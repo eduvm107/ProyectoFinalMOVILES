@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.example.chatbot_diseo"
-    compileSdk = 36
+    compileSdk = 29
 
     defaultConfig {
         applicationId = "com.example.chatbot_diseo"
-        minSdk = 33
-        targetSdk = 36
+        minSdk = 29
+        targetSdk = 29
         versionCode = 1
         versionName = "1.0"
 
