@@ -56,7 +56,8 @@ fun PermissionHandler(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (permissionsGranted) {
-            navController.navigate("calendario") {
+            // Navega a la pantalla de Chat por defecto
+            navController.navigate("chat") {
                 popUpTo("permissions") { inclusive = true }
             }
         } else {
