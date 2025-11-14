@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.chatbot_diseo.presentation.calendario.ChatPruebaScreen
 import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
+import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
 import com.example.chatbot_diseo.presentation.footer.PlaceholderScreen
 
 @Composable
@@ -21,7 +22,7 @@ fun AppNavGraph(
     ) {
         composable("chat") { ChatPruebaScreen() }
         composable("calendario") { PantallaCalendario() }
-        composable("recursos") { PlaceholderScreen(screenName = "Recursos") }
+        composable("recursos") { Pantalla_de_Recurso() }
         composable("perfil") { PlaceholderScreen(screenName = "Perfil") }
     }
 }
