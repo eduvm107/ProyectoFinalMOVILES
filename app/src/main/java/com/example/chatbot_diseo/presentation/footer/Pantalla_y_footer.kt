@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.chatbot_diseo.presentation.navigation.AppNavGraph
 
@@ -41,28 +42,38 @@ fun PantallaPrincipal() {
         )
     }
 
-    Scaffold(
-        bottomBar = { BottomNavBar(navController = navController) }
-    ) { innerPadding ->
+    if (hasPermissions) {
+        // Observar la ruta actual para mostrar/ocultar el BottomNavBar
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
 
-        // Este Box es el "lienzo" para nuestro contenido. NO debe tener scroll.
-        Box(modifier = Modifier.padding(innerPadding)) {
-            if (hasPermissions) {
+        // Lista de rutas donde NO debe aparecer el BottomNavBar
+        val routesWithoutBottomBar = listOf("login", "admin_panel")
+        val showBottomBar = currentRoute !in routesWithoutBottomBar
+
+        // Sistema de navegación principal
+        Scaffold(
+            bottomBar = {
+                if (showBottomBar) {
+                    BottomNavBar(navController = navController)
+                }
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
                 AppNavGraph(
-                    navController = navController,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                PermissionScreenForMain(
                     modifier = Modifier.fillMaxSize(),
-                    onPermissionsGranted = { hasPermissions = true }
+                    navController = navController
                 )
             }
         }
+    } else {
+        // Pantalla de permisos sin BottomNavBar
+        PermissionScreenForMain(
+            modifier = Modifier.fillMaxSize(),
+            onPermissionsGranted = { hasPermissions = true }
+        )
     }
 }
-
-// --- El resto del código no cambia y es correcto ---
 
 @Composable
 fun PermissionScreenForMain(modifier: Modifier = Modifier, onPermissionsGranted: () -> Unit) {

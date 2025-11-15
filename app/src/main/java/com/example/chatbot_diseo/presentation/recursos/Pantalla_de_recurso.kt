@@ -24,8 +24,7 @@ fun Pantalla_de_Recurso(){
             .fillMaxSize()
             .background(Color(0xFFF0F2F5))
             .padding(16.dp)
-    ){
-        ResourcesHeader()
+    ){ResourcesHeader()
 
         Spacer(modifier = Modifier.height(8.dp))
 

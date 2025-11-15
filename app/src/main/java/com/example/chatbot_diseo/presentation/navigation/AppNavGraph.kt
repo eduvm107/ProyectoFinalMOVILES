@@ -8,25 +8,21 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.chatbot_diseo.presentation.PermissionHandler
 import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
-import com.example.chatbot_diseo.presentation.calendario.Calendario
-import com.example.chatbot_diseo.presentation.calendario.ChatPruebaScreen
 import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
 import com.example.chatbot_diseo.presentation.chat.ChatScreen
 import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
-import com.example.chatbot_diseo.presentation.footer.PantallaPrincipal
-import com.example.chatbot_diseo.presentation.footer.PlaceholderScreen
 import com.example.chatbot_diseo.presentation.historial.HistorialScreen
 import com.example.chatbot_diseo.presentation.notificaciones.NotificacionesScreen
 import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
+import com.example.chatbot_diseo.presentation.userperfil.PerfilScreen
 
 @Composable
 fun AppNavGraph(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController
 ) {
-    val navController = rememberNavController()
     val context = LocalContext.current
 
     NavHost(
@@ -43,7 +39,11 @@ fun AppNavGraph(
                         "Bienvenido! Rol: $role",
                         Toast.LENGTH_SHORT
                     ).show()
-                    navController.navigate("main") {
+
+                    // Redirigir según el rol
+                    val destination = if (role == "admin") "admin_panel" else "chat"
+
+                    navController.navigate(destination) {
                         popUpTo("login") { inclusive = true }
                     }
                 },
@@ -57,19 +57,6 @@ fun AppNavGraph(
             )
         }
 
-        // Pantalla principal después del login
-        composable("main") {
-            PantallaPrincipal()
-        }
-
-        composable("permissions") {
-            PermissionHandler(navController)
-        }
-
-        composable("calendario") {
-            Calendario()
-        }
-
         composable("admin_panel") {
             AdminPanelScreen(
                 onBack = { navController.popBackStack() }
@@ -80,7 +67,7 @@ fun AppNavGraph(
             ChatScreen(navController = navController)
         }
 
-        composable("pantalla_calendario") {
+        composable("calendario") {
             PantallaCalendario()
         }
 
@@ -89,7 +76,13 @@ fun AppNavGraph(
         }
 
         composable("perfil") {
-            PlaceholderScreen(screenName = "Perfil")
+            PerfilScreen(
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable("notificaciones") {
