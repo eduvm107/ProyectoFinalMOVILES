@@ -1,2 +1,3 @@
 # ProyectoFinalMOVILES
-App Android para intercambio colaborativo de bienes y servicios sin dinero
+App Android para intercambio ayudar a los nuevos colaboradores de TATA 
+
