@@ -2,12 +2,9 @@ package com.example.chatbot_diseo.presentation.navigation
 
 import android.widget.Toast
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,9 +14,13 @@ import com.example.chatbot_diseo.presentation.auth.LoginScreen
 import com.example.chatbot_diseo.presentation.calendario.Calendario
 import com.example.chatbot_diseo.presentation.calendario.ChatPruebaScreen
 import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
-import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
-import com.example.chatbot_diseo.presentation.footer.PlaceholderScreen
+import com.example.chatbot_diseo.presentation.chat.ChatScreen
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
 import com.example.chatbot_diseo.presentation.footer.PantallaPrincipal
+import com.example.chatbot_diseo.presentation.footer.PlaceholderScreen
+import com.example.chatbot_diseo.presentation.historial.HistorialScreen
+import com.example.chatbot_diseo.presentation.notificaciones.NotificacionesScreen
+import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
 
 @Composable
 fun AppNavGraph(
@@ -37,9 +38,6 @@ fun AppNavGraph(
         composable("login") {
             LoginScreen(
                 onLogin = { role ->
-                    // Validar credenciales preestablecidas
-                    // Usuario: admin@tcs.com
-                    // Contraseña: admin123
                     Toast.makeText(
                         context,
                         "Bienvenido! Rol: $role",
@@ -79,7 +77,7 @@ fun AppNavGraph(
         }
 
         composable("chat") {
-            ChatPruebaScreen()
+            ChatScreen(navController = navController)
         }
 
         composable("pantalla_calendario") {
@@ -92,6 +90,20 @@ fun AppNavGraph(
 
         composable("perfil") {
             PlaceholderScreen(screenName = "Perfil")
+        }
+
+        composable("notificaciones") {
+            NotificacionesScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("historial") {
+            HistorialScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("favoritos") {
+            FavoritosScreen(onBack = { navController.popBackStack() })
         }
     }
 }

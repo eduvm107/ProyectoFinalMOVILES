@@ -87,6 +87,8 @@ fun BottomNavBar(navController: NavController) {
 
         NavigationBar(
             modifier = Modifier.navigationBarsPadding(),
+            containerColor = Color(0xFF000080), // color llamativo para depuración
+
             containerColor = Color(0xFF39C219), // color llamativo para depuración
         ) {
             items.forEach { item ->
