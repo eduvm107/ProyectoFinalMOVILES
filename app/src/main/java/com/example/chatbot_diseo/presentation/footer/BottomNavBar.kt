@@ -3,13 +3,13 @@ package com.example.chatbot_diseo.presentation.footer
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -47,7 +47,7 @@ fun BottomNavBar(navController: NavController) {
         BottomNavigationItem(
             title = "Chat",
             route = "chat",
-            icon = Icons.Filled.Chat,
+            icon = Icons.AutoMirrored.Filled.Chat,
             hasNews = true
         ),
         BottomNavigationItem(
@@ -59,7 +59,7 @@ fun BottomNavBar(navController: NavController) {
         BottomNavigationItem(
             title = "Recursos",
             route = "recursos",
-            icon = Icons.Filled.MenuBook,
+            icon = Icons.AutoMirrored.Filled.MenuBook,
             hasNews = false
         ),
         BottomNavigationItem(
@@ -83,11 +83,13 @@ fun BottomNavBar(navController: NavController) {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Divider para separar visualmente la barra del contenido
-        Divider(color = Color.Black.copy(alpha = 0.08f), thickness = 1.dp)
+        HorizontalDivider(color = Color.Black.copy(alpha = 0.08f), thickness = 1.dp)
 
         NavigationBar(
             modifier = Modifier.navigationBarsPadding(),
             containerColor = Color(0xFF000080), // color llamativo para depuración
+
+            containerColor = Color(0xFF39C219), // color llamativo para depuración
         ) {
             items.forEach { item ->
                 val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
