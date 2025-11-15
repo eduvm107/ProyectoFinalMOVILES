@@ -25,7 +25,6 @@ fun Pantalla_de_Recurso(){
             .background(Color(0xFFF0F2F5))
             .padding(16.dp)
     ){
-        // Header arriba
         ResourcesHeader()
 
         Spacer(modifier = Modifier.height(8.dp))
