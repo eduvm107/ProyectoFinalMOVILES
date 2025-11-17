@@ -28,50 +28,37 @@ fun AdminDashboardHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = "Panel RRHH",
-            style = MaterialTheme.typography.titleMedium,
-            color = TcsTextDark
-        )
-        Text(
-            text = "Gestión de onboarding",
-            style = MaterialTheme.typography.bodySmall,
-            color = TcsTextLight
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(
-                    icon = Icons.Filled.Group,
-                    title = "Nuevos colaboradores",
-                    value = totalContents.toString(), // puedes cambiar a otra métrica si quieres
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = Icons.Filled.Today,
-                    title = "Actividades programadas",
-                    value = totalActivities.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(
-                    icon = Icons.Filled.Book,
-                    title = "Recursos disponibles",
-                    value = totalResources.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = Icons.Filled.CheckCircle,
-                    title = "Tasa de completitud",
-                    value = "$completionRate%",
-                    modifier = Modifier.weight(1f)
-                )
-            }
+        // Grid de estadísticas muy compacto - una sola fila horizontal
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            StatCard(
+                icon = Icons.Filled.Group,
+                title = "Mensajes",
+                value = totalContents.toString(),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                icon = Icons.Filled.Today,
+                title = "Actividades",
+                value = totalActivities.toString(),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                icon = Icons.Filled.Book,
+                title = "Recursos",
+                value = totalResources.toString(),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                icon = Icons.Filled.CheckCircle,
+                title = "Completitud",
+                value = "$completionRate%",
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -85,29 +72,36 @@ private fun StatCard(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(TcsWhite)
-            .padding(12.dp)
+            .padding(8.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(TcsBlue.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = TcsBlue
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.bodySmall, color = TcsTextLight)
-                Text(value, style = MaterialTheme.typography.titleMedium, color = TcsTextDark)
-            }
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Icono muy compacto
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = TcsBlue,
+                modifier = Modifier.size(16.dp)
+            )
+
+            // Valor compacto
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                color = TcsTextDark
+            )
+
+            // Título muy pequeño
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = TcsTextLight
+            )
         }
     }
 }

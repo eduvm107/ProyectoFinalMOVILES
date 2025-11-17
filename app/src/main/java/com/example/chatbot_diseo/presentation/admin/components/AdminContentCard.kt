@@ -26,34 +26,91 @@ fun AdminContentCard(
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = TcsWhite),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
-            Text(item.title, color = TcsTextDark)
-            Text("Tipo: ${item.type}", color = TcsTextLight)
-            Spacer(Modifier.height(4.dp))
-            Text(item.description, color = TcsTextDark)
+            // Título principal con mejor estilo
+            Text(
+                text = item.title,
+                style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+                color = TcsTextDark
+            )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
+            // Tipo con badge mejorado
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(TcsBlueLight)
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = item.type,
+                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                    color = TcsBlue
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Descripción con mejor espaciado
+            Text(
+                text = item.description,
+                style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                color = TcsTextLight,
+                lineHeight = androidx.compose.ui.unit.TextUnit(22f, androidx.compose.ui.unit.TextUnitType.Sp)
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            // Botones de acción mejorados
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onEdit) {
-                    Icon(Icons.Filled.Edit, contentDescription = null, tint = TcsBlue)
+                TextButton(
+                    onClick = onEdit,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Edit,
+                        contentDescription = "Editar",
+                        tint = TcsBlue,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Editar",
+                        color = TcsBlue,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelLarge
+                    )
                 }
-                TextButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = null, tint = TcsRed)
+                Spacer(Modifier.width(12.dp))
+                TextButton(
+                    onClick = onDelete,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = "Eliminar",
+                        tint = TcsRed,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Eliminar",
+                        color = TcsRed,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

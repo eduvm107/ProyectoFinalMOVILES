@@ -30,9 +30,10 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.chatbot_diseo.presentation.navigation.AppNavGraph
+import com.example.chatbot_diseo.presentation.theme.ThemeViewModel
 
 @Composable
-fun PantallaPrincipal() {
+fun PantallaPrincipal(themeViewModel: ThemeViewModel? = null) {
     val context = LocalContext.current
     val navController = rememberNavController()
 
@@ -62,7 +63,8 @@ fun PantallaPrincipal() {
             Box(modifier = Modifier.padding(innerPadding)) {
                 AppNavGraph(
                     modifier = Modifier.fillMaxSize(),
-                    navController = navController
+                    navController = navController,
+                    themeViewModel = themeViewModel
                 )
             }
         }

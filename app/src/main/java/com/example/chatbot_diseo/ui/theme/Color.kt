@@ -11,22 +11,22 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 
-//admin
-// ---------------- AZULES ----------------
-val TcsBlue = Color(0xFF0070C0)          // Azul principal
-val TcsBlueLight = Color(0xFFD9ECFF)     // Fondo iconos / chips
-val TcsBlueMid = Color(0xFF4A90E2)       // Celeste medio
-val TcsBlueDark = Color(0xFF003865)      // Azul oscuro
-val TcsBlueSoft = Color(0xFFEAF4FF)      // Azul super suave (para tabs seleccionadas)
-val TcsTextGray = Color(0xFF6A7A89)
+//admin - Professional Theme
+// ---------------- AZULES PROFESIONALES ----------------
+val TcsBlue = Color(0xFF4A6B8A)          // Azul principal profesional
+val TcsBlueLight = Color(0xFFE3EAF2)     // Fondo iconos / chips
+val TcsBlueMid = Color(0xFF5F7D9A)       // Azul medio
+val TcsBlueDark = Color(0xFF2F4558)      // Azul oscuro
+val TcsBlueSoft = Color(0xFFF0F4F8)      // Azul super suave (para tabs seleccionadas)
+val TcsTextGray = Color(0xFF6B7280)
 // ---------------- GRAY / BLANCOS ----------------
 val TcsWhite = Color(0xFFFFFFFF)
-val TcsGrayText = Color(0xFF6A7A89)
-val TcsGrayBackground = Color(0xFFF6F8FC)   // Fondo general
-val TcsGrayBorder = Color(0xFFE1E6EF)       // Bordes suaves
-val TcsGraySoft = Color(0xFFF2F4F7)         // Fondo suave
-val TcsTextDark = Color(0xFF1A2D4A)         // Texto principal
-val TcsTextLight = Color(0xFF6A7A89)        // Texto secundario
+val TcsGrayText = Color(0xFF6B7280)
+val TcsGrayBackground = Color(0xFFFFFFFF)   // Fondo blanco profesional
+val TcsGrayBorder = Color(0xFFE5E7EB)       // Bordes suaves
+val TcsGraySoft = Color(0xFFF5F7FA)         // Fondo suave
+val TcsTextDark = Color(0xFF1A1A1A)         // Texto principal
+val TcsTextLight = Color(0xFF6B7280)        // Texto secundario
 val TcsDashboardBox = Color(0xFFFFFFFF)
 // ---------------- ALERTAS ----------------
 val TcsRed = Color(0xFFD9534F)              // Eliminar / advertencia
