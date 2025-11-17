@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -50,13 +51,37 @@ fun AdminPanelScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Panel de Gestión de", color = TcsTextDark)
-                        Text("Contenido", color = TcsTextDark)
+                        Text(
+                            "Panel de Administración",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TcsTextDark
+                        )
+                        Text(
+                            "Administrador: Juan Pérez",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TcsTextLight
+                        )
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TcsTextDark)
+                    }
+                },
+                actions = {
+                    TextButton(
+                        onClick = onBack,
+                        colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                            contentColor = TcsRed
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Logout,
+                            contentDescription = "Salir",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Salir", style = MaterialTheme.typography.labelLarge)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = TcsWhite)
@@ -83,34 +108,31 @@ fun AdminPanelScreen(
                 selected = selectedTab,
                 onSelect = { selectedTab = it }
             )
-            Text(
-                text = when (selectedTab) {
-                    0 -> "Mensajes Automáticos"
-                    1 -> "Actividades"
-                    2 -> "Recursos"
-                    3 -> "Métricas de Onboarding"
-                    else -> ""
-                },
-                style = MaterialTheme.typography.titleMedium,
-                color = TcsTextDark,
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    top = if (selectedTab == 3) 0.dp else 16.dp,   // 🔥 SOLO MÉTRICAS SUBE EL TÍTULO
-                    bottom = 12.dp
+            // Título de la sección activa
+            if (selectedTab != 3) {
+                Text(
+                    text = when (selectedTab) {
+                        0 -> "Mensajes Automáticos"
+                        1 -> "Actividades Programadas"
+                        2 -> "Recursos Disponibles"
+                        else -> ""
+                    },
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = TcsTextDark,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
-            )
-
-            Spacer(Modifier.height(16.dp))
+            } else {
+                Spacer(Modifier.height(4.dp))
+            }
 
             // CONTENIDO SEGÚN TAB
             when (selectedTab) {
 
                 // MENSAJES AUTOMÁTICOS
                 0 -> LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(contentList) { item ->
                         AdminContentCard(
@@ -123,10 +145,9 @@ fun AdminPanelScreen(
 
                 // ACTIVIDADES
                 1 -> LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(activityList) { item ->
                         AdminActivityCard(
@@ -139,10 +160,9 @@ fun AdminPanelScreen(
 
                 // RECURSOS
                 2 -> LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(resourceList) { item ->
                         AdminResourceCard(

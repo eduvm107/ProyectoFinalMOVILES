@@ -1,337 +1,469 @@
 package com.example.chatbot_diseo.presentation.userperfil
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 data class UserProfile(
     val name: String,
     val email: String,
     val position: String,
-    val supervisor: String,
-    val startDate: String,
-    val onboardingProgress: Int
+    val department: String,
+    val phone: String,
+    val joinDate: String
 )
 
 @Composable
 fun PerfilScreen(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
-    sampleProfile: UserProfile? = null
+    sampleProfile: UserProfile? = null,
+    isDarkTheme: Boolean = false,
+    onThemeToggle: (Boolean) -> Unit = {}
 ) {
-    var showEmailModal by remember { mutableStateOf(false) }
-    var emailMessage by remember { mutableStateOf("Hola María, tengo una consulta sobre mi proceso de onboarding…") }
-    var showConfirmation by remember { mutableStateOf(false) }
-
-    // Toggle local de tema (solo afecta esta pantalla para preview/demo)
-    var isDark by remember { mutableStateOf(true) }
-
     val profile = sampleProfile ?: UserProfile(
         name = "José Martínez",
         email = "jose.martinez@tcs.com",
         position = "Consultor de Tecnología",
-        supervisor = "María García",
-        startDate = "15 noviembre 2025",
-        onboardingProgress = 65
+        department = "Desarrollo",
+        phone = "+52 555 123 4567",
+        joinDate = "15 Nov 2025"
     )
 
-    val scope = rememberCoroutineScope()
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
-    // colores según tema local
-    val bgColor = if (isDark) Color(0xFF001827) else Color(0xFFF6FAFF)
-    val cardBg = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.06f) else Color(0xFFEFF7FF)
-    val primaryAccent = if (isDark) Color(0xFF00BFFF) else Color(0xFF0076CE)
+    // Colores profesionales
+    val primaryColor = Color(0xFF4A6B8A)
+    val backgroundColor = Color.White
+    val cardColor = Color(0xFFF5F7FA)
+    val textPrimary = Color(0xFF1A1A1A)
+    val textSecondary = Color(0xFF6B7280)
 
-    Surface(modifier = modifier.fillMaxSize(), color = bgColor) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = backgroundColor
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header con fondo de color
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(cardBg)
-                    .padding(horizontal = 16.dp, vertical = 18.dp)
+                    .background(primaryColor)
+                    .padding(vertical = 32.dp, horizontal = 24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Avatar con iniciales
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)),
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .border(4.dp, Color.White.copy(alpha = 0.3f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "👤", fontSize = 18.sp)
+                        val initials = profile.name.split(" ")
+                            .mapNotNull { it.firstOrNull() }
+                            .take(2)
+                            .joinToString("")
+                        Text(
+                            text = initials,
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryColor
+                        )
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Column {
-                        Text(text = "Mi Perfil", color = if (isDark) Color(0xFFE7F6FF) else Color(0xFF04233A), fontWeight = FontWeight.SemiBold)
-                        Text(text = "Información del colaborador", color = if (isDark) Color(0xFF9FB9CA) else Color(0xFF557083), fontSize = 13.sp)
-                    }
+                    Text(
+                        text = profile.name,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = profile.position,
+                        fontSize = 16.sp,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
                 }
             }
 
-            // Content (ahora scrollable)
+            // Información personal
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()) // hace la pantalla desplazable
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp) // padding inferior para evitar recorte
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Avatar y nombre
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .size(112.dp)
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(Brush.verticalGradient(listOf(Color(0xFF0076CE), Color(0xFF00BFFF))))
-                            .shadow(8.dp, RoundedCornerShape(18.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val initials = profile.name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.joinToString("")
-                        Text(text = initials, color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                    }
+                Text(
+                    text = "Información Personal",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textPrimary
+                )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                ProfileInfoCard(
+                    icon = Icons.Default.Email,
+                    label = "Correo Electrónico",
+                    value = profile.email,
+                    primaryColor = primaryColor,
+                    cardColor = cardColor,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
+                )
 
-                    Text(text = profile.name, color = if (isDark) Color(0xFFE7F6FF) else Color(0xFF04233A), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                    Text(text = profile.position, color = if (isDark) Color(0xFF9FB9CA) else Color(0xFF557083), fontSize = 13.sp)
+                ProfileInfoCard(
+                    icon = Icons.Default.Phone,
+                    label = "Teléfono",
+                    value = profile.phone,
+                    primaryColor = primaryColor,
+                    cardColor = cardColor,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
+                )
 
-                    Spacer(modifier = Modifier.height(18.dp))
-                }
+                ProfileInfoCard(
+                    icon = Icons.Default.Work,
+                    label = "Departamento",
+                    value = profile.department,
+                    primaryColor = primaryColor,
+                    cardColor = cardColor,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
+                )
 
-                // Detalles
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    val items = listOf(
-                        Triple("Email corporativo", profile.email, "✉️"),
-                        Triple("Cargo", profile.position, "💼"),
-                        Triple("Supervisor", profile.supervisor, "👩‍💼"),
-                        Triple("Fecha de ingreso", profile.startDate, "📅")
+                ProfileInfoCard(
+                    icon = Icons.Default.CalendarToday,
+                    label = "Fecha de Ingreso",
+                    value = profile.joinDate,
+                    primaryColor = primaryColor,
+                    cardColor = cardColor,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Botones de acción
+                Text(
+                    text = "Acciones",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textPrimary
+                )
+
+                ActionButton(
+                    icon = Icons.Default.Edit,
+                    text = "Editar Perfil",
+                    onClick = { /* TODO */ },
+                    primaryColor = primaryColor
+                )
+
+                ActionButton(
+                    icon = Icons.Default.Lock,
+                    text = "Cambiar Contraseña",
+                    onClick = { /* TODO */ },
+                    primaryColor = primaryColor
+                )
+
+                ActionButton(
+                    icon = Icons.Default.Settings,
+                    text = "Configuración",
+                    onClick = { /* TODO */ },
+                    primaryColor = primaryColor
+                )
+
+                // Switch de tema oscuro/claro
+                ThemeToggleCard(
+                    isDarkTheme = isDarkTheme,
+                    onToggle = onThemeToggle,
+                    primaryColor = primaryColor,
+                    cardColor = cardColor,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botón de cerrar sesión
+                Button(
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDC2626)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Logout,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
                     )
-
-                    items.forEach { item ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(cardBg)
-                                .padding(14.dp)
-                        ) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(44.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(text = item.third, fontSize = 18.sp)
-                                    }
-
-                                    Spacer(modifier = Modifier.width(12.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = item.first, color = if (isDark) Color(0xFF9FB9CA) else Color(0xFF557083), fontSize = 12.sp)
-                                        Text(text = item.second, color = if (isDark) Color(0xFFE7F6FF) else Color(0xFF04233A), fontSize = 15.sp)
-                                    }
-                                }
-
-                                // Si es supervisor, mostrar el botón debajo (full width)
-                                if (item.first == "Supervisor") {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Button(
-                                        onClick = { showEmailModal = true },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(44.dp),
-                                        // estilo de boton con gradiente simulado
-                                    ) {
-                                        Text(text = "✉️  Enviar correo al supervisor")
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Cerrar Sesión",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // Progreso
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(cardBg)
-                        .padding(14.dp)
-                ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Brush.horizontalGradient(listOf(Color(0xFF0076CE), Color(0xFF00BFFF)))),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "🏆", fontSize = 18.sp)
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = "Progreso del Onboarding", color = if (isDark) Color(0xFFE7F6FF) else Color(0xFF04233A), fontSize = 16.sp)
-                                Text(text = "${profile.onboardingProgress}% completado", color = primaryAccent, fontSize = 13.sp)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // barra progresiva con overlay gradiente
-                        val progress = (profile.onboardingProgress.coerceIn(0,100) / 100f)
-                        LinearProgressIndicator(progress = progress, modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(20.dp)),
-                            color = primaryAccent
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "¡Estás avanzando muy bien! Sigue así 💙", color = if (isDark) Color(0xFF9FB9CA) else Color(0xFF557083), fontSize = 13.sp)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // Theme toggle
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(cardBg)
-                        .padding(12.dp)
-                ) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Column {
-                            Text(text = "Tema de la app", color = if (isDark) Color(0xFFE7F6FF) else Color(0xFF04233A), fontSize = 14.sp)
-                            Text(text = "Claro u oscuro", color = if (isDark) Color(0xFF9FB9CA) else Color(0xFF557083), fontSize = 12.sp)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = if (isDark) "Oscuro" else "Claro", color = primaryAccent)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Switch(checked = isDark, onCheckedChange = { isDark = it })
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // Logout (Outlined style)
-                OutlinedButton(
-                    onClick = onLogout,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    border = BorderStroke(1.dp, primaryAccent),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryAccent)
-                ) {
-                    Text(text = "\u27A1  Cerrar sesión")
-                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
+    }
 
-        // Email Modal
-        if (showEmailModal) {
-            AlertDialog(
-                onDismissRequest = { showEmailModal = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        scope.launch {
-                            showConfirmation = true
-                            delay(2000)
-                            showConfirmation = false
-                            showEmailModal = false
-                            emailMessage = "Hola María, tengo una consulta sobre mi proceso de onboarding…"
-                        }
-                    }) {
-                        Text(text = "Enviar")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showEmailModal = false }) { Text(text = "Cancelar") }
-                },
-                title = {
-                    Text(text = "Enviar correo al supervisor")
-                },
-                text = {
-                    Column {
-                        Text(text = "Para: maria.garcia@tcs.com", color = if (isDark) Color(0xFF9FB9CA) else Color(0xFF557083), fontSize = 13.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(value = emailMessage, onValueChange = { emailMessage = it }, modifier = Modifier.fillMaxWidth(), maxLines = 6)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        AnimatedVisibility(visible = showConfirmation) {
-                            Box(modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Brush.horizontalGradient(listOf(Color(0xFF00B87C), Color(0xFF00E5A0))))
-                                .padding(10.dp)
-                            ) {
-                                Text(text = "✅ Correo enviado correctamente.", color = Color.White)
-                            }
-                        }
-                    }
+    // Diálogo de confirmación de logout
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            containerColor = Color.White,
+            title = {
+                Text(
+                    text = "Cerrar Sesión",
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = "¿Estás seguro que deseas cerrar sesión?",
+                    color = textSecondary
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFFDC2626)
+                    )
+                ) {
+                    Text("Cerrar Sesión", fontWeight = FontWeight.SemiBold)
                 }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = primaryColor
+                    )
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun ProfileInfoCard(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    primaryColor: Color,
+    cardColor: Color,
+    textPrimary: Color,
+    textSecondary: Color
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = cardColor
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(primaryColor.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = primaryColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = label,
+                    fontSize = 12.sp,
+                    color = textSecondary,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = value,
+                    fontSize = 15.sp,
+                    color = textPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ActionButton(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit,
+    primaryColor: Color
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = primaryColor
+        ),
+        border = ButtonDefaults.outlinedButtonBorder.copy(
+            width = 1.5.dp,
+            brush = androidx.compose.ui.graphics.SolidColor(primaryColor.copy(alpha = 0.3f))
+        )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Start
+        )
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+fun ThemeToggleCard(
+    isDarkTheme: Boolean,
+    onToggle: (Boolean) -> Unit,
+    primaryColor: Color,
+    cardColor: Color,
+    textPrimary: Color,
+    textSecondary: Color
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = cardColor
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(primaryColor.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
+                        contentDescription = null,
+                        tint = primaryColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        text = "Tema",
+                        fontSize = 15.sp,
+                        color = textPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isDarkTheme) "Modo Oscuro" else "Modo Claro",
+                        fontSize = 12.sp,
+                        color = textSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Switch(
+                checked = isDarkTheme,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = primaryColor,
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color.LightGray
+                )
             )
         }
     }
 }
 
-@Preview(showBackground = true, widthDp = 380, heightDp = 800)
+@Preview(showBackground = true)
 @Composable
 fun PerfilScreenPreview() {
     PerfilScreen(onLogout = {})
