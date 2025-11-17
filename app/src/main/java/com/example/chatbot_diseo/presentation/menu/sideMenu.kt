@@ -28,14 +28,10 @@ fun SideMenu(
         DrawerItem("Inicio", Icons.Outlined.Home, "chat", onNavigate)
         DrawerItem("Notificaciones", Icons.Outlined.Notifications, "notificaciones", onNavigate)
         DrawerItem("Favoritos", Icons.Outlined.StarBorder, "favoritos", onNavigate)
-        // DrawerItem("Checklist", Icons.Outlined.Checklist, "checklist", onNavigate)
         DrawerItem("Historial", Icons.Outlined.ChatBubbleOutline, "historial", onNavigate)
-
         DrawerItem("Configuración", Icons.Outlined.Settings, "configuracion", onNavigate)
         DrawerItem("Ayuda", Icons.Outlined.HelpOutline, "ayuda", onNavigate)
-
         Spacer(modifier = Modifier.height(40.dp))
-
         DrawerItem(
             "Cerrar sesión",
             Icons.Outlined.Logout,

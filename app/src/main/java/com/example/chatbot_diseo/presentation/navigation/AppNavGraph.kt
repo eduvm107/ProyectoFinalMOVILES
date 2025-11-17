@@ -1,67 +1,30 @@
 package com.example.chatbot_diseo.presentation.navigation
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
-import com.example.chatbot_diseo.presentation.auth.LoginScreen
-import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
+
+// IMPORTA TODAS TUS PANTALLAS
 import com.example.chatbot_diseo.presentation.chat.ChatScreen
-import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
 import com.example.chatbot_diseo.presentation.historial.HistorialScreen
+import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
+import com.example.chatbot_diseo.presentation.footer.PlaceholderScreen
 import com.example.chatbot_diseo.presentation.notificaciones.NotificacionesScreen
-import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
-import com.example.chatbot_diseo.presentation.userperfil.PerfilScreen
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
 
 @Composable
 fun AppNavGraph(
-    modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
 
     NavHost(
         navController = navController,
-        startDestination = "login",
+        startDestination = "chat",
         modifier = modifier
     ) {
-        // Pantalla de Login
-        composable("login") {
-            LoginScreen(
-                onLogin = { role ->
-                    Toast.makeText(
-                        context,
-                        "Bienvenido! Rol: $role",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    // Redirigir según el rol
-                    val destination = if (role == "admin") "admin_panel" else "chat"
-
-                    navController.navigate(destination) {
-                        popUpTo("login") { inclusive = true }
-                    }
-                },
-                onForgotPassword = {
-                    Toast.makeText(
-                        context,
-                        "Credenciales: admin@tcs.com / admin123",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            )
-        }
-
-        composable("admin_panel") {
-            AdminPanelScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
 
         composable("chat") {
             ChatScreen(navController = navController)
@@ -71,22 +34,12 @@ fun AppNavGraph(
             PantallaCalendario()
         }
 
-        composable("recursos") {
-            Pantalla_de_Recurso()
+        composable("notificaciones") {
+            NotificacionesScreen(onBack = { navController.popBackStack() })
         }
 
         composable("perfil") {
-            PerfilScreen(
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        composable("notificaciones") {
-            NotificacionesScreen(onBack = { navController.popBackStack() })
+            PlaceholderScreen(screenName = "Perfil")
         }
 
         composable("historial") {
@@ -98,5 +51,6 @@ fun AppNavGraph(
         composable("favoritos") {
             FavoritosScreen(onBack = { navController.popBackStack() })
         }
+
     }
 }
