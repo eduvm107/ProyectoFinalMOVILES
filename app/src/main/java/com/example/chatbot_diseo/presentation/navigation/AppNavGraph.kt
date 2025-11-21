@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
 import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
@@ -34,11 +35,13 @@ fun AppNavGraph(
         composable("login") {
             LoginScreen(
                 onLogin = { role ->
-                    Toast.makeText(
-                        context,
-                        "Bienvenido! Rol: $role",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // Verificar token guardado antes de navegar
+                    val token = TokenHolder.token
+                    if (token.isNullOrBlank()) {
+                        Toast.makeText(context, "Login inválido (sin token)", Toast.LENGTH_SHORT).show()
+                        return@LoginScreen
+                    }
+                    Toast.makeText(context, "Bienvenido! Rol: $role", Toast.LENGTH_SHORT).show()
 
                     // Redirigir según el rol
                     val destination = if (role == "admin") "admin_panel" else "chat"
