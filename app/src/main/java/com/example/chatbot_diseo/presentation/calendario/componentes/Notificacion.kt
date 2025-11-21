@@ -30,9 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.chatbot_diseo.data.remote.model.Actividad.ActividadUI
 
 @Composable
-fun NotificacionCard() {
+fun NotificacionCard(actividad: ActividadUI) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -44,7 +45,6 @@ fun NotificacionCard() {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Top Row: Date and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -56,7 +56,7 @@ fun NotificacionCard() {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "15 NOV",
+                    text = actividad.fechaCorta,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Color.Black
@@ -70,7 +70,7 @@ fun NotificacionCard() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Pendiente",
+                        text = actividad.estado,
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
@@ -80,9 +80,8 @@ fun NotificacionCard() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Title
             Text(
-                text = "Setup de herramientas y accesos",
+                text = actividad.titulo,
                 fontWeight = FontWeight.Bold,
                 fontSize = 22.sp,
                 color = Color.Black
@@ -90,7 +89,6 @@ fun NotificacionCard() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Time Row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Schedule,
@@ -98,12 +96,11 @@ fun NotificacionCard() {
                     tint = Color(0xFFE91E63)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "02:00 PM", color = Color.DarkGray, fontSize = 16.sp)
+                Text(text = actividad.horaInicio, color = Color.DarkGray, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Session Row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Videocam,
@@ -111,17 +108,15 @@ fun NotificacionCard() {
                     tint = Color.Gray
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Sesión virtual", color = Color(0xFF007AFF), fontSize = 16.sp)
+                Text(text = actividad.lugar, color = Color(0xFF007AFF), fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Divider
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Bottom Row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Build,
@@ -139,6 +134,16 @@ fun NotificacionCard() {
 @Composable
 fun NotificacionCardPreview() {
     Box(Modifier.padding(16.dp)) {
-        NotificacionCard()
+        NotificacionCard(
+            actividad = ActividadUI(
+                id = "1",
+                titulo = "Setup de herramientas y accesos",
+                fechaCorta = "15 NOV",
+                estado = "Pendiente",
+                horaInicio = "02:00 PM",
+                lugar = "Sesión virtual"
+            )
+        )
     }
 }
+
