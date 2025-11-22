@@ -61,6 +61,13 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.runtime)
+// Retrofit + converters + logging  (retrofit estaba duplicado)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
 
 
     // Dependencias para llamadas HTTP con Retrofit y coroutines
@@ -85,4 +92,16 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+
+// Converter: JSON con Gson
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+// OkHttp (cliente recomendado)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+}
 }

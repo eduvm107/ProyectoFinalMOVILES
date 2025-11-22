@@ -128,17 +128,18 @@ fun AppNavGraph(
         }
 
         composable("notificaciones") {
-            NotificacionesScreen(onBack = { navController.popBackStack() })
+            NotificacionesScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("favoritos") {
+            FavoritosScreen(onBack = { navController.popBackStack() })
         }
 
         composable("historial") {
             HistorialScreen(
                 onBack = { navController.popBackStack() }
             )
-        }
-
-        composable("favoritos") {
-            FavoritosScreen(onBack = { navController.popBackStack() })
         }
     }
 }

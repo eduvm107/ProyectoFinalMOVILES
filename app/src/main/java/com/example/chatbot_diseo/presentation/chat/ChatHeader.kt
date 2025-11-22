@@ -64,19 +64,6 @@ fun ChatHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // Notificaciones
-            BadgedBox(
-                badge = { Badge(containerColor = Color(0xFF0070C0)) { Text("2") } }
-            ) {
-                IconButton(onClick = {}) {
-                    Icon(
-                        Icons.Outlined.Notifications,
-                        contentDescription = "Notificaciones",
-                        tint = Color(0xFF26415F)
-                    )
-                }
-            }
-
             // Nuevo chat
             IconButton(onClick = onNewChat) {
                 Icon(

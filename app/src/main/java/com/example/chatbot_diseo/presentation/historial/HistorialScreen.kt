@@ -1,116 +1,61 @@
 package com.example.chatbot_diseo.presentation.historial
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistorialScreen(
     onBack: () -> Unit,
-    vm: HistorialViewModel = viewModel()
+    viewModel: HistorialViewModel = viewModel()
 ) {
+    val chats by viewModel.chats.collectAsState()
 
-    val lista = vm.historial
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF7F9FC))
-    ) {
-
-        TopBarHistorial(onBack)
-
-        if (lista.isEmpty()) {
-            EmptyHistorial()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Mis Conversaciones") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, null) }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { viewModel.crearNuevoChat() }, // Crea chat en Mongo
+                containerColor = Color(0xFF1A73E8),
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Edit, "Nuevo Chat")
+            }
+        },
+        containerColor = Color(0xFFF8F9FA)
+    ) { padding ->
+        if (chats.isEmpty()) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text("No hay chats recientes", color = Color.Gray)
+            }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(lista) { item ->
-                    HistorialCard(item)
+            LazyColumn(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                contentPadding = PaddingValues(top = 10.dp, bottom = 80.dp)
+            ) {
+                items(chats) { chat ->
+                    HistorialItem(chat = chat, onClick = { /* Navegar al chat luego */ })
                 }
             }
         }
-    }
-}
-
-@Composable
-fun TopBarHistorial(onBack: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Icon(
-            Icons.Default.ArrowBack,
-            contentDescription = "",
-            tint = Color.Black,
-            modifier = Modifier
-                .size(26.dp)
-                .clickable { onBack() }
-        )
-
-        Spacer(Modifier.width(12.dp))
-
-        Text(
-            "Historial",
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color.Black
-        )
-    }
-}
-
-@Composable
-fun HistorialCard(item: HistorialItem) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .fillMaxWidth()
-    ) {
-
-        Column(Modifier.padding(16.dp)) {
-
-            Text(
-                text = item.mensaje,
-                color = Color.Black
-            )
-
-            Spacer(Modifier.height(6.dp))
-
-            Text(
-                text = item.fecha,
-                color = Color(0xFF6B7280),
-                fontSize = MaterialTheme.typography.labelSmall.fontSize
-            )
-        }
-    }
-}
-
-@Composable
-fun EmptyHistorial() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            "No hay conversaciones aún",
-            color = Color.Gray
-        )
     }
 }
