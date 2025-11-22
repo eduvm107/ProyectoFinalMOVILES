@@ -11,6 +11,12 @@ class Actividad {
         val lugar: String           // "Auditorio Principal"
     )
 
+    data class Notificacion(
+        val titulo: String,
+        val fechaDeActividad: String
+    )
+
+
 
     data class Actividad(
         val id: String,
@@ -33,7 +39,8 @@ class Actividad {
         val preparacionPrevia: String,
         val actividadesSiguientes: List<String>,
         val estado: String,
-        val fechaCreacion: String
+        val fechaCreacion: String,
+        val fechaDeActividad: String
     )
 
 
