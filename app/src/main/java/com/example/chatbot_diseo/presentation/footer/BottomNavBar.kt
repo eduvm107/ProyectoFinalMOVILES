@@ -88,6 +88,7 @@ fun BottomNavBar(navController: NavController) {
         NavigationBar(
             modifier = Modifier.navigationBarsPadding(),
             containerColor = Color(0xFF000080) // <-- CORREGIDO: Dejamos solo uno
+            containerColor = Color(0xFF4A6B8A)
         ) {
             items.forEach { item ->
                 val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true

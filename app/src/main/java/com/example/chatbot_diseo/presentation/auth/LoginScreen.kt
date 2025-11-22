@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.autoMirrored.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,21 +37,28 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.chatbot_diseo.presentation.ui.login.LoginViewModel
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.example.chatbot_diseo.data.api.TokenHolder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,9 +67,57 @@ fun LoginScreen(
     onForgotPassword: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // obtener ViewModel localmente usando la sobrecarga con modelClass para evitar problemas de resolución
+    val vm: LoginViewModel = viewModel(modelClass = LoginViewModel::class.java)
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var navigated by remember { mutableStateOf(false) }
+
+    // Limpiar estado previo al entrar en la pantalla para evitar navegar por resultados antiguos
+    LaunchedEffect(Unit) {
+        vm.clearState()
+    }
+
+    val loginResult by vm.state.collectAsState(initial = null)
+
+    val context = LocalContext.current
+
+    LaunchedEffect(loginResult) {
+        loginResult?.let {
+            isLoading = false
+            it.onSuccess { resp ->
+                // Requerir token explícito para considerar autenticación válida
+                val hasToken = !resp.token.isNullOrBlank()
+                if (hasToken) {
+                    // Verificar también que TokenHolder tenga el token guardado por el ViewModel
+                    val savedToken = TokenHolder.token
+                    if (!savedToken.isNullOrBlank()) {
+                        if (!navigated) {
+                            val role = resp.usuario?.rol ?: "employee"
+                            Toast.makeText(context, "Login OK - role: $role", Toast.LENGTH_SHORT).show()
+                            navigated = true
+                            onLogin(role)
+                        }
+                    } else {
+                        // token no guardado aún -> mostrar error y evitar navegar
+                        Toast.makeText(context, "Token no guardado localmente", Toast.LENGTH_SHORT).show()
+                        errorMessage = "No se pudo almacenar el token"
+                    }
+                } else {
+                    // Si no hay token, mostrar mensaje de error proveniente del backend
+                    Toast.makeText(context, resp.message ?: "Credenciales inválidas", Toast.LENGTH_SHORT).show()
+                    errorMessage = resp.message ?: "Credenciales inválidas"
+                }
+            }
+            it.onFailure { ex ->
+                Toast.makeText(context, ex.message ?: "Error en login", Toast.LENGTH_SHORT).show()
+                errorMessage = ex.message ?: "Credenciales inválidas"
+            }
+        }
+    }
 
     // background animations using an infinite transition
     val transition = rememberInfiniteTransition()
@@ -196,6 +252,7 @@ fun LoginScreen(
                             placeholder = { Text("••••••••") },
                             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                             singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -214,30 +271,41 @@ fun LoginScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        // Mostrar error si existe
+                        if (errorMessage != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = errorMessage!!,
+                                color = Color(0xFFB00020),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
 
                         Button(
                             onClick = {
+                                errorMessage = null
+                                // validación simple
+                                if (email.isBlank() || password.isBlank()) {
+                                    errorMessage = "Ingresa email y contraseña"
+                                    return@Button
+                                }
                                 isLoading = true
-                                // Demo logic: small delay using coroutine would be better, but keep simple here
-                                // The caller should implement real auth. We infer role from email like prototype.
-                                val role = if (email.contains("admin", ignoreCase = true)) "admin" else "employee"
-                                // Call onLogin after a short simulated delay using composition (not ideal for production)
-                                // Here we simply call immediately to avoid coroutine complexity in this file.
-                                onLogin(role)
-                                isLoading = false
+                                vm.login(email.trim(), password)
                             },
+                            enabled = !isLoading && !navigated,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             if (isLoading) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = Dp.Hairline)
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 1.dp)
                                 Spacer(modifier = Modifier.size(8.dp))
                                 Text("Accediendo...")
                             } else {
-                                Icon(Icons.Filled.ArrowForward, contentDescription = null)
+                                // usar la versión AutoMirrored para evitar la deprecación
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                                 Spacer(modifier = Modifier.size(8.dp))
                                 Text("Iniciar sesión")
                             }
