@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.foundation)
 
+
     // Dependencias para llamadas HTTP con Retrofit y coroutines
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -62,6 +63,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
+
+    // Retrofit para llamadas a la API del chatbot
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

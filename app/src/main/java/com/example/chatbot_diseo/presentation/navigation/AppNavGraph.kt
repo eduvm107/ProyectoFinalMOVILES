@@ -2,6 +2,10 @@ package com.example.chatbot_diseo.presentation.navigation
 
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -18,11 +22,13 @@ import com.example.chatbot_diseo.presentation.historial.HistorialScreen
 import com.example.chatbot_diseo.presentation.notificaciones.NotificacionesScreen
 import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
 import com.example.chatbot_diseo.presentation.userperfil.PerfilScreen
+import com.example.chatbot_diseo.presentation.theme.ThemeViewModel
 
 @Composable
 fun AppNavGraph(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    themeViewModel: ThemeViewModel? = null
 ) {
     val context = LocalContext.current
 
@@ -79,11 +85,16 @@ fun AppNavGraph(
         }
 
         composable("perfil") {
+            val isDarkTheme by themeViewModel?.isDarkTheme?.collectAsState() ?: remember { mutableStateOf(false) }
             PerfilScreen(
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                isDarkTheme = isDarkTheme,
+                onThemeToggle = { newValue ->
+                    themeViewModel?.setDarkTheme(newValue)
                 }
             )
         }

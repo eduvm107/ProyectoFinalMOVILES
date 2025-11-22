@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Emulador: permite HTTP hacia 10.0.2.2 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+
+    <!-- Dispositivo físico: permite HTTP hacia la IP de la PC en la misma red -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.100.22</domain>
+    </domain-config>
+</network-security-config>
+
