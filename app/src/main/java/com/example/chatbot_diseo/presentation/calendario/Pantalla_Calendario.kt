@@ -86,7 +86,7 @@ private fun ActividadRemota.toUI(): ActividadUI =
     ActividadUI(
         id = id,
         titulo = titulo,
-        fechaCorta = dia.toString(), // Puedes formatear con mes si el backend lo envía
+        fechaCorta = fechaDeActividad.substringBefore("T"),
         estado = estado,
         horaInicio = horaInicio,
         lugar = lugar
@@ -99,7 +99,7 @@ private fun matchesActividadFilter(actividad: ActividadUI, filtro: String): Bool
         "Todas" -> true
         "Pendientes" -> estado.contains("pendiente")
         "Completadas" -> estado.contains("complet")
-        "Próximas" -> !estado.contains("complet")
+        "Pr��ximas" -> !estado.contains("complet")
         else -> true
     }
 }
@@ -109,3 +109,4 @@ private fun matchesActividadFilter(actividad: ActividadUI, filtro: String): Bool
 fun PantallaCalendarioPreview() {
     PantallaCalendario()
 }
+
