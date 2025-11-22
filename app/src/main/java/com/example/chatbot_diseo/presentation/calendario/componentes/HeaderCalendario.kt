@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -26,10 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,15 +39,16 @@ data class FilterOption(
 )
 
 @Composable
-fun HeaderCalendario() {
+fun HeaderCalendario(
+    selectedFilter: String,
+    onFilterSelected: (String) -> Unit
+) {
     val filters = listOf(
         FilterOption("Todas"),
         FilterOption("Pendientes", Icons.Default.Schedule),
         FilterOption("Próximas", Icons.AutoMirrored.Filled.ArrowForward),
         FilterOption("Completadas", Icons.Default.Check)
     )
-
-    var selectedFilter by remember { mutableStateOf(filters.first()) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -64,7 +59,6 @@ fun HeaderCalendario() {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // --- Title Section ---
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -90,37 +84,84 @@ fun HeaderCalendario() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Filter Buttons ---
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            val firstRowFilters = filters.take(2)
+            val secondRowFilters = filters.drop(2)
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filters) {
-                    filter ->
-                    val isSelected = selectedFilter == filter
-                    if (isSelected && filter.icon == null) { // "Todas" button
-                        Button(
-                            onClick = { selectedFilter = filter },
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
-                        ) {
-                            Text(filter.text, color = Color.White)
-                        }
-                    } else { // Other outlined buttons
-                        OutlinedButton(
-                            onClick = { selectedFilter = filter },
-                            shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, Color.LightGray)
-                        ) {
-                            filter.icon?.let {
-                                Icon(
-                                    imageVector = it,
-                                    contentDescription = filter.text,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = if (isSelected) Color(0xFF007AFF) else Color.Gray
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    firstRowFilters.forEach { filter ->
+                        val isSelected = selectedFilter == filter.text
+                        if (isSelected && filter.icon == null) {
+                            Button(
+                                onClick = { onFilterSelected(filter.text) },
+                                shape = RoundedCornerShape(50),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
+                            ) {
+                                Text(filter.text, color = Color.White)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { onFilterSelected(filter.text) },
+                                shape = RoundedCornerShape(50),
+                                border = BorderStroke(1.dp, Color.LightGray)
+                            ) {
+                                filter.icon?.let {
+                                    Icon(
+                                        imageVector = it,
+                                        contentDescription = filter.text,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = if (isSelected) Color(0xFF007AFF) else Color.Gray
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    filter.text,
+                                    color = if (isSelected) Color(0xFF007AFF) else Color.DarkGray
                                 )
                             }
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(filter.text, color = if (isSelected) Color(0xFF007AFF) else Color.DarkGray)
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    secondRowFilters.forEach { filter ->
+                        val isSelected = selectedFilter == filter.text
+                        if (isSelected && filter.icon == null) {
+                            Button(
+                                onClick = { onFilterSelected(filter.text) },
+                                shape = RoundedCornerShape(50),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
+                            ) {
+                                Text(filter.text, color = Color.White)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { onFilterSelected(filter.text) },
+                                shape = RoundedCornerShape(50),
+                                border = BorderStroke(1.dp, Color.LightGray)
+                            ) {
+                                filter.icon?.let {
+                                    Icon(
+                                        imageVector = it,
+                                        contentDescription = filter.text,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = if (isSelected) Color(0xFF007AFF) else Color.Gray
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    filter.text,
+                                    color = if (isSelected) Color(0xFF007AFF) else Color.DarkGray
+                                )
+                            }
                         }
                     }
                 }
@@ -132,5 +173,6 @@ fun HeaderCalendario() {
 @Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
 @Composable
 fun HeaderCalendarioPreview() {
-    HeaderCalendario()
+    HeaderCalendario(selectedFilter = "Todas", onFilterSelected = {})
 }
+
