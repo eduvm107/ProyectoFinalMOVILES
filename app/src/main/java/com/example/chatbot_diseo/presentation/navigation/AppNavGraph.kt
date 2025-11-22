@@ -11,7 +11,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
+import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
+import com.example.chatbot_diseo.presentation.chat.ChatScreen
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
+import com.example.chatbot_diseo.presentation.footer.PlaceholderScreen
+import com.example.chatbot_diseo.presentation.historial.HistorialScreen
+import com.example.chatbot_diseo.presentation.notificaciones.NotificacionesScreen
+import com.example.chatbot_diseo.presentation.recursos.PantallaDeRecurso
 import androidx.navigation.compose.rememberNavController
+import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
 import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
@@ -29,6 +38,26 @@ fun AppNavGraph(
     navController: NavHostController,
     themeViewModel: ThemeViewModel? = null
 ) {
+
+    NavHost(
+        navController = navController,
+        startDestination = "chat", // La pantalla por defecto es el Chat
+        modifier = modifier
+    ) {
+        // --- Rutas de la barra de navegación principal ---
+        composable("chat") { ChatScreen(navController = navController) }
+        composable("calendario") { PantallaCalendario() }
+        composable("recursos") { PantallaDeRecurso() }
+        composable("perfil") { PlaceholderScreen(screenName = "Perfil") }
+
+        // --- Rutas que se acceden desde otras partes (ej. menú de accesos rápidos) ---
+        composable("notificaciones") { NotificacionesScreen(onBack = { navController.popBackStack() }) }
+        composable("historial") { HistorialScreen(onBack = { navController.popBackStack() }) }
+        composable("favoritos") { FavoritosScreen(onBack = { navController.popBackStack() }) }
+
+        // --- Otras rutas ---
+        composable("admin_panel") { AdminPanelScreen(onBack = { navController.popBackStack() }) }
+
     val context = LocalContext.current
 
     NavHost(
@@ -40,11 +69,13 @@ fun AppNavGraph(
         composable("login") {
             LoginScreen(
                 onLogin = { role ->
-                    Toast.makeText(
-                        context,
-                        "Bienvenido! Rol: $role",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // Verificar token guardado antes de navegar
+                    val token = TokenHolder.token
+                    if (token.isNullOrBlank()) {
+                        Toast.makeText(context, "Login inválido (sin token)", Toast.LENGTH_SHORT).show()
+                        return@LoginScreen
+                    }
+                    Toast.makeText(context, "Bienvenido! Rol: $role", Toast.LENGTH_SHORT).show()
 
                     // Redirigir según el rol
                     val destination = if (role == "admin") "admin_panel" else "chat"

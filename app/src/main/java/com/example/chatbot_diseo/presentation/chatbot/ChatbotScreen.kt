@@ -239,7 +239,7 @@ fun ChatbotScreen(
         }
     }
 }
-
+// holamundo
 @Preview(showBackground = true, widthDp = 380, heightDp = 800)
 @Composable
 fun ChatbotScreenPreview() {
