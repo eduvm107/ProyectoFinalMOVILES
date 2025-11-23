@@ -1,18 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    // --- ¡AÑADIDO DE NUEVO! El plugin que el sistema exige ---
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
     namespace = "com.example.chatbot_diseo"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.chatbot_diseo"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -38,10 +37,6 @@ android {
     buildFeatures {
         compose = true
     }
-    // --- ELIMINADO: La configuración "antigua" que ya no necesitamos ---
-    // composeOptions {
-    //     kotlinCompilerExtensionVersion = "1.5.13"
-    // }
 }
 
 dependencies {
@@ -86,5 +81,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-}
 }
