@@ -22,14 +22,14 @@ object ApiConfig {
     // URL HTTPS para emulador Android (10.0.2.2 = localhost del PC)
     const val BASE_URL_EMULADOR_HTTPS = "https://10.0.2.2:7095/"
 
-    // URL HTTP para emulador Android
+    // URL HTTP para emulador Android (más estable para desarrollo)
     const val BASE_URL_EMULADOR_HTTP = "http://10.0.2.2:5288/"
 
     // URL para dispositivo físico (cambiar por la IP de tu PC)
-    const val BASE_URL_DISPOSITIVO = "https://192.168.100.22:7095/"
+    const val BASE_URL_DISPOSITIVO = "http://192.168.100.22:5288/"
 
-    // URL activa - usar HTTPS puerto 7095
-    const val BASE_URL = BASE_URL_EMULADOR_HTTPS
+    // URL activa - usar HTTP puerto 5288 para evitar problemas de SSL
+    const val BASE_URL = BASE_URL_EMULADOR_HTTP
 }
 
 /**
