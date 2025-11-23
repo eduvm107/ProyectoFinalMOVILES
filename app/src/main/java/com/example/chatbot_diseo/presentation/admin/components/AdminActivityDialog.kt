@@ -19,9 +19,9 @@ fun AdminActivityDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String, String) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }
-    var modality by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialItem?.title ?: "") }
+    var date by remember { mutableStateOf(initialItem?.date ?: "") }
+    var modality by remember { mutableStateOf(initialItem?.modality ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -64,7 +64,7 @@ fun AdminActivityDialog(
                 onClick = { onConfirm(title, date, modality) },
                 colors = ButtonDefaults.buttonColors(containerColor = TcsBlue)
             ) {
-                Text("Crear actividad", color = TcsWhite)
+                Text(if (initialItem == null) "Crear actividad" else "Guardar cambios", color = TcsWhite)
             }
         },
         dismissButton = {
