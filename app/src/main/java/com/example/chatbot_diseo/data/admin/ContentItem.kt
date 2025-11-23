@@ -4,5 +4,6 @@ data class ContentItem(
     val id: Int,
     val title: String,
     val type: String,
-    val description: String
+    val description: String,
+    val apiId: String? = null // ID del backend MongoDB
 )

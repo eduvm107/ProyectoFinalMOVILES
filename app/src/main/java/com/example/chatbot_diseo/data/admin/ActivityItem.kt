@@ -4,5 +4,6 @@ data class ActivityItem(
     val id: Int,
     val title: String,
     val date: String,
-    val modality: String
+    val modality: String,
+    val apiId: String? = null // ID del backend MongoDB
 )

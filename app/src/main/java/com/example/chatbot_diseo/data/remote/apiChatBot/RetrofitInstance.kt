@@ -19,14 +19,17 @@ import javax.net.ssl.X509TrustManager
  * Configuración centralizada de URLs del backend
  */
 object ApiConfig {
-    // URL para emulador Android (10.0.2.2 = localhost del PC)
-    const val BASE_URL_EMULADOR = "http://10.0.2.2:5288/"
+    // URL HTTPS para emulador Android (10.0.2.2 = localhost del PC)
+    const val BASE_URL_EMULADOR_HTTPS = "https://10.0.2.2:7095/"
+
+    // URL HTTP para emulador Android
+    const val BASE_URL_EMULADOR_HTTP = "http://10.0.2.2:5288/"
 
     // URL para dispositivo físico (cambiar por la IP de tu PC)
-    const val BASE_URL_DISPOSITIVO = "http://192.168.100.22:5288/"
+    const val BASE_URL_DISPOSITIVO = "https://192.168.100.22:7095/"
 
-    // URL activa - cambiar según el entorno
-    const val BASE_URL = BASE_URL_EMULADOR
+    // URL activa - usar HTTPS puerto 7095
+    const val BASE_URL = BASE_URL_EMULADOR_HTTPS
 }
 
 /**

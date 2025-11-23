@@ -3,7 +3,6 @@ package com.example.chatbot_diseo.presentation.ui.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.util.Log
-import com.example.chatbot_diseo.data.api.RetrofitClient
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.models.LoginResponse
 import com.example.chatbot_diseo.data.repository.AuthRepository
@@ -12,7 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val repository = AuthRepository(RetrofitClient.apiService)
+    // Usa RetrofitInstance unificado por defecto
+    private val repository = AuthRepository()
 
     private val _state = MutableStateFlow<Result<LoginResponse>?>(null)
     val state: StateFlow<Result<LoginResponse>?> = _state
