@@ -10,43 +10,79 @@ import retrofit2.http.Path
 
 typealias ActividadRemota = Actividad.Actividad
 
+/**
+ * Servicio API para gestión de Actividades
+ * Endpoints: /api/Actividad
+ */
 interface ApiActividadService {
 
-    @GET("Actividad")
+    /**
+     * Obtener todas las actividades
+     * GET /api/Actividad
+     */
+    @GET("api/Actividad")
     suspend fun getAllActividades(): List<ActividadRemota>
 
-    @GET("Actividad/{id}")
+    /**
+     * Obtener actividad por ID
+     * GET /api/Actividad/{id}
+     */
+    @GET("api/Actividad/{id}")
     suspend fun getActividadById(
         @Path("id") id: String
     ): ActividadRemota
 
-    @POST("Actividad")
+    /**
+     * Crear una nueva actividad
+     * POST /api/Actividad
+     */
+    @POST("api/Actividad")
     suspend fun createActividad(
         @Body actividad: ActividadRemota
     ): ActividadRemota
 
-    @PUT("Actividad/{id}")
+    /**
+     * Actualizar una actividad existente
+     * PUT /api/Actividad/{id}
+     */
+    @PUT("api/Actividad/{id}")
     suspend fun updateActividad(
         @Path("id") id: String,
         @Body actividad: ActividadRemota
     )
 
-    @DELETE("Actividad/{id}")
+    /**
+     * Eliminar una actividad
+     * DELETE /api/Actividad/{id}
+     */
+    @DELETE("api/Actividad/{id}")
     suspend fun deleteActividad(
         @Path("id") id: String
     )
 
-    @GET("Actividad/dia/{dia}")
+    /**
+     * Obtener actividades por día
+     * GET /api/Actividad/dia/{dia}
+     */
+    @GET("api/Actividad/dia/{dia}")
     suspend fun getByDia(
         @Path("dia") dia: Int
     ): List<ActividadRemota>
 
-    @GET("Actividad/tipo/{tipo}")
+    /**
+     * Obtener actividades por tipo
+     * GET /api/Actividad/tipo/{tipo}
+     */
+    @GET("api/Actividad/tipo/{tipo}")
     suspend fun getByTipo(
         @Path("tipo") tipo: String
     ): List<ActividadRemota>
 
-    @GET("Actividad/obligatorias")
+    /**
+     * Obtener actividades obligatorias
+     * GET /api/Actividad/obligatorias
+     */
+    @GET("api/Actividad/obligatorias")
     suspend fun getObligatorias(): List<ActividadRemota>
 }
 
