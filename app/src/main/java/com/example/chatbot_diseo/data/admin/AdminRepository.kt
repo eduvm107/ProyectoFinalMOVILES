@@ -1,10 +1,8 @@
 package com.example.chatbot_diseo.data.admin
 
 import android.util.Log
-import com.example.chatbot_diseo.data.model.FAQ
 import com.example.chatbot_diseo.data.model.FAQRequest
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
-import com.example.chatbot_diseo.data.remote.model.Documento
 
 /**
  * Repositorio para el panel de administración
