@@ -28,8 +28,8 @@ object ApiConfig {
     // URL para dispositivo físico (cambiar por la IP de tu PC)
     const val BASE_URL_DISPOSITIVO = "http://192.168.100.22:5288/"
 
-    // URL activa - usar HTTP puerto 5288 para evitar problemas de SSL
-    const val BASE_URL = BASE_URL_EMULADOR_HTTP
+    // URL activa - usar HTTPS puerto 7095
+    const val BASE_URL = BASE_URL_EMULADOR_HTTPS
 }
 
 /**
