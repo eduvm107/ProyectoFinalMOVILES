@@ -1,6 +1,5 @@
 package com.example.chatbot_diseo.presentation.chat
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -17,8 +16,9 @@ class ChatViewModel : ViewModel() {
     val isLoading = mutableStateOf(false)
     val error = mutableStateOf<String?>(null)
 
-    // ID del usuario actual (se obtiene del login)
-    var usuarioId: String? = null
+    // ID del usuario actual - se obtiene de TokenHolder después del login
+    val usuarioId: String?
+        get() = TokenHolder.usuarioId
 
     // ID de la conversación actual
     var conversacionId: String? = null
@@ -53,25 +53,47 @@ class ChatViewModel : ViewModel() {
         isLoading.value = true
         error.value = null
 
+        // Agregar mensaje de carga
+        mensajes.add(Mensaje("⏳ Procesando tu pregunta... esto puede tardar unos momentos...", false))
+
         viewModelScope.launch {
             try {
-                Log.d("ChatViewModel", "Enviando pregunta al chatbot: $texto")
-
                 val result = chatbotRepository.enviarPregunta(userId, texto)
 
                 result.onSuccess { response ->
-                    Log.d("ChatViewModel", "Respuesta del chatbot: ${response.respuesta}")
+                    // Remover mensaje de carga
+                    if (mensajes.isNotEmpty() && mensajes.last().texto.startsWith("⏳")) {
+                        mensajes.removeAt(mensajes.size - 1)
+                    }
+
                     // Guardar el ID de la conversación
                     response.conversacionId?.let { conversacionId = it }
                     // Agregar respuesta del bot
                     mensajes.add(Mensaje(response.respuesta, false))
                 }.onFailure { e ->
-                    Log.e("ChatViewModel", "Error del chatbot", e)
+                    // Remover mensaje de carga
+                    if (mensajes.isNotEmpty() && mensajes.last().texto.startsWith("⏳")) {
+                        mensajes.removeAt(mensajes.size - 1)
+                    }
+
                     error.value = e.message
-                    mensajes.add(Mensaje("Lo siento, ocurrió un error: ${e.message}", false))
+                    val errorMsg = when {
+                        e.message?.contains("timeout", ignoreCase = true) == true ->
+                            "⏱️ La respuesta tardó demasiado. El servidor está muy ocupado. Por favor, intenta de nuevo."
+                        e.message?.contains("401") == true ->
+                            "🔐 Error de autenticación. Por favor, inicia sesión nuevamente."
+                        e.message?.contains("404") == true ->
+                            "❌ Servicio no disponible. Verifica la conexión del servidor."
+                        else -> "Lo siento, ocurrió un error: ${e.message}"
+                    }
+                    mensajes.add(Mensaje(errorMsg, false))
                 }
             } catch (e: Exception) {
-                Log.e("ChatViewModel", "Exception en enviarMensaje", e)
+                // Remover mensaje de carga
+                if (mensajes.isNotEmpty() && mensajes.last().texto.startsWith("⏳")) {
+                    mensajes.removeAt(mensajes.size - 1)
+                }
+
                 error.value = e.message
                 mensajes.add(Mensaje("Error de conexión. Por favor intenta de nuevo.", false))
             } finally {
@@ -89,9 +111,8 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 chatbotRepository.registrarSatisfaccion(convId, satisfaccion)
-                Log.d("ChatViewModel", "Satisfacción registrada: $satisfaccion")
             } catch (e: Exception) {
-                Log.e("ChatViewModel", "Error registrando satisfacción", e)
+                // Error silencioso
             }
         }
     }
@@ -111,14 +132,9 @@ class ChatViewModel : ViewModel() {
     fun verificarEstadoChatbot() {
         viewModelScope.launch {
             try {
-                val result = chatbotRepository.healthCheck()
-                result.onSuccess { health ->
-                    Log.d("ChatViewModel", "Estado chatbot: ${health.estado}, Ollama: ${health.ollama?.disponible}")
-                }.onFailure { e ->
-                    Log.e("ChatViewModel", "Error verificando estado", e)
-                }
+                chatbotRepository.healthCheck()
             } catch (e: Exception) {
-                Log.e("ChatViewModel", "Exception en healthCheck", e)
+                // Error silencioso
             }
         }
     }

@@ -15,14 +15,14 @@ interface ConfiguracionApiService {
      * Obtener todas las configuraciones
      * GET /api/Configuracion
      */
-    @GET("api/Configuracion")
+    @GET("Configuracion")
     suspend fun getAllConfiguraciones(): Response<List<Configuracion>>
 
     /**
      * Obtener configuración por ID
      * GET /api/Configuracion/{id}
      */
-    @GET("api/Configuracion/{id}")
+    @GET("Configuracion/{id}")
     suspend fun getConfiguracionById(
         @Path("id") id: String
     ): Response<Configuracion>
@@ -31,7 +31,7 @@ interface ConfiguracionApiService {
      * Crear una nueva configuración
      * POST /api/Configuracion
      */
-    @POST("api/Configuracion")
+    @POST("Configuracion")
     suspend fun createConfiguracion(
         @Body configuracion: ConfiguracionRequest
     ): Response<Configuracion>
@@ -40,7 +40,7 @@ interface ConfiguracionApiService {
      * Actualizar una configuración existente
      * PUT /api/Configuracion/{id}
      */
-    @PUT("api/Configuracion/{id}")
+    @PUT("Configuracion/{id}")
     suspend fun updateConfiguracion(
         @Path("id") id: String,
         @Body configuracion: ConfiguracionRequest
@@ -50,7 +50,7 @@ interface ConfiguracionApiService {
      * Eliminar una configuración
      * DELETE /api/Configuracion/{id}
      */
-    @DELETE("api/Configuracion/{id}")
+    @DELETE("Configuracion/{id}")
     suspend fun deleteConfiguracion(
         @Path("id") id: String
     ): Response<Unit>
@@ -59,7 +59,7 @@ interface ConfiguracionApiService {
      * Obtener configuraciones por tipo
      * GET /api/Configuracion/tipo/{tipo}
      */
-    @GET("api/Configuracion/tipo/{tipo}")
+    @GET("Configuracion/tipo/{tipo}")
     suspend fun getConfiguracionesByTipo(
         @Path("tipo") tipo: String
     ): Response<List<Configuracion>>
@@ -68,14 +68,14 @@ interface ConfiguracionApiService {
      * Obtener todas las configuraciones activas
      * GET /api/Configuracion/activas
      */
-    @GET("api/Configuracion/activas")
+    @GET("Configuracion/activas")
     suspend fun getConfiguracionesActivas(): Response<List<Configuracion>>
 
     /**
      * Buscar configuración por nombre
      * GET /api/Configuracion/nombre/{nombre}
      */
-    @GET("api/Configuracion/nombre/{nombre}")
+    @GET("Configuracion/nombre/{nombre}")
     suspend fun getConfiguracionByNombre(
         @Path("nombre") nombre: String
     ): Response<Configuracion>

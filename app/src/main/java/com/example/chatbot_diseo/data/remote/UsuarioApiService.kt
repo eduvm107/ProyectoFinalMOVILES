@@ -15,14 +15,14 @@ interface UsuarioApiService {
      * Obtener todos los usuarios
      * GET /api/Usuario
      */
-    @GET("api/Usuario")
+    @GET("Usuario")
     suspend fun getAllUsuarios(): Response<List<UsuarioCompleto>>
 
     /**
      * Obtener usuario por ID
      * GET /api/Usuario/{id}
      */
-    @GET("api/Usuario/{id}")
+    @GET("Usuario/{id}")
     suspend fun getUsuarioById(
         @Path("id") id: String
     ): Response<UsuarioCompleto>
@@ -31,7 +31,7 @@ interface UsuarioApiService {
      * Crear un nuevo usuario
      * POST /api/Usuario
      */
-    @POST("api/Usuario")
+    @POST("Usuario")
     suspend fun createUsuario(
         @Body usuario: UsuarioRequest
     ): Response<UsuarioCompleto>
@@ -40,7 +40,7 @@ interface UsuarioApiService {
      * Actualizar un usuario existente
      * PUT /api/Usuario/{id}
      */
-    @PUT("api/Usuario/{id}")
+    @PUT("Usuario/{id}")
     suspend fun updateUsuario(
         @Path("id") id: String,
         @Body usuario: UsuarioRequest
@@ -50,7 +50,7 @@ interface UsuarioApiService {
      * Eliminar un usuario
      * DELETE /api/Usuario/{id}
      */
-    @DELETE("api/Usuario/{id}")
+    @DELETE("Usuario/{id}")
     suspend fun deleteUsuario(
         @Path("id") id: String
     ): Response<Unit>
@@ -59,7 +59,7 @@ interface UsuarioApiService {
      * Buscar usuario por email
      * GET /api/Usuario/email/{email}
      */
-    @GET("api/Usuario/email/{email}")
+    @GET("Usuario/email/{email}")
     suspend fun getUsuarioByEmail(
         @Path("email") email: String
     ): Response<UsuarioCompleto>
@@ -68,7 +68,7 @@ interface UsuarioApiService {
      * Buscar usuario por DNI
      * GET /api/Usuario/dni/{dni}
      */
-    @GET("api/Usuario/dni/{dni}")
+    @GET("Usuario/dni/{dni}")
     suspend fun getUsuarioByDni(
         @Path("dni") dni: String
     ): Response<UsuarioCompleto>
@@ -77,7 +77,7 @@ interface UsuarioApiService {
      * Obtener usuarios por estado de onboarding
      * GET /api/Usuario/onboarding/{estado}
      */
-    @GET("api/Usuario/onboarding/{estado}")
+    @GET("Usuario/onboarding/{estado}")
     suspend fun getUsuariosByOnboarding(
         @Path("estado") estado: String
     ): Response<List<UsuarioCompleto>>
@@ -86,14 +86,14 @@ interface UsuarioApiService {
      * Obtener todos los usuarios activos
      * GET /api/Usuario/activos
      */
-    @GET("api/Usuario/activos")
+    @GET("Usuario/activos")
     suspend fun getUsuariosActivos(): Response<List<UsuarioCompleto>>
 
     /**
      * Obtener usuarios por departamento
      * GET /api/Usuario/departamento/{departamento}
      */
-    @GET("api/Usuario/departamento/{departamento}")
+    @GET("Usuario/departamento/{departamento}")
     suspend fun getUsuariosByDepartamento(
         @Path("departamento") departamento: String
     ): Response<List<UsuarioCompleto>>

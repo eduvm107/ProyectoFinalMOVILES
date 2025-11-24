@@ -87,6 +87,8 @@ fun AppNavGraph(
             val isDarkTheme by themeViewModel?.isDarkTheme?.collectAsState() ?: remember { mutableStateOf(false) }
             PerfilScreen(
                 onLogout = {
+                    // Limpiar token e ID del usuario
+                    TokenHolder.clear()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }

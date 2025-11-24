@@ -37,7 +37,12 @@ object RetrofitInstance {
 
     // Interceptor de logging para debug
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = HttpLoggingInterceptor.Level.BASIC
+    }
+
+    // Interceptor SIN logging para máxima velocidad (chatbot)
+    private val noLoggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.NONE
     }
 
     // Interceptor de autenticación Bearer Token
@@ -54,10 +59,55 @@ object RetrofitInstance {
     }
 
     /**
-     * Cliente OkHttp configurado para desarrollo
-     * NOTA: Acepta cualquier certificado SSL (solo para desarrollo)
+     * Cliente OkHttp para login SOLAMENTE (sin interceptor de autenticación, pero con headers correctos)
      */
-    private val unsafeClient: OkHttpClient by lazy {
+    private val loginClient: OkHttpClient by lazy {
+        val trustAllCerts = arrayOf<TrustManager>(
+            object : X509TrustManager {
+                override fun checkClientTrusted(
+                    chain: Array<out X509Certificate>?,
+                    authType: String?
+                ) = Unit
+
+                override fun checkServerTrusted(
+                    chain: Array<out X509Certificate>?,
+                    authType: String?
+                ) = Unit
+
+                override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+            }
+        )
+
+        val sslContext = SSLContext.getInstance("SSL").apply {
+            init(null, trustAllCerts, SecureRandom())
+        }
+
+        val trustManager = trustAllCerts[0] as X509TrustManager
+
+        // Interceptor para agregar headers necesarios en login
+        val headerInterceptor = Interceptor { chain ->
+            val original = chain.request()
+            val requestBuilder = original.newBuilder()
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+            chain.proceed(requestBuilder.build())
+        }
+
+        OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .addInterceptor(headerInterceptor)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .sslSocketFactory(sslContext.socketFactory, trustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
+
+    /**
+     * Cliente OkHttp optimizado para operaciones con token (timeouts cortos para rapidez)
+     */
+    private val fastClient: OkHttpClient by lazy {
         val trustAllCerts = arrayOf<TrustManager>(
             object : X509TrustManager {
                 override fun checkClientTrusted(
@@ -83,18 +133,116 @@ object RetrofitInstance {
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
             .sslSocketFactory(sslContext.socketFactory, trustManager)
             .hostnameVerifier { _, _ -> true }
             .build()
     }
 
-    private val retrofit: Retrofit by lazy {
+    /**
+     * Cliente OkHttp optimizado para chatbot (máxima velocidad, sin logging)
+     */
+    private val chatbotClient: OkHttpClient by lazy {
+        val trustAllCerts = arrayOf<TrustManager>(
+            object : X509TrustManager {
+                override fun checkClientTrusted(
+                    chain: Array<out X509Certificate>?,
+                    authType: String?
+                ) = Unit
+
+                override fun checkServerTrusted(
+                    chain: Array<out X509Certificate>?,
+                    authType: String?
+                ) = Unit
+
+                override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+            }
+        )
+
+        val sslContext = SSLContext.getInstance("SSL").apply {
+            init(null, trustAllCerts, SecureRandom())
+        }
+
+        val trustManager = trustAllCerts[0] as X509TrustManager
+
+        OkHttpClient.Builder()
+            .addInterceptor(noLoggingInterceptor)
+            .addInterceptor(authInterceptor)
+            .connectTimeout(120, TimeUnit.SECONDS)
+            .readTimeout(180, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .sslSocketFactory(sslContext.socketFactory, trustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
+
+    /**
+     * Cliente OkHttp para operaciones de larga duración (documentos, etc)
+     */
+    private val slowClient: OkHttpClient by lazy {
+        val trustAllCerts = arrayOf<TrustManager>(
+            object : X509TrustManager {
+                override fun checkClientTrusted(
+                    chain: Array<out X509Certificate>?,
+                    authType: String?
+                ) = Unit
+
+                override fun checkServerTrusted(
+                    chain: Array<out X509Certificate>?,
+                    authType: String?
+                ) = Unit
+
+                override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+            }
+        )
+
+        val sslContext = SSLContext.getInstance("SSL").apply {
+            init(null, trustAllCerts, SecureRandom())
+        }
+
+        val trustManager = trustAllCerts[0] as X509TrustManager
+
+        OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .sslSocketFactory(sslContext.socketFactory, trustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
+
+    private val retrofitLogin: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
-            .client(unsafeClient)
+            .client(loginClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    private val retrofitFast: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(ApiConfig.BASE_URL)
+            .client(fastClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    private val retrofitChatbot: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(ApiConfig.BASE_URL)
+            .client(chatbotClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    private val retrofitSlow: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(ApiConfig.BASE_URL)
+            .client(slowClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -103,49 +251,48 @@ object RetrofitInstance {
     // SERVICIOS DE LA API
     // =====================================================
 
-    /** Servicio de Autenticación */
+    /** Servicio de Autenticación (sin interceptor, sin token) */
     val authApi: ApiService by lazy {
-        retrofit.create(ApiService::class.java)
+        retrofitLogin.create(ApiService::class.java)
     }
 
-    /** Servicio de Chatbot (IA con Ollama) */
+    /** Servicio de Chatbot (optimizado para velocidad - SIN LOGGING) */
     val chatbotApi: ChatbotApiService by lazy {
-        retrofit.create(ChatbotApiService::class.java)
+        retrofitChatbot.create(ChatbotApiService::class.java)
     }
 
-    /** Servicio de Usuarios */
+    /** Servicio de Usuarios (rápido) */
     val usuarioApi: UsuarioApiService by lazy {
-        retrofit.create(UsuarioApiService::class.java)
+        retrofitFast.create(UsuarioApiService::class.java)
     }
 
-    /** Servicio de Conversaciones */
+    /** Servicio de Conversaciones (rápido) */
     val conversacionApi: ConversacionApiService by lazy {
-        retrofit.create(ConversacionApiService::class.java)
+        retrofitFast.create(ConversacionApiService::class.java)
     }
 
-    /** Servicio de Mensajes Automáticos */
+    /** Servicio de Mensajes Automáticos (rápido) */
     val mensajeApi: MensajeApiService by lazy {
-        retrofit.create(MensajeApiService::class.java)
+        retrofitFast.create(MensajeApiService::class.java)
     }
 
-    /** Servicio de Documentos */
+    /** Servicio de Documentos (lento) */
     val documentosApi: ApiChatBotDocumentos by lazy {
-        retrofit.create(ApiChatBotDocumentos::class.java)
+        retrofitSlow.create(ApiChatBotDocumentos::class.java)
     }
 
-    /** Servicio de Actividades */
+    /** Servicio de Actividades (rápido) */
     val actividadesApi: ApiActividadService by lazy {
-        retrofit.create(ApiActividadService::class.java)
+        retrofitFast.create(ApiActividadService::class.java)
     }
 
-    /** Servicio de FAQs */
+    /** Servicio de FAQs (rápido) */
     val faqApi: FAQApiService by lazy {
-        retrofit.create(FAQApiService::class.java)
+        retrofitFast.create(FAQApiService::class.java)
     }
 
-    /** Servicio de Configuración */
+    /** Servicio de Configuración (rápido) */
     val configuracionApi: ConfiguracionApiService by lazy {
-        retrofit.create(ConfiguracionApiService::class.java)
+        retrofitFast.create(ConfiguracionApiService::class.java)
     }
 }
-

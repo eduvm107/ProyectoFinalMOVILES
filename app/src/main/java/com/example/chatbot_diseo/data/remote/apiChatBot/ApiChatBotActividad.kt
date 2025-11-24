@@ -20,14 +20,14 @@ interface ApiActividadService {
      * Obtener todas las actividades
      * GET /api/Actividad
      */
-    @GET("api/Actividad")
+    @GET("Actividad")
     suspend fun getAllActividades(): List<ActividadRemota>
 
     /**
      * Obtener actividad por ID
      * GET /api/Actividad/{id}
      */
-    @GET("api/Actividad/{id}")
+    @GET("Actividad/{id}")
     suspend fun getActividadById(
         @Path("id") id: String
     ): ActividadRemota
@@ -36,7 +36,7 @@ interface ApiActividadService {
      * Crear una nueva actividad
      * POST /api/Actividad
      */
-    @POST("api/Actividad")
+    @POST("Actividad")
     suspend fun createActividad(
         @Body actividad: ActividadRemota
     ): ActividadRemota
@@ -45,7 +45,7 @@ interface ApiActividadService {
      * Actualizar una actividad existente
      * PUT /api/Actividad/{id}
      */
-    @PUT("api/Actividad/{id}")
+    @PUT("Actividad/{id}")
     suspend fun updateActividad(
         @Path("id") id: String,
         @Body actividad: ActividadRemota
@@ -55,7 +55,7 @@ interface ApiActividadService {
      * Eliminar una actividad
      * DELETE /api/Actividad/{id}
      */
-    @DELETE("api/Actividad/{id}")
+    @DELETE("Actividad/{id}")
     suspend fun deleteActividad(
         @Path("id") id: String
     )
@@ -64,7 +64,7 @@ interface ApiActividadService {
      * Obtener actividades por día
      * GET /api/Actividad/dia/{dia}
      */
-    @GET("api/Actividad/dia/{dia}")
+    @GET("Actividad/dia/{dia}")
     suspend fun getByDia(
         @Path("dia") dia: Int
     ): List<ActividadRemota>
@@ -73,7 +73,7 @@ interface ApiActividadService {
      * Obtener actividades por tipo
      * GET /api/Actividad/tipo/{tipo}
      */
-    @GET("api/Actividad/tipo/{tipo}")
+    @GET("Actividad/tipo/{tipo}")
     suspend fun getByTipo(
         @Path("tipo") tipo: String
     ): List<ActividadRemota>
@@ -82,7 +82,6 @@ interface ApiActividadService {
      * Obtener actividades obligatorias
      * GET /api/Actividad/obligatorias
      */
-    @GET("api/Actividad/obligatorias")
+    @GET("Actividad/obligatorias")
     suspend fun getObligatorias(): List<ActividadRemota>
 }
-

@@ -13,14 +13,14 @@ interface ApiChatBotDocumentos {
      * Obtener todos los documentos
      * GET /api/Documento
      */
-    @GET("api/Documento")
+    @GET("Documento")
     suspend fun getAllDocumentos(): List<Documento>
 
     /**
      * Obtener documento por ID
      * GET /api/Documento/{id}
      */
-    @GET("api/Documento/{id}")
+    @GET("Documento/{id}")
     suspend fun getDocumentoById(
         @Path("id") id: String
     ): Documento
@@ -29,7 +29,7 @@ interface ApiChatBotDocumentos {
      * Crear un nuevo documento
      * POST /api/Documento
      */
-    @POST("api/Documento")
+    @POST("Documento")
     suspend fun createDocumento(
         @Body documento: Documento
     ): Documento
@@ -38,7 +38,7 @@ interface ApiChatBotDocumentos {
      * Actualizar un documento existente
      * PUT /api/Documento/{id}
      */
-    @PUT("api/Documento/{id}")
+    @PUT("Documento/{id}")
     suspend fun updateDocumento(
         @Path("id") id: String,
         @Body documento: Documento
@@ -48,7 +48,7 @@ interface ApiChatBotDocumentos {
      * Eliminar un documento
      * DELETE /api/Documento/{id}
      */
-    @DELETE("api/Documento/{id}")
+    @DELETE("Documento/{id}")
     suspend fun deleteDocumento(
         @Path("id") id: String
     )
@@ -57,7 +57,7 @@ interface ApiChatBotDocumentos {
      * Obtener documentos por categoría
      * GET /api/Documento/categoria/{categoria}
      */
-    @GET("api/Documento/categoria/{categoria}")
+    @GET("Documento/categoria/{categoria}")
     suspend fun getByCategoria(
         @Path("categoria") categoria: String
     ): List<Documento>
@@ -66,7 +66,7 @@ interface ApiChatBotDocumentos {
      * Obtener documentos por tipo
      * GET /api/Documento/tipo/{tipo}
      */
-    @GET("api/Documento/tipo/{tipo}")
+    @GET("Documento/tipo/{tipo}")
     suspend fun getByTipo(
         @Path("tipo") tipo: String
     ): List<Documento>
@@ -75,7 +75,7 @@ interface ApiChatBotDocumentos {
      * Buscar documentos por tag
      * GET /api/Documento/tag/{tag}
      */
-    @GET("api/Documento/tag/{tag}")
+    @GET("Documento/tag/{tag}")
     suspend fun searchByTag(
         @Path("tag") tag: String
     ): List<Documento>

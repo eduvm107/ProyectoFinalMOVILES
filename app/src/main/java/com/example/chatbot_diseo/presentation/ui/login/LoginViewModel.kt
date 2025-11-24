@@ -2,8 +2,7 @@ package com.example.chatbot_diseo.presentation.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.util.Log
-import com.example.chatbot_diseo.data.api.TokenHolder
+ import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.models.LoginResponse
 import com.example.chatbot_diseo.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,31 +24,28 @@ class LoginViewModel : ViewModel() {
     fun login(email: String, password: String) {
         // resetear estado antes de iniciar la petición para evitar resultados antiguos
         _state.value = null
-        Log.d("LoginViewModel", "Iniciando login para: $email")
 
         viewModelScope.launch {
             try {
                 val resp = repository.login(email, password)
-                Log.d("LoginViewModel", "Respuesta login code=${resp.code()}")
                 val body = resp.body()
 
                 if (resp.isSuccessful) {
                     if (body != null) {
-                        Log.d("LoginViewModel", "Login success token=${body.token}, usuario=${body.usuario?.email}")
+                        // Guardar token e ID del usuario de forma rápida
                         body.token?.let { TokenHolder.token = it }
+                        body.usuario?.id?.let { TokenHolder.usuarioId = it }
                         _state.value = Result.success(body)
                     } else {
-                        Log.d("LoginViewModel", "Login success sin body")
                         TokenHolder.token = null
+                        TokenHolder.usuarioId = null
                         _state.value = Result.success(LoginResponse(message = "OK", token = null, usuario = null))
                     }
                 } else {
                     val err = try { resp.errorBody()?.string() } catch (_: Exception) { null }
-                    Log.d("LoginViewModel", "Login error ${resp.code()} - ${err ?: resp.message()}")
-                    _state.value = Result.failure(Exception("Error ${resp.code()} - ${err ?: resp.message()}"))
+                    _state.value = Result.failure(Exception("Error ${resp.code()}"))
                 }
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "Exception en login", e)
                 _state.value = Result.failure(e)
             }
         }
