@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Emulador: permite HTTP hacia 10.0.2.2 -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">10.0.2.2</domain>
-    </domain-config>
+    <!-- Permitir tráfico HTTP para desarrollo -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
 
-    <!-- Dispositivo físico: permite HTTP hacia la IP de la PC en la misma red -->
+    <!-- Configuración específica para servidores de desarrollo -->
     <domain-config cleartextTrafficPermitted="true">
+        <!-- IP del servidor de desarrollo principal -->
+        <domain includeSubdomains="true">10.185.24.6</domain>
+        <!-- Localhost y emulador -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- IP para dispositivo físico en la misma red -->
         <domain includeSubdomains="false">192.168.100.22</domain>
     </domain-config>
 </network-security-config>
-

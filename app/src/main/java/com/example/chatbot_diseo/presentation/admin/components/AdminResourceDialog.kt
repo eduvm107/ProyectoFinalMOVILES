@@ -20,9 +20,9 @@ fun AdminResourceDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String, String) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
-    var url by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialItem?.title ?: "") }
+    var category by remember { mutableStateOf(initialItem?.category ?: "") }
+    var url by remember { mutableStateOf(initialItem?.url ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -59,10 +59,14 @@ fun AdminResourceDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(title, category, url) },
+                onClick = {
+                    if (title.isNotBlank() && category.isNotBlank() && url.isNotBlank()) {
+                        onConfirm(title, category, url)
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = TcsBlue)
             ) {
-                Text("Crear recurso", color = TcsWhite)
+                Text(if (initialItem == null) "Crear recurso" else "Guardar cambios", color = TcsWhite)
             }
         },
         dismissButton = {

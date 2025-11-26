@@ -23,10 +23,11 @@ fun AdminDashboardHeader(
     totalContents: Int,
     totalActivities: Int,
     totalResources: Int,
-    completionRate: Int
+    completionRate: Int,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
@@ -53,12 +54,12 @@ fun AdminDashboardHeader(
                 value = totalResources.toString(),
                 modifier = Modifier.weight(1f)
             )
-            StatCard(
+            /*StatCard(
                 icon = Icons.Filled.CheckCircle,
                 title = "Completitud",
                 value = "$completionRate%",
                 modifier = Modifier.weight(1f)
-            )
+            )*/
         }
     }
 }

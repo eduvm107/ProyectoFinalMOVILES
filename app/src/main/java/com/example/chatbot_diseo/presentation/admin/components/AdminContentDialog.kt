@@ -78,7 +78,7 @@ fun AdminContentDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = TcsBlue),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Crear mensaje", color = TcsWhite)
+                Text(if (initialItem == null) "Crear mensaje" else "Guardar cambios", color = TcsWhite)
             }
         },
         dismissButton = {

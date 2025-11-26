@@ -58,11 +58,11 @@ fun AdminTabs(
                 onClick = { onSelect(2) }
             )
 
-            TabItemFigma(
+            /*TabItemFigma(
                 icon = Icons.Default.AutoGraph,
                 isSelected = selected == 3,
                 onClick = { onSelect(3) }
-            )
+            )*/
         }
     }
 }
@@ -90,108 +90,3 @@ fun TabItemFigma(
         )
     }
 }
-/*package com.example.chatbot_diseo.presentation.admin.components
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-import com.example.chatbot_diseo.ui.theme.*
-
-@Composable
-fun AdminTabs(
-    selected: Int,
-    onSelect: (Int) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        TabButton(
-            index = 0,
-            selected = selected,
-            icon = Icons.Filled.Email,
-            label = "Mensajes",
-            onSelect = onSelect
-        )
-        TabButton(
-            index = 1,
-            selected = selected,
-            icon = Icons.Filled.CalendarToday,
-            label = "Actividad",
-            onSelect = onSelect
-        )
-        TabButton(
-            index = 2,
-            selected = selected,
-            icon = Icons.Filled.Create,
-            label = "Recursos",
-            onSelect = onSelect
-        )
-        TabButton(
-            index = 3,
-            selected = selected,
-            icon = Icons.Filled.Build,
-            label = "Métricas",
-            onSelect = onSelect
-        )
-    }
-}
-
-@Composable
-private fun TabButton(
-    index: Int,
-    selected: Int,
-    icon: ImageVector,
-    label: String,
-    onSelect: (Int) -> Unit
-) {
-    val isSelected = index == selected
-
-    Column(
-        modifier = Modifier
-            .width(76.dp)
-            .padding(4.dp)
-            .clip(RoundedCornerShape(40.dp))
-            .background(if (isSelected) TcsBlueLight else TcsWhite)
-            .border(
-                2.dp,
-                if (isSelected) TcsBlue else TcsGrayBorder,
-                RoundedCornerShape(40.dp)
-            )
-            .padding(vertical = 12.dp)
-            .clickable { onSelect(index) },
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) TcsBlue else TcsGrayText
-        )
-        Text(
-            text = label,
-            color = if (isSelected) TcsBlue else TcsGrayText,
-            style = MaterialTheme.typography.labelSmall
-        )
-    }
-}*/
