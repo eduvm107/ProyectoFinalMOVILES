@@ -54,12 +54,6 @@ fun AdminDashboardHeader(
                 value = totalResources.toString(),
                 modifier = Modifier.weight(1f)
             )
-            /*StatCard(
-                icon = Icons.Filled.CheckCircle,
-                title = "Completitud",
-                value = "$completionRate%",
-                modifier = Modifier.weight(1f)
-            )*/
         }
     }
 }

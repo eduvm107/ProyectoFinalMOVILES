@@ -302,25 +302,38 @@ class AdminPanelViewModel : ViewModel() {
     private val _metrics = MutableStateFlow<AdminStats?>(null)
     val metrics: StateFlow<AdminStats?> = _metrics
 
+    /**
+     * Cargar métricas desde el backend
+     */
     fun loadMetrics() {
-        // Métricas deshabilitadas - usar valores por defecto
-        _metrics.value = AdminStats(
-            totalContents = _contents.value.size,
-            totalActivities = _activities.value.size,
-            totalResources = _resources.value.size,
-            completionRate = 0,
-            averageSatisfaction = 0.0,
-            averageTimeDays = 0
-        )
+        viewModelScope.launch {
+            when (val result = repository.getMetrics()) {
+                is Result.Success -> {
+                    _metrics.value = result.data
+                }
+                is Result.Error -> {
+                    // Si falla la API, usar valores locales como fallback
+                    _metrics.value = AdminStats(
+                        totalContents = _contents.value.size,
+                        totalActivities = _activities.value.size,
+                        totalResources = _resources.value.size,
+                        completionRate = 0,
+                        averageSatisfaction = 0.0,
+                        averageTimeDays = 0
+                    )
+                }
+                is Result.Loading -> { /* No action needed */ }
+            }
+        }
     }
 
-    // Métodos compatibles con la UI existente
+    // Métodos compatibles con la UI existente - ahora retornan StateFlow para actualización en tiempo real
     fun getTotalContents() = _contents.value.size
     fun getTotalActivities() = _activities.value.size
     fun getTotalResources() = _resources.value.size
-    fun getCompletionRate() = 0
-    fun getAverageSatisfaction() = 0.0
-    fun getAverageTimeDays() = 0
+    fun getCompletionRate() = _metrics.value?.completionRate ?: 0
+    fun getAverageSatisfaction() = _metrics.value?.averageSatisfaction ?: 0.0
+    fun getAverageTimeDays() = _metrics.value?.averageTimeDays ?: 0
 
     // ============== UTILIDADES ==============
 

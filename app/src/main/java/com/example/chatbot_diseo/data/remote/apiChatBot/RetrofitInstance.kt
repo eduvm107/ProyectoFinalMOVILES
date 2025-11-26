@@ -19,14 +19,9 @@ import javax.net.ssl.X509TrustManager
  * Configuración centralizada de URLs del backend
  */
 object ApiConfig {
-    // Usa esta si trabajas con emulador (10.0.2.2 = localhost del PC)
-    const val BASE_URL_EMULADOR = "https://10.0.2.2:7095/api/"
-
-    // Usa esta si trabajas con celular físico (reemplaza la IP por la de tu PC)
-    const val BASE_URL_DISPOSITIVO = "https://192.168.100.22:7095/api/"
-
-    // URL activa - cambiar según el entorno
-    const val BASE_URL = BASE_URL_EMULADOR
+    // ✅ API corriendo en: http://localhost:5288 (HTTP, no HTTPS)
+    // Para emulador: http://10.0.2.2:5288
+    const val BASE_URL = "http://10.0.2.2:5288/api/"
 }
 
 /**
@@ -170,9 +165,9 @@ object RetrofitInstance {
         OkHttpClient.Builder()
             .addInterceptor(noLoggingInterceptor)
             .addInterceptor(authInterceptor)
-            .connectTimeout(120, TimeUnit.SECONDS)
-            .readTimeout(180, TimeUnit.SECONDS)
-            .writeTimeout(120, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .sslSocketFactory(sslContext.socketFactory, trustManager)
             .hostnameVerifier { _, _ -> true }
             .build()

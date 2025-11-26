@@ -134,9 +134,9 @@ fun AdminPanelScreen(
 
             // DASHBOARD SUPERIOR (4 tarjetas)
             AdminDashboardHeader(
-                totalContents = viewModel.getTotalContents(),
-                totalActivities = viewModel.getTotalActivities(),
-                totalResources = viewModel.getTotalResources(),
+                totalContents = contentList.size,
+                totalActivities = activityList.size,
+                totalResources = resourceList.size,
                 completionRate = viewModel.getCompletionRate()
             )
 

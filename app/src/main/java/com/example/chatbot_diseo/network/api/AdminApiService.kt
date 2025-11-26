@@ -9,7 +9,7 @@ import retrofit2.http.*
 
 /**
  * API Service para el panel de administración
- * Endpoints usando nombres en español del backend ASP.NET Core
+ * Endpoints usando nombres en PascalCase del backend ASP.NET Core
  */
 interface AdminApiService {
 
@@ -19,23 +19,22 @@ interface AdminApiService {
      * Obtener todos los mensajes automáticos
      * El backend devuelve: List<MensajeAutomatico>
      */
-    @GET("mensajeautomatico")
+    @GET("MensajeAutomatico")
     suspend fun getContents(): Response<List<ContentResponse>>
 
-    @GET("mensajeautomatico/{id}")
+    @GET("MensajeAutomatico/{id}")
     suspend fun getContentById(@Path("id") id: String): Response<ContentResponse>
 
-    @POST("mensajeautomatico")
+    @POST("MensajeAutomatico")
     suspend fun createContent(@Body request: ContentRequest): Response<ContentResponse>
 
-    @PUT("mensajeautomatico/{id}")
+    @PUT("MensajeAutomatico/{id}")
     suspend fun updateContent(
         @Path("id") id: String,
         @Body request: ContentRequest
     ): Response<ContentResponse>
 
-    @DELETE("mensajeautomatico/{id}")
-
+    @DELETE("MensajeAutomatico/{id}")
     suspend fun deleteContent(@Path("id") id: String): Response<Unit>
 
     // ============== ACTIVIDADES ==============
@@ -44,22 +43,22 @@ interface AdminApiService {
      * Obtener todas las actividades
      * El backend devuelve: List<Actividad>
      */
-    @GET("actividad")
+    @GET("Actividad")
     suspend fun getActivities(): Response<List<ActivityResponse>>
 
-    @GET("actividad/{id}")
+    @GET("Actividad/{id}")
     suspend fun getActivityById(@Path("id") id: String): Response<ActivityResponse>
 
-    @POST("actividad")
+    @POST("Actividad")
     suspend fun createActivity(@Body request: ActivityRequest): Response<ActivityResponse>
 
-    @PUT("actividad/{id}")
+    @PUT("Actividad/{id}")
     suspend fun updateActivity(
         @Path("id") id: String,
         @Body request: ActivityRequest
     ): Response<ActivityResponse>
 
-    @DELETE("actividad/{id}")
+    @DELETE("Actividad/{id}")
     suspend fun deleteActivity(@Path("id") id: String): Response<Unit>
 
     // ============== DOCUMENTOS ==============
@@ -68,26 +67,26 @@ interface AdminApiService {
      * Obtener todos los documentos
      * El backend devuelve: List<Documento>
      */
-    @GET("documento")
+    @GET("Documento")
     suspend fun getResources(): Response<List<ResourceResponse>>
 
-    @GET("documento/{id}")
+    @GET("Documento/{id}")
     suspend fun getResourceById(@Path("id") id: String): Response<ResourceResponse>
 
-    @POST("documento")
+    @POST("Documento")
     suspend fun createResource(@Body request: ResourceRequest): Response<ResourceResponse>
 
-    @PUT("documento/{id}")
+    @PUT("Documento/{id}")
     suspend fun updateResource(
         @Path("id") id: String,
         @Body request: ResourceRequest
     ): Response<ResourceResponse>
 
-    @DELETE("documento/{id}")
+    @DELETE("Documento/{id}")
     suspend fun deleteResource(@Path("id") id: String): Response<Unit>
 
     // ============== MÉTRICAS ==============
 
-    @GET("metricas")
+    @GET("Metricas")
     suspend fun getMetrics(): Response<MetricsResponse>
 }

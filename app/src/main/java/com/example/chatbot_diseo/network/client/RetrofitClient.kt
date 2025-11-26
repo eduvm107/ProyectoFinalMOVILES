@@ -1,28 +1,32 @@
 package com.example.chatbot_diseo.network.client
 
+import com.example.chatbot_diseo.data.api.TokenHolder
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 /**
  * Cliente Retrofit para conectar con ASP.NET Core Backend
  * Configuración centralizada para todas las peticiones HTTP
  */
-object  RetrofitClient {
+object RetrofitClient {
 
     /**
-     * 🔧 IMPORTANTE: Cambiar esta URL por la de tu backend
-     *
-     * Ejemplos:
-     * - Producción: "https://api.tudominio.com/"
-     * - Desarrollo local: "http://10.0.2.2:5000/api/" (para emulador Android)
-     * - Desarrollo local: "http://TU_IP_LOCAL:5000/api/" (para dispositivo físico)
+     * URL base del backend ASP.NET Core
+     * ✅ API corriendo en: http://localhost:5288 (puerto HTTP)
+     * Para emulador Android: http://10.0.2.2:5288/api/
      */
-    private const val BASE_URL = "http://10.185.24.6:5288/api/"
+    private const val BASE_URL = "http://10.0.2.2:5288/api/"
 
     /**
      * Configuración de Gson para serialización/deserialización
@@ -40,6 +44,24 @@ object  RetrofitClient {
     }
 
     /**
+     * Interceptor de autenticación con Bearer Token
+     */
+    private val authInterceptor = Interceptor { chain ->
+        val original = chain.request()
+        val token = TokenHolder.token
+        val requestBuilder = original.newBuilder()
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Accept", "application/json")
+
+        // Agregar token de autenticación si está disponible
+        if (!token.isNullOrBlank()) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
+        }
+
+        chain.proceed(requestBuilder.build())
+    }
+
+    /**
      * Cliente HTTP con configuración de timeouts y logging
      */
     private val okHttpClient = OkHttpClient.Builder()
@@ -47,12 +69,29 @@ object  RetrofitClient {
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(loggingInterceptor)
-        .addInterceptor { chain ->
-            val request = chain.request().newBuilder()
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .build()
-            chain.proceed(request)
+        .addInterceptor(authInterceptor)
+        // Confiar en todos los certificados (para desarrollo local con HTTP)
+        .apply {
+            try {
+                val trustAllCerts = arrayOf<TrustManager>(
+                    object : X509TrustManager {
+                        override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
+                        override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
+                        override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+                    }
+                )
+
+                val sslContext = SSLContext.getInstance("SSL").apply {
+                    init(null, trustAllCerts, SecureRandom())
+                }
+
+                val trustManager = trustAllCerts[0] as X509TrustManager
+
+                sslSocketFactory(sslContext.socketFactory, trustManager)
+                hostnameVerifier { _, _ -> true }
+            } catch (e: Exception) {
+                throw RuntimeException(e)
+            }
         }
         .build()
 
