@@ -72,5 +72,14 @@ class AuthRepository(private val api: ApiService = RetrofitInstance.authApi) {
     fun setCurrentUser(usuario: Usuario?) {
         currentUser = usuario
     }
+
+    /**
+     * Solicitar recuperación de contraseña
+     * Envía una contraseña temporal al correo del usuario
+     */
+    suspend fun forgotPassword(email: String): Response<com.example.chatbot_diseo.data.models.ForgotPasswordResponse> {
+        val req = com.example.chatbot_diseo.data.models.ForgotPasswordRequest(email = email)
+        return api.forgotPassword(req)
+    }
 }
 
