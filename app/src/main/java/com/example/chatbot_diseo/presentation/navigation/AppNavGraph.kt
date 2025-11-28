@@ -13,7 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
-import com.example.chatbot_diseo.presentation.auth.ForgotPasswordScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
 import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
 import com.example.chatbot_diseo.presentation.chat.ChatScreen
@@ -57,14 +56,12 @@ fun AppNavGraph(
                     }
                 },
                 onForgotPassword = {
-                    navController.navigate("forgot_password")
+                    Toast.makeText(
+                        context,
+                        "Credenciales: admin@tcs.com / admin123",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
-            )
-        }
-
-        composable("forgot_password") {
-            ForgotPasswordScreen(
-                onBack = { navController.popBackStack() }
             )
         }
 

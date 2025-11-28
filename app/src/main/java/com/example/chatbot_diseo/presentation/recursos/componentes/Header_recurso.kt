@@ -83,6 +83,7 @@ fun ResourcesHeader(
                     if (isSelected) {
                         Button(
                             onClick = { onFilterSelected(filter.text) },
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
                         ) {
@@ -91,6 +92,7 @@ fun ResourcesHeader(
                     } else {
                         OutlinedButton(
                             onClick = { onFilterSelected(filter.text) },
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(50),
                             border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.7f))
                         ) {
@@ -128,6 +130,7 @@ fun ResourcesHeader(
                     if (isSelected) {
                         Button(
                             onClick = { onFilterSelected(filter.text) },
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
                         ) {
@@ -136,6 +139,7 @@ fun ResourcesHeader(
                     } else {
                         OutlinedButton(
                             onClick = { onFilterSelected(filter.text) },
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(50),
                             border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.7f))
                         ) {

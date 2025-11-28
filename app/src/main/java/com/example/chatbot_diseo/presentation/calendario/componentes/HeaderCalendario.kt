@@ -99,6 +99,7 @@ fun HeaderCalendario(
                         if (isSelected && filter.icon == null) {
                             Button(
                                 onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(50),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
                             ) {
@@ -107,6 +108,7 @@ fun HeaderCalendario(
                         } else {
                             OutlinedButton(
                                 onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(50),
                                 border = BorderStroke(1.dp, Color.LightGray)
                             ) {
@@ -137,6 +139,7 @@ fun HeaderCalendario(
                         if (isSelected && filter.icon == null) {
                             Button(
                                 onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(50),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
                             ) {
@@ -145,6 +148,7 @@ fun HeaderCalendario(
                         } else {
                             OutlinedButton(
                                 onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(50),
                                 border = BorderStroke(1.dp, Color.LightGray)
                             ) {
