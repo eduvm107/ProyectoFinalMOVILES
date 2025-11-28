@@ -4,6 +4,8 @@ import com.example.chatbot_diseo.data.api.ApiService
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.models.LoginRequest
 import com.example.chatbot_diseo.data.models.LoginResponse
+import com.example.chatbot_diseo.data.models.RecoverPasswordRequest
+import com.example.chatbot_diseo.data.models.RecoverPasswordResponse
 import com.example.chatbot_diseo.data.models.Usuario
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 import retrofit2.Response
@@ -36,6 +38,15 @@ class AuthRepository(private val api: ApiService = RetrofitInstance.authApi) {
 
         return response
     }
+
+    /**
+     * Solicitar recuperación de contraseña
+     */
+    suspend fun recoverPassword(email: String): Response<RecoverPasswordResponse> {
+        val request = RecoverPasswordRequest(email = email)
+        return api.recoverPassword(request)
+    }
+
 
     /**
      * Cerrar sesión - limpia el token y usuario actual
@@ -73,4 +84,3 @@ class AuthRepository(private val api: ApiService = RetrofitInstance.authApi) {
         currentUser = usuario
     }
 }
-
