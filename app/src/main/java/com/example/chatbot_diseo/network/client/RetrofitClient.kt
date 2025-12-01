@@ -22,7 +22,7 @@ object  RetrofitClient {
      * - Desarrollo local: "http://10.0.2.2:5000/api/" (para emulador Android)
      * - Desarrollo local: "http://TU_IP_LOCAL:5000/api/" (para dispositivo físico)
      */
-    private const val BASE_URL = "http://10.185.24.6:5288/api/"
+    private const val BASE_URL = "http://192.168.1.44:5288/api/"
 
     /**
      * Configuración de Gson para serialización/deserialización

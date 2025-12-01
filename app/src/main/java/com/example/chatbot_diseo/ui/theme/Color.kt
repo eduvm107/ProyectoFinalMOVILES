@@ -35,3 +35,5 @@ val TcsDashboardBorder = Color(0xFFE2E6EE)
 // ---------------- NECESARIOS PARA LAS CARDS ----------------
 val TcsPinkLight = Color(0xFFFFE8E8)        // Fondo rosado (cards de mensajes)
 val TcsYellowLight = Color(0xFFFFF7E0)      // (si quieres usarlo más adelante)
+val TcsGrayLight = Color(0xFFF3F4F6)        // Fondo gris claro (cards inactivas)
+val TcsOrange = Color(0xFFFFA500)            // Naranja (si quieres usarlo más adelante)

@@ -61,5 +61,16 @@ data class ActivityRequest(
     val actividadesSiguientes: List<String> = emptyList(),
 
     @SerializedName("estado")
-    val estado: String = "activo"
+    val estado: String = "activo",
+
+
+    @SerializedName("fecha_de_actividad")      // ✔ NOMBRE CORRECTO DEL BACKEND
+    val fechaActividad: String? = null,
+
+    @SerializedName("usuarioID")               // ✔ Si quieres asignar usuario
+    val usuarioID: String? = null,
+
+    @SerializedName("favorito")                // ✔ Para documentos
+    val favorito: Boolean = false
+
 )
