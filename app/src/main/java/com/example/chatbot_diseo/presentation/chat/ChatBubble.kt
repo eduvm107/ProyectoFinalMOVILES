@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,14 +36,12 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                 Text(mensaje.texto, color = Color.White)
             }
         }
-
     } else {
         // BURBUJA DEL BOT
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top
         ) {
-
             Icon(
                 Icons.Default.SmartToy,
                 contentDescription = "",
@@ -53,39 +51,17 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                     .size(28.dp)
             )
 
-
             Box(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(22.dp))
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(22.dp)
+                    )
                     .padding(14.dp)
                     .widthIn(max = 260.dp)
             ) {
                 Column {
                     Box(
-
-            Column {
-                Box(
-                    modifier = Modifier
-                        .background(Color.White, RoundedCornerShape(22.dp))
-                        .padding(14.dp)
-                        .widthIn(max = 260.dp)
-                ) {
-                    Text(mensaje.texto, color = Color(0xFF333D47))
-                }
-
-                // Botón de acción (si existe)
-                mensaje.textoAccion?.let { accionTexto ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            // Ejecutar la accion asignada en el Mensaje (si existe) como primer intento
-                            mensaje.accion?.invoke()
-                            // Luego notificar al handler de la pantalla (fallback / navegación por route)
-                            onAction(mensaje)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F78FF), contentColor = Color.White),
-                        shape = RoundedCornerShape(12.dp),
-
                         modifier = Modifier
                             .background(Color.White, RoundedCornerShape(22.dp))
                             .padding(14.dp)
@@ -99,7 +75,7 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = {
-                                // Ejecutar la accion asignada en el Mensaje (si existe) como primer intento
+                                // Ejecutar la acción asignada en el Mensaje (si existe)
                                 mensaje.accion?.invoke()
                                 // Luego notificar al handler de la pantalla (fallback / navegación por route)
                                 onAction(mensaje)
@@ -109,15 +85,14 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                                 contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .padding(start = 4.dp)
+                            modifier = Modifier.padding(start = 4.dp)
                         ) {
                             Text(accionTexto)
                         }
                     }
-
                 }
             }
         }
     }
 }
+
