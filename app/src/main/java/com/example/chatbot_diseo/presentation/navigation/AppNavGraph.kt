@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
+import com.example.chatbot_diseo.presentation.ayuda.AyudaScreen
 import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
 import com.example.chatbot_diseo.presentation.chat.ChatScreen
 import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
@@ -110,6 +111,10 @@ fun AppNavGraph(
 
         composable("favoritos") {
             FavoritosScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("ayuda") {
+            AyudaScreen(onBack = { navController.popBackStack() })
         }
     }
 }
