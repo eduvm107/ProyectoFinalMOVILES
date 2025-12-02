@@ -44,13 +44,15 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
         ) {
             Icon(
                 Icons.Default.SmartToy,
-                contentDescription = "",
+                contentDescription = "Icono del Bot",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .size(28.dp)
             )
 
+            // --- CÓDIGO CORREGIDO Y LIMPIO ---
+            // Un único Box para la burbuja del bot
             Box(
                 modifier = Modifier
                     .background(
@@ -60,32 +62,28 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                     .padding(14.dp)
                     .widthIn(max = 260.dp)
             ) {
+                // Una Columna para apilar el texto y el botón
                 Column {
-                    Box(
-                        modifier = Modifier
-                            .background(Color.White, RoundedCornerShape(22.dp))
-                            .padding(14.dp)
-                            .widthIn(max = 260.dp)
-                    ) {
-                        Text(mensaje.texto, color = Color(0xFF333D47))
-                    }
+                    Text(
+                        text = mensaje.texto,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
                     // Botón de acción (si existe)
                     mensaje.textoAccion?.let { accionTexto ->
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = {
-                                // Ejecutar la acción asignada en el Mensaje (si existe)
+                                // Ejecutar la accion asignada en el Mensaje (si existe)
                                 mensaje.accion?.invoke()
-                                // Luego notificar al handler de la pantalla (fallback / navegación por route)
+                                // Luego notificar al handler de la pantalla (fallback)
                                 onAction(mensaje)
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF1F78FF),
                                 contentColor = Color.White
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.padding(start = 4.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(accionTexto)
                         }

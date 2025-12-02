@@ -49,12 +49,29 @@ fun Pantalla_Calendario() {
                 return@LaunchedEffect
             }
 
-            val remotas: List<ActividadRemota> =
-                RetrofitInstance.actividadesApi.getByUsuario(userId)
+            // Log para debug
+            println("DEBUG CALENDARIO - UserId actual: '$userId'")
+
+            // Workaround: usar getAllActividades y filtrar por usuario
+            val todasActividades: List<ActividadRemota> =
+                RetrofitInstance.actividadesApi.getAllActividades()
+
+            println("DEBUG CALENDARIO - Total actividades recibidas: ${todasActividades.size}")
+
+            // Mostrar los primeros UsuarioIds para debug
+            todasActividades.take(5).forEachIndexed { index, actividad ->
+                println("DEBUG CALENDARIO - Actividad[$index] UsuarioId: '${actividad.UsuarioId}' | Titulo: '${actividad.titulo}'")
+            }
+
+            val remotas = todasActividades.filter { it.UsuarioId == userId }
+            println("DEBUG CALENDARIO - Actividades filtradas para usuario: ${remotas.size}")
+
             actividades = remotas.map { it.toUI() }
             errorMessage = null
         } catch (e: Exception) {
             errorMessage = "Error: ${e.message ?: "Desconocido"}\nTipo: ${e::class.simpleName}"
+            println("DEBUG CALENDARIO - Error: ${e.message}")
+            e.printStackTrace()
         } finally {
             isLoading = false
         }

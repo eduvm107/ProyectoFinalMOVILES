@@ -28,13 +28,17 @@ import kotlinx.coroutines.delay
 @Composable
 fun AdminPanelScreen(
     viewModel: AdminPanelViewModel = viewModel(),
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showNewDialog by remember { mutableStateOf(false) }
 
     // ESTADO PARA MOSTRAR EL DIÁLOGO DEL ADMINISTRADOR
     var showAdminInfo by remember { mutableStateOf(false) }
+
+    // ESTADO PARA MOSTRAR EL DIÁLOGO DE CONFIRMACIÓN DE LOGOUT
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     var editContent by remember { mutableStateOf<com.example.chatbot_diseo.network.dto.response.ContentResponse?>(null) }
     var editActivity by remember { mutableStateOf<ActivityItem?>(null) }
@@ -85,46 +89,47 @@ fun AdminPanelScreen(
             }
         },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Panel de Administración",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TcsTextDark
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TcsTextDark)
-                    }
-                },
-                actions = {
-                    // 1. ÍCONO DEL ADMINISTRADOR
-                    IconButton(onClick = { showAdminInfo = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Info Administrador",
-                            tint = TcsBlue
+            Surface(
+                shadowElevation = 6.dp,
+                tonalElevation = 0.dp
+            ) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Panel de Administración",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TcsTextDark,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                    // 2. BOTÓN DE SALIR
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = TcsRed
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Salir",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text("Salir", style = MaterialTheme.typography.labelLarge)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = TcsWhite)
-            )
+                    },
+                    actions = {
+                        // 1. ÍCONO DEL ADMINISTRADOR
+                        IconButton(onClick = { showAdminInfo = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Info Administrador",
+                                tint = TcsBlue
+                            )
+                        }
+                        // 2. BOTÓN DE SALIR
+                        TextButton(
+                            onClick = { showLogoutDialog = true },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = TcsRed
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Salir",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("Salir", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = TcsWhite)
+                )
+            }
         }
     ) { padding ->
 
@@ -317,6 +322,54 @@ fun AdminPanelScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = TcsBlue)
                     ) {
                         Text("Cerrar", color = TcsWhite)
+                    }
+                }
+            )
+        }
+
+        // DIÁLOGO DE CONFIRMACIÓN DE LOGOUT
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false },
+                containerColor = TcsWhite,
+                icon = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = null,
+                        tint = TcsRed,
+                        modifier = Modifier.size(32.dp)
+                    )
+                },
+                title = {
+                    Text(
+                        "Cerrar Sesión",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TcsTextDark
+                    )
+                },
+                text = {
+                    Text(
+                        "¿Estás seguro de que deseas cerrar sesión?",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TcsTextDark
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showLogoutDialog = false
+                            onLogout()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = TcsRed)
+                    ) {
+                        Text("Cerrar Sesión", color = TcsWhite)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showLogoutDialog = false }
+                    ) {
+                        Text("Cancelar", color = TcsTextDark)
                     }
                 }
             )

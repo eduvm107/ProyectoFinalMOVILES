@@ -121,7 +121,7 @@ class ChatViewModel : ViewModel() {
         error.value = null
 
         // Agregar mensaje de carga
-        mensajes.add(Mensaje("⏳ Procesando tu pregunta... esto puede tardar unos momentos...", false))
+        mensajes.add(Mensaje("⏳ Analizando tu pregunta con IA... (esto toma 15-60 segundos)", false))
 
         viewModelScope.launch {
             try {
