@@ -33,11 +33,7 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                     .padding(14.dp)
                     .widthIn(max = 260.dp)
             ) {
-
-                Text(texto, color = MaterialTheme.colorScheme.onPrimary)
-
                 Text(mensaje.texto, color = Color.White)
-
             }
         }
 
@@ -57,13 +53,6 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                     .size(28.dp)
             )
 
-            Box(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(22.dp))
-                    .padding(14.dp)
-                    .widthIn(max = 260.dp)
-            ) {
-                Text(texto, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Column {
                 Box(
                     modifier = Modifier
@@ -92,7 +81,6 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                         Text(accionTexto)
                     }
                 }
-
             }
         }
     }
