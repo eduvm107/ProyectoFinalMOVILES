@@ -4,27 +4,25 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Person // Nueva importación para el icono de persona
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.SpanStyle // Nueva importación
-import androidx.compose.ui.text.buildAnnotatedString // Nueva importación
-import androidx.compose.ui.text.font.FontWeight // Nueva importación
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle // Nueva importación
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatbot_diseo.data.admin.ActivityItem
-import com.example.chatbot_diseo.data.admin.ContentItem
 import com.example.chatbot_diseo.data.admin.ResourceItem
 import com.example.chatbot_diseo.presentation.admin.components.*
 import com.example.chatbot_diseo.ui.theme.*
-import kotlinx.coroutines.delay // Importación necesaria para delay
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,9 +36,15 @@ fun AdminPanelScreen(
     // ESTADO PARA MOSTRAR EL DIÁLOGO DEL ADMINISTRADOR
     var showAdminInfo by remember { mutableStateOf(false) }
 
-    var editContent by remember { mutableStateOf<ContentItem?>(null) }
+    var editContent by remember { mutableStateOf<com.example.chatbot_diseo.network.dto.response.ContentResponse?>(null) }
     var editActivity by remember { mutableStateOf<ActivityItem?>(null) }
     var editResource by remember { mutableStateOf<ResourceItem?>(null) }
+
+    // Estado para editar actividad completa
+    val selectedActivity by viewModel.selectedActivity.collectAsState()
+
+    // Estado para editar contenido completo
+    val selectedContent by viewModel.selectedContent.collectAsState()
 
     val contentList by viewModel.contents.collectAsState()
     val activityList by viewModel.activities.collectAsState()
@@ -91,7 +95,7 @@ fun AdminPanelScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TcsTextDark)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TcsTextDark)
                     }
                 },
                 actions = {
@@ -111,7 +115,7 @@ fun AdminPanelScreen(
                         )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Logout,
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = "Salir",
                             modifier = Modifier.size(20.dp)
                         )
@@ -166,20 +170,6 @@ fun AdminPanelScreen(
                 )
             }
 
-            // Tarjeta de diagnóstico (temporal para debugging)
-            if (errorMessage?.contains("404") == true ||
-                errorMessage?.contains("conexión") == true ||
-                (contentList.isEmpty() && activityList.isEmpty() && resourceList.isEmpty() && !isLoading)) {
-                DiagnosticCard(
-                    errorMessage = errorMessage,
-                    onTest = {
-                        // Mostrar info de configuración
-                    },
-                    onRefresh = {
-                        viewModel.refreshAll()
-                    }
-                )
-            }
 
             // TABS TIPO FIGMA
             AdminTabs(
@@ -217,7 +207,11 @@ fun AdminPanelScreen(
                         AdminContentCard(
                             item = item,
                             onEdit = { editContent = item },
-                            onDelete = { viewModel.deleteContent(item.id) }
+                            onDelete = {
+                                item.id?.let { id ->
+                                    viewModel.deleteContent(id)
+                                }
+                            }
                         )
                     }
                 }
@@ -231,7 +225,11 @@ fun AdminPanelScreen(
                     items(activityList) { item ->
                         AdminActivityCard(
                             item = item,
-                            onEdit = { editActivity = item },
+                            onEdit = {
+                                // Cargar actividad completa por ID
+                                viewModel.getActivityById(item.id)
+                                editActivity = item
+                            },
                             onDelete = { viewModel.deleteActivity(item.id) }
                         )
                     }
@@ -331,18 +329,22 @@ fun AdminPanelScreen(
                     titleDialog = "Crear nuevo mensaje",
                     initialItem = null,
                     onDismiss = { showNewDialog = false },
-                    onConfirm = { title, type, desc ->
-                        viewModel.addContent(title, type, desc)
+                    onConfirm = { titulo, contenido, tipo, diaGatillo, prioridad, canales, activo, segmento, horaEnvio ->
+                        viewModel.addContent(titulo, contenido, tipo, diaGatillo, prioridad, canales, activo, segmento, horaEnvio)
                         showNewDialog = false
                     }
                 )
 
-                1 -> AdminActivityDialog(
+                1 -> AdminActivityDialog2(
                     titleDialog = "Crear nueva actividad",
                     initialItem = null,
                     onDismiss = { showNewDialog = false },
-                    onConfirm = { title, date, modality ->
-                        viewModel.addActivity(title, date, modality)
+                    onConfirm = { activityRequest ->
+                        viewModel.addActivity(
+                            activityRequest.titulo,
+                            "Día ${activityRequest.dia} - ${activityRequest.horaInicio}",
+                            activityRequest.modalidad
+                        )
                         showNewDialog = false
                     }
                 )
@@ -351,35 +353,59 @@ fun AdminPanelScreen(
                     titleDialog = "Crear nuevo recurso",
                     initialItem = null,
                     onDismiss = { showNewDialog = false },
-                    onConfirm = { title, category, url ->
-                        viewModel.addResource(title, category, url)
+                    onConfirm = { titulo, descripcion, url, tipo, categoria, subcategoria, tags, icono, tamaño, idioma, version, publico, obligatorio, fechaPublicacion, fechaActualizacion, autor, favorito ->
+                        // Por ahora solo usamos los 3 campos básicos que ya soporta el ViewModel
+                        // TODO: Actualizar viewModel.addResource para aceptar todos los campos
+                        viewModel.addResource(titulo, categoria, url)
                         showNewDialog = false
                     }
                 )
             }
         }
 
-        // DIALOGOS EDITAR
+        // DIALOGOS EDITAR - Editar contenido completo
         editContent?.let { item ->
+            // Cargar contenido completo por ID solo si el id no es nulo
+            item.id?.let { id ->
+                LaunchedEffect(id) {
+                    viewModel.getContentById(id)
+                }
+            }
+        }
+
+        // Mostrar diálogo cuando selectedContent está cargado
+        selectedContent?.let { contentResponse ->
             AdminContentDialog(
                 titleDialog = "Editar contenido",
-                initialItem = item,
-                onDismiss = { editContent = null },
-                onConfirm = { title, type, desc ->
-                    viewModel.updateContent(item.id, title, type, desc)
+                initialItem = contentResponse,
+                onDismiss = {
+                    viewModel.clearSelectedContent()
                     editContent = null
+                },
+                onConfirm = { titulo, contenido, tipo, diaGatillo, prioridad, canales, activo, segmento, horaEnvio ->
+                    editContent?.id?.let { id ->
+                        viewModel.updateContent(id, titulo, contenido, tipo, diaGatillo, prioridad, canales, activo, segmento, horaEnvio)
+                        viewModel.clearSelectedContent()
+                        editContent = null
+                    }
                 }
             )
         }
 
-        editActivity?.let { item ->
-            AdminActivityDialog(
-                titleDialog = "Editar actividad",
-                initialItem = item,
-                onDismiss = { editActivity = null },
-                onConfirm = { title, date, modality ->
-                    viewModel.updateActivity(item.id, title, date, modality)
+        // Editar actividad with the new complete dialog
+        selectedActivity?.let { activityResponse ->
+            EditarActividadDialog(
+                actividadInicial = activityResponse,
+                onDismiss = {
+                    viewModel.clearSelectedActivity()
                     editActivity = null
+                },
+                onConfirm = { activityRequest ->
+                    editActivity?.let { item ->
+                        viewModel.updateActivityComplete(item.id, activityRequest)
+                        viewModel.clearSelectedActivity()
+                        editActivity = null
+                    }
                 }
             )
         }
@@ -389,8 +415,10 @@ fun AdminPanelScreen(
                 titleDialog = "Editar recurso",
                 initialItem = item,
                 onDismiss = { editResource = null },
-                onConfirm = { title, category, url ->
-                    viewModel.updateResource(item.id, title, category, url)
+                onConfirm = { titulo, descripcion, url, tipo, categoria, subcategoria, tags, icono, tamaño, idioma, version, publico, obligatorio, fechaPublicacion, fechaActualizacion, autor, favorito ->
+                    // Por ahora solo usamos los 3 campos básicos que ya soporta el ViewModel
+                    // TODO: Actualizar viewModel.updateResource para aceptar todos los campos
+                    viewModel.updateResource(item.id, titulo, categoria, url)
                     editResource = null
                 }
             )

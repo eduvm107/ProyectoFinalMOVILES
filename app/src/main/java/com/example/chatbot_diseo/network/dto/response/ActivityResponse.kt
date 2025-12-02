@@ -69,7 +69,20 @@ data class ActivityResponse(
     val estado: String = "activo",
 
     @SerializedName("fechaCreacion")
-    val fechaCreacion: String? = null
+    val fechaCreacion: String? = null,
+
+    @SerializedName("fecha_de_actividad")
+    val fechaDeActividad: String? = null,
+
+    @SerializedName("usuarioID")
+    val usuarioID: String? = null,
+
+    // Campo legacy para documentos antiguos con usuarioId (minúscula)
+    @SerializedName("usuarioId")
+    val usuarioId: String? = null,
+
+    @SerializedName("favorito")
+    val favorito: Boolean = false
 )
 
 /**

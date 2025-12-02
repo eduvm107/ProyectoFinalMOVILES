@@ -39,32 +39,61 @@ class AdminRemoteDataSource {
         }
     }
 
-    suspend fun createContent(title: String, type: String, description: String): Result<ContentResponse> =
-        withContext(Dispatchers.IO) {
-            try {
-                val request = ContentRequest(
-                    titulo = title,
-                    contenido = description,
-                    tipo = type
-                )
-                val response = apiService.createContent(request)
-                handleResponse(response) { it }
-            } catch (e: Exception) {
-                Result.Error(handleException(e))
-            }
-        }
-
-    suspend fun updateContent(
-        id: String,
-        title: String,
-        type: String,
-        description: String
+    suspend fun createContent(
+        titulo: String,
+        contenido: String,
+        tipo: String,
+        diaGatillo: Int,
+        prioridad: String,
+        canal: List<String>,
+        activo: Boolean,
+        segmento: String,
+        horaEnvio: String
     ): Result<ContentResponse> = withContext(Dispatchers.IO) {
         try {
             val request = ContentRequest(
-                titulo = title,
-                contenido = description,
-                tipo = type
+                titulo = titulo,
+                contenido = contenido,
+                tipo = tipo,
+                diaGatillo = diaGatillo,
+                prioridad = prioridad,
+                canal = canal,
+                activo = activo,
+                segmento = segmento,
+                horaEnvio = horaEnvio,
+                creadoPor = "admin"
+            )
+            val response = apiService.createContent(request)
+            handleResponse(response) { it }
+        } catch (e: Exception) {
+            Result.Error(handleException(e))
+        }
+    }
+
+    suspend fun updateContent(
+        id: String,
+        titulo: String,
+        contenido: String,
+        tipo: String,
+        diaGatillo: Int,
+        prioridad: String,
+        canal: List<String>,
+        activo: Boolean,
+        segmento: String,
+        horaEnvio: String
+    ): Result<ContentResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = ContentRequest(
+                titulo = titulo,
+                contenido = contenido,
+                tipo = tipo,
+                diaGatillo = diaGatillo,
+                prioridad = prioridad,
+                canal = canal,
+                activo = activo,
+                segmento = segmento,
+                horaEnvio = horaEnvio,
+                creadoPor = "admin"
             )
             val response = apiService.updateContent(id, request)
 
@@ -166,6 +195,24 @@ class AdminRemoteDataSource {
                 responsable = "RRHH"
             )
             val response = apiService.updateActivity(id, request)
+
+            // Si es 204 No Content, hacer GET para obtener el objeto actualizado
+            if (response.code() == 204) {
+                return@withContext getActivityById(id)
+            }
+
+            handleResponse(response) { it }
+        } catch (e: Exception) {
+            Result.Error(handleException(e))
+        }
+    }
+
+    suspend fun updateActivityComplete(
+        id: String,
+        activityRequest: ActivityRequest
+    ): Result<ActivityResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.updateActivity(id, activityRequest)
 
             // Si es 204 No Content, hacer GET para obtener el objeto actualizado
             if (response.code() == 204) {
@@ -349,17 +396,52 @@ class AdminRemoteDataSource {
             response.isSuccessful && response.body() != null -> {
                 Result.Success(transform(response.body()!!))
             }
+            response.isSuccessful && response.body() == null -> {
+                // Respuesta exitosa pero sin contenido - el servidor respondió OK
+                // Esto puede indicar que la colección está vacía
+                Result.Error("El servidor respondió OK pero sin datos. Verifica que la colección tenga elementos en MongoDB.", response.code())
+            }
             response.code() == 400 -> {
-                Result.Error("Datos inválidos. Verifica la información enviada.", 400)
+                val errorBody = try {
+                    response.errorBody()?.string() ?: "Datos inválidos"
+                } catch (e: Exception) {
+                    "Datos inválidos: ${e.message}"
+                }
+                Result.Error("Petición incorrecta: $errorBody", 400)
+            }
+            response.code() == 401 -> {
+                Result.Error("No autorizado. Verifica tus credenciales de administrador.", 401)
+            }
+            response.code() == 403 -> {
+                Result.Error("Acceso denegado. No tienes permisos para esta operación.", 403)
             }
             response.code() == 404 -> {
-                Result.Error("Recurso no encontrado.", 404)
+                Result.Error("Endpoint no encontrado. Verifica la configuración del servidor: http://10.185.24.6:5288", 404)
             }
             response.code() == 500 -> {
-                Result.Error("Error en el servidor. Intenta más tarde.", 500)
+                val errorBody = try {
+                    response.errorBody()?.string() ?: "Sin detalles del error"
+                } catch (e: Exception) {
+                    "Error al leer respuesta: ${e.message}"
+                }
+                Result.Error("Error 500 del servidor: $errorBody\n\nDetalles técnicos: El backend ASP.NET Core tiene un problema interno. Revisa los logs del servidor para más información.", 500)
+            }
+            response.code() == 502 -> {
+                Result.Error("Bad Gateway (502). El servidor proxy no puede conectarse al backend.", 502)
+            }
+            response.code() == 503 -> {
+                Result.Error("Servicio no disponible (503). El servidor está temporalmente sobrecargado o en mantenimiento.", 503)
+            }
+            response.code() == 504 -> {
+                Result.Error("Gateway Timeout (504). El servidor tardó demasiado en responder.", 504)
             }
             else -> {
-                Result.Error("Error desconocido: ${response.code()}", response.code())
+                val errorBody = try {
+                    response.errorBody()?.string() ?: response.message()
+                } catch (e: Exception) {
+                    response.message()
+                }
+                Result.Error("Error HTTP ${response.code()}: $errorBody", response.code())
             }
         }
     }

@@ -50,5 +50,23 @@ data class ResourceRequest(
     val autor: String = "Administrador",
 
     @SerializedName("valoracion")
-    val valoracion: Int = 0
+    val valoracion: Int = 0,
+
+    @SerializedName("favorito")
+    val favorito: Boolean = false,
+
+    // ⭐ Opcionales pero recomendados para consistencia
+    @SerializedName("fechaPublicacion")
+    val fechaPublicacion: String? = null,
+
+    @SerializedName("fechaActualizacion")
+    val fechaActualizacion: String? = null,
+
+    @SerializedName("descargas")
+    val descargas: Int? = null,
+
+    @SerializedName("accesos")
+    val accesos: Int? = null
+
+
 )

@@ -89,4 +89,13 @@ interface AdminApiService {
 
     @GET("Metricas")
     suspend fun getMetrics(): Response<MetricsResponse>
+
+    // ============== USUARIOS ==============
+
+    /**
+     * Obtener usuario completo por email
+     * El backend devuelve: UsuarioCompleto
+     */
+    @GET("api/usuario/email/{email}")
+    suspend fun getUsuarioByEmail(@Path("email") email: String): Response<UsuarioCompleto>
 }
