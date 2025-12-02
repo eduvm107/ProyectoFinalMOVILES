@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,11 +27,11 @@ fun ChatBubble(texto: String, esUsuario: Boolean) {
         ) {
             Box(
                 modifier = Modifier
-                    .background(Color(0xFF1F78FF), RoundedCornerShape(22.dp))
+                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(22.dp))
                     .padding(14.dp)
                     .widthIn(max = 260.dp)
             ) {
-                Text(texto, color = Color.White)
+                Text(texto, color = MaterialTheme.colorScheme.onPrimary)
             }
         }
 
@@ -44,7 +45,7 @@ fun ChatBubble(texto: String, esUsuario: Boolean) {
             Icon(
                 Icons.Default.SmartToy,
                 contentDescription = "",
-                tint = Color(0xFFADB4C0),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .size(28.dp)
@@ -52,11 +53,11 @@ fun ChatBubble(texto: String, esUsuario: Boolean) {
 
             Box(
                 modifier = Modifier
-                    .background(Color.White, RoundedCornerShape(22.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(22.dp))
                     .padding(14.dp)
                     .widthIn(max = 260.dp)
             ) {
-                Text(texto, color = Color(0xFF333D47))
+                Text(texto, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

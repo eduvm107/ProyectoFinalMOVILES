@@ -25,7 +25,7 @@ fun ChatHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
     ) {
 
@@ -33,13 +33,13 @@ fun ChatHeader(
             Box(
                 modifier = Modifier
                     .size(50.dp)
-                    .background(Color(0xFFE6EEF7), CircleShape),
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.SmartToy,
                     contentDescription = "TCS Bot",
-                    tint = Color(0xFF26415F),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -48,12 +48,12 @@ fun ChatHeader(
             Column {
                 Text(
                     "TCS Assistant",
-                    color = Color(0xFF1A1A1A),
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     "Siempre disponible para ti",
-                    color = Color(0xFF4B5563),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -69,7 +69,7 @@ fun ChatHeader(
                 Icon(
                     Icons.Outlined.Create,
                     contentDescription = "Nuevo chat",
-                    tint = Color(0xFF26415F)
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -78,7 +78,7 @@ fun ChatHeader(
                 Icon(
                     Icons.Outlined.Menu,
                     contentDescription = "Menú",
-                    tint = Color(0xFF26415F)
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
