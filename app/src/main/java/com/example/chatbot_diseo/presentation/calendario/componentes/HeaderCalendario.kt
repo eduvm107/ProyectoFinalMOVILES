@@ -43,11 +43,12 @@ fun HeaderCalendario(
     selectedFilter: String,
     onFilterSelected: (String) -> Unit
 ) {
+    // Orden: Proximas, Pendientes, Completadas, Todas (último)
     val filters = listOf(
-        FilterOption("Todas"),
+        FilterOption("Proximas", Icons.AutoMirrored.Filled.ArrowForward),
         FilterOption("Pendientes", Icons.Default.Schedule),
-        FilterOption("Próximas", Icons.AutoMirrored.Filled.ArrowForward),
-        FilterOption("Completadas", Icons.Default.Check)
+        FilterOption("Completadas", Icons.Default.Check),
+        FilterOption("Todas")
     )
 
     Card(
@@ -177,6 +178,6 @@ fun HeaderCalendario(
 @Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
 @Composable
 fun HeaderCalendarioPreview() {
-    HeaderCalendario(selectedFilter = "Todas", onFilterSelected = {})
+    HeaderCalendario(selectedFilter = "Proximas", onFilterSelected = {})
 }
 

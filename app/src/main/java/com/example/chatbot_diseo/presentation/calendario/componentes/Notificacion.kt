@@ -2,6 +2,7 @@ package com.example.chatbot_diseo.presentation.calendario.componentes
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,12 +32,32 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chatbot_diseo.data.remote.model.Actividad.ActividadUI
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
 
 @Composable
-fun NotificacionCard(actividad: ActividadUI) {
+fun NotificacionCard(
+    actividad: ActividadUI,
+    isFromProximas: Boolean = false,
+    filtro: String = "Todas" // <-- NUEVO PARÁMETRO PARA EL FILTRO
+) {
+    // --- LÓGICA DE FILTRADO ---
+    val hoy = LocalDate.now()
+    val fechaActividad = try { LocalDate.parse(actividad.fechaCorta) } catch (e: DateTimeParseException) { null }
+
+    val mostrarTarjeta = when (filtro) {
+        "Próximas" -> fechaActividad != null && fechaActividad.isEqual(hoy) // <-- LÓGICA PARA "PRÓXIMAS"
+        // Aquí puedes añadir más casos para otros filtros si quieres
+        else -> true // Para "Todas" o si no hay filtro, se muestra siempre
+    }
+
+    if (!mostrarTarjeta) {
+        return // Si no se debe mostrar, no se dibuja nada y se acaba aquí.
+    }
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -117,6 +138,23 @@ fun NotificacionCard(actividad: ActividadUI) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            val estadoLower = actividad.estado.lowercase()
+            val etiqueta = try {
+                val fecha = LocalDate.parse(actividad.fechaCorta)
+                val dias = ChronoUnit.DAYS.between(hoy, fecha).toInt()
+
+                when {
+                    estadoLower.contains("complet") -> "Actividad finalizada"
+                    dias < 0 -> "La actividad ya pasó"
+                    dias == 0 && isFromProximas -> "Tu actividad es hoy ¡Suerte!"
+                    dias == 0 -> "La actividad es hoy"
+                    dias == 1 -> "La actividad inicia en 1 día"
+                    else -> "La actividad inicia en $dias días"
+                }
+            } catch (_: DateTimeParseException) {
+                if (estadoLower.contains("complet")) "Actividad finalizada" else "Próxima actividad"
+            }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Build,
@@ -124,26 +162,39 @@ fun NotificacionCard(actividad: ActividadUI) {
                     tint = Color(0xFF9C27B0)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Próxima actividad", color = Color(0xFF007AFF), fontSize = 16.sp)
+                Text(text = etiqueta, color = Color(0xFF007AFF), fontSize = 16.sp)
             }
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
+@Preview(showBackground = true, backgroundColor = 0xFFF0F2F5)
 @Composable
 fun NotificacionCardPreview() {
-    Box(Modifier.padding(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Ejemplo de tarjeta que SÍ se mostrará con el filtro "Próximas"
         NotificacionCard(
             actividad = ActividadUI(
                 id = "1",
-                titulo = "Setup de herramientas y accesos",
-                fechaCorta = "15 NOV",
-                estado = "Pendiente",
-                horaInicio = "02:00 PM",
-                lugar = "Sesión virtual"
-            )
+                titulo = "Actividad de Hoy",
+                fechaCorta = LocalDate.now().toString(),
+                estado = "pendiente",
+                horaInicio = "10:00",
+                lugar = "Virtual"
+            ),
+            filtro = "Próximas"
+        )
+        // Ejemplo de tarjeta que NO se mostrará con el filtro "Próximas"
+        NotificacionCard(
+            actividad = ActividadUI(
+                id = "2",
+                titulo = "Actividad de Mañana",
+                fechaCorta = LocalDate.now().plusDays(1).toString(),
+                estado = "pendiente",
+                horaInicio = "11:00",
+                lugar = "Oficina"
+            ),
+            filtro = "Próximas"
         )
     }
 }
-

@@ -33,9 +33,6 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                     .padding(14.dp)
                     .widthIn(max = 260.dp)
             ) {
-
-                Text(texto, color = MaterialTheme.colorScheme.onPrimary)
-
                 Text(mensaje.texto, color = Color.White)
 
             }
@@ -63,36 +60,39 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
                     .padding(14.dp)
                     .widthIn(max = 260.dp)
             ) {
-                Text(texto, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Column {
-                Box(
-                    modifier = Modifier
-                        .background(Color.White, RoundedCornerShape(22.dp))
-                        .padding(14.dp)
-                        .widthIn(max = 260.dp)
-                ) {
-                    Text(mensaje.texto, color = Color(0xFF333D47))
-                }
-
-                // Botón de acción (si existe)
-                mensaje.textoAccion?.let { accionTexto ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            // Ejecutar la accion asignada en el Mensaje (si existe) como primer intento
-                            mensaje.accion?.invoke()
-                            // Luego notificar al handler de la pantalla (fallback / navegación por route)
-                            onAction(mensaje)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1F78FF), contentColor = Color.White),
-                        shape = RoundedCornerShape(12.dp),
+                Column {
+                    Box(
                         modifier = Modifier
-                            .padding(start = 4.dp)
+                            .background(Color.White, RoundedCornerShape(22.dp))
+                            .padding(14.dp)
+                            .widthIn(max = 260.dp)
                     ) {
-                        Text(accionTexto)
+                        Text(mensaje.texto, color = Color(0xFF333D47))
                     }
-                }
 
+                    // Botón de acción (si existe)
+                    mensaje.textoAccion?.let { accionTexto ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                // Ejecutar la accion asignada en el Mensaje (si existe) como primer intento
+                                mensaje.accion?.invoke()
+                                // Luego notificar al handler de la pantalla (fallback / navegación por route)
+                                onAction(mensaje)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1F78FF),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .padding(start = 4.dp)
+                        ) {
+                            Text(accionTexto)
+                        }
+                    }
+
+                }
             }
         }
     }

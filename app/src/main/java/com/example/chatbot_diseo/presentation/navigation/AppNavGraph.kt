@@ -15,7 +15,7 @@ import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
 import com.example.chatbot_diseo.presentation.ayuda.AyudaScreen
-import com.example.chatbot_diseo.presentation.calendario.PantallaCalendario
+import com.example.chatbot_diseo.presentation.calendario.Pantalla_Calendario
 import com.example.chatbot_diseo.presentation.chat.ChatScreen
 import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
 import com.example.chatbot_diseo.presentation.historial.HistorialScreen
@@ -77,7 +77,7 @@ fun AppNavGraph(
         }
 
         composable("calendario") {
-            PantallaCalendario()
+            Pantalla_Calendario()
         }
 
         composable("recursos") {

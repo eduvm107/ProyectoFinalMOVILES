@@ -40,7 +40,8 @@ class Actividad {
         val actividadesSiguientes: List<String>,
         val estado: String,
         val fechaCreacion: String,
-        val fechaDeActividad: String
+        val fechaDeActividad: String,
+        val UsuarioId: String,
     )
 
 
