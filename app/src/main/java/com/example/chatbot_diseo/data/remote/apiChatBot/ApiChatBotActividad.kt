@@ -8,7 +8,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
-typealias ActividadRemota = Actividad.Actividad
+typealias ActividadRemota = Actividad.Actividad_Calendario
 
 /**
  * Servicio API para gestión de Actividades
