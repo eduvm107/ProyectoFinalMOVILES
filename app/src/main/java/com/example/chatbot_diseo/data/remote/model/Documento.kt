@@ -27,5 +27,8 @@ data class Documento(
     val accesos: Int? = null,
     val valoracion: Double? = null,
     val fechaCreacion: String? = null,
-    val fechaModificacion: String? = null
+    val fechaModificacion: String? = null,
+    // Flag opcional que puede ser inyectado por el endpoint personalizado
+    @SerializedName("isFavorite")
+    val isFavorite: Boolean? = null
 )

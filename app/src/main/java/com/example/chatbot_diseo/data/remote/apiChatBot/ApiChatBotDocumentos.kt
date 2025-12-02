@@ -79,4 +79,14 @@ interface ApiChatBotDocumentos {
     suspend fun searchByTag(
         @Path("tag") tag: String
     ): List<Documento>
+
+    /**
+     * Obtener documentos personalizados para un usuario
+     * GET /api/Documento/personalizado/{usuarioId}
+     * Este endpoint debería devolver la lista de documentos con el campo isFavorite inyectado
+     */
+    @GET("Documento/personalizado/{usuarioId}")
+    suspend fun getDocumentosPersonalizados(
+        @Path("usuarioId") usuarioId: String
+    ): List<Documento>
 }

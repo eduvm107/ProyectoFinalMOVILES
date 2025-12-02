@@ -18,10 +18,16 @@ import com.example.chatbot_diseo.presentation.menu.SideMenu
 @Composable
 fun ChatScreen(
     navController: NavHostController,
+    initialConversacionId: String? = null,
     viewModel: ChatViewModel = viewModel()
 ) {
 
     var drawerOpen by remember { mutableStateOf(false) }
+
+    // Si se pasó un ID de conversación inicial, asígnalo al ViewModel al entrar
+    LaunchedEffect(initialConversacionId) {
+        initialConversacionId?.let { viewModel.conversacionId = it }
+    }
 
     // Asignar callbacks de navegación en cuanto la pantalla se crea (compatibilidad)
     viewModel.navegarADocumentos = { navController.navigate("recursos") }
@@ -57,7 +63,7 @@ fun ChatScreen(
                             // Primero intentar la lambda del ViewModel (fallback seguro si hay otro NavController)
                             when (route) {
                                 "recursos" -> viewModel.navegarADocumentos?.invoke()
-                                "actividades" -> viewModel.navegarAActividades?.invoke()
+                                "actividades", "calendario" -> viewModel.navegarAActividades?.invoke()
                                 "perfil" -> viewModel.navegarAPerfil?.invoke()
                             }
 

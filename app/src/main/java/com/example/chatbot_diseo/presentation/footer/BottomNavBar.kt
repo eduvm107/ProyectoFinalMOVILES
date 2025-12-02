@@ -62,24 +62,15 @@ fun BottomNavBar(navController: NavController) {
 
                 NavigationBarItem(
                     selected = selected,
-                    // Siempre navegar a la ruta al hacer click (evita clicks sin efecto)
+                    // Navegación consistente para todos los items
                     onClick = {
                         Log.d("BottomNavBar", "Clicked bottom item: ${item.title}, route=${item.route}")
-                        if (item.route == "chat") {
-                            // Forzar navegación explícita a "chat" usando popUpTo por ruta
-                            navController.navigate("chat") {
-                                popUpTo("chat") { inclusive = false }
-                                launchSingleTop = true
-                                restoreState = true
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
                             }
-                        } else {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     label = {

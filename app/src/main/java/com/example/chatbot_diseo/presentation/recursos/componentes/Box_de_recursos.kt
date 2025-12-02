@@ -1,7 +1,7 @@
 package com.example.chatbot_diseo.presentation.recursos.componentes
 
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,15 +17,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Launch
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -46,12 +46,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 import com.example.chatbot_diseo.data.remote.model.Documento
+import com.example.chatbot_diseo.data.api.TokenHolder
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosViewModel
 
+// Ahora DocumentoRecurso incluye id e isFavorite
 data class DocumentoRecurso(
+    val id: String,
     val titulo: String,
     val descripcion: String,
     val tag: String,
-    val url: String
+    val url: String,
+    var isFavorite: Boolean = false
 )
 
 @Composable
@@ -60,10 +65,11 @@ fun ResourceCard(
     descripcion: String = "Guía completa para nuevos colaboradores de TCS",
     tag: String = "Manual",
     url: String = "",
+    isFavorite: Boolean = false,
     onCardClick: () -> Unit = {},
+    onFavoriteToggle: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    var isFavorite by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -107,7 +113,7 @@ fun ResourceCard(
                     )
                 }
 
-                IconButton(onClick = { isFavorite = !isFavorite }, modifier = Modifier.size(24.dp)) {
+                IconButton(onClick = onFavoriteToggle, modifier = Modifier.size(24.dp)) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Favorite",
@@ -118,7 +124,7 @@ fun ResourceCard(
 
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
-            Divider()
+            HorizontalDivider()
 
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -136,7 +142,7 @@ fun ResourceCard(
                 Button(
                     onClick = {
                         if (url.isNotBlank()) {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
                     },
@@ -145,7 +151,7 @@ fun ResourceCard(
                 ) {
                     Text("Ver enlace", fontSize = 14.sp)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(Icons.Default.Launch, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Filled.Launch, contentDescription = null, modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -155,7 +161,8 @@ fun ResourceCard(
 @Composable
 fun ResourceListFromApi(
     modifier: Modifier = Modifier,
-    selectedFilter: String = "Todos"
+    selectedFilter: String = "Todos",
+    favoritosViewModel: FavoritosViewModel? = null // opcional: si se pasa, usar toggle centralizado
 ) {
     var resources by remember { mutableStateOf<List<DocumentoRecurso>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -163,7 +170,21 @@ fun ResourceListFromApi(
 
     LaunchedEffect(Unit) {
         try {
-            resources = fetchDocumentos()
+            val usuarioId = TokenHolder.usuarioId
+            val documentos = fetchDocumentosRaw(usuarioId)
+
+            resources = documentos.map { doc ->
+                DocumentoRecurso(
+                    id = doc.id ?: "",
+                    titulo = doc.titulo,
+                    descripcion = doc.descripcion ?: "",
+                    tag = doc.tags?.firstOrNull() ?: "",
+                    url = doc.url,
+                    // Usar el flag inyectado por el backend (si está) o false por defecto
+                    isFavorite = (doc.isFavorite ?: false)
+                )
+            }
+
             errorMessage = null
         } catch (e: Exception) {
             errorMessage = e.message ?: "Error desconocido"
@@ -197,11 +218,31 @@ fun ResourceListFromApi(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(filtered) { doc ->
+                    // Mantener estado local isFavorite para cada item
+                    var isFav by remember { mutableStateOf(doc.isFavorite) }
+
                     ResourceCard(
                         titulo = doc.titulo,
                         descripcion = doc.descripcion,
                         tag = doc.tag,
-                        url = doc.url
+                        url = doc.url,
+                        isFavorite = isFav,
+                        onCardClick = {},
+                        onFavoriteToggle = {
+                            // Optimistic update
+                            isFav = !isFav
+
+                            // Si hay un ViewModel de favoritos, usarlo (centraliza token y manejo de errores)
+                            val usuarioId = TokenHolder.usuarioId
+                            if (favoritosViewModel != null && !usuarioId.isNullOrBlank()) {
+                                favoritosViewModel.toggleFavorito("documento", doc.id) { res ->
+                                    if (!res.isSuccess) {
+                                        // revertir estado
+                                        isFav = !isFav
+                                    }
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -209,16 +250,11 @@ fun ResourceListFromApi(
     }
 }
 
-suspend fun fetchDocumentos(): List<DocumentoRecurso> {
-    val documentos: List<Documento> = RetrofitInstance.documentosApi.getAllDocumentos()
-
-    return documentos.map { doc ->
-        DocumentoRecurso(
-            titulo = doc.titulo,
-            descripcion = doc.descripcion ?: "",
-            tag = doc.tags?.firstOrNull() ?: "",
-            url = doc.url
-        )
+suspend fun fetchDocumentosRaw(usuarioId: String? = null): List<Documento> {
+    return if (!usuarioId.isNullOrBlank()) {
+        RetrofitInstance.documentosApi.getDocumentosPersonalizados(usuarioId)
+    } else {
+        RetrofitInstance.documentosApi.getAllDocumentos()
     }
 }
 

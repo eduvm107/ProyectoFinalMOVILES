@@ -15,12 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatbot_diseo.presentation.recursos.componentes.ResourceCard
 import com.example.chatbot_diseo.presentation.recursos.componentes.ResourceListFromApi
 import com.example.chatbot_diseo.presentation.recursos.componentes.ResourcesHeader
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosViewModel
 
 @Composable
-fun Pantalla_de_Recurso() {
+fun Pantalla_de_Recurso(
+    favoritosViewModel: FavoritosViewModel = viewModel()
+) {
     var selectedFilter by remember { mutableStateOf("Todos") }
 
     Column(
@@ -38,7 +42,8 @@ fun Pantalla_de_Recurso() {
 
         ResourceListFromApi(
             modifier = Modifier.weight(1f),
-            selectedFilter = selectedFilter
+            selectedFilter = selectedFilter,
+            favoritosViewModel = favoritosViewModel
         )
     }
 }

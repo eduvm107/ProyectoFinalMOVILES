@@ -2,6 +2,8 @@ package com.example.chatbot_diseo.data.remote
 
 import com.example.chatbot_diseo.data.model.UsuarioCompleto
 import com.example.chatbot_diseo.data.model.UsuarioRequest
+import com.example.chatbot_diseo.data.model.RecursoFavorito
+import com.example.chatbot_diseo.data.model.FavoritoRequest
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -97,4 +99,23 @@ interface UsuarioApiService {
     suspend fun getUsuariosByDepartamento(
         @Path("departamento") departamento: String
     ): Response<List<UsuarioCompleto>>
+
+    // --- Nuevos endpoints para Favoritos ---
+
+    /**
+     * Obtener los favoritos de un usuario
+     * GET /api/Usuario/{id}/favoritos
+     */
+    @GET("Usuario/{id}/favoritos")
+    suspend fun getFavoritosByUsuario(@Path("id") id: String): Response<List<RecursoFavorito>>
+
+    /**
+     * Toggle (marcar/desmarcar) favorito para un usuario
+     * POST /api/Usuario/{id}/favoritos
+     */
+    @POST("Usuario/{id}/favoritos")
+    suspend fun toggleFavorito(
+        @Path("id") id: String,
+        @Body request: FavoritoRequest
+    ): Response<Unit>
 }

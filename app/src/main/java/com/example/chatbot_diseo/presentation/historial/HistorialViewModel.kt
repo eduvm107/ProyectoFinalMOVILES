@@ -19,8 +19,12 @@ class HistorialViewModel : ViewModel() {
         cargarDatos()
     }
 
-    fun cargarDatos() {
+    // Ahora acepta un usuarioId opcional; si se provee, lo asigna al repositorio
+    fun cargarDatos(usuarioId: String? = null) {
         viewModelScope.launch {
+            if (!usuarioId.isNullOrBlank()) {
+                repository.usuarioId = usuarioId
+            }
             // Obtenemos y ordenamos por fecha (el más nuevo arriba)
             // Nota: Si te sale error en 'sortedByDescending', asegúrate de que 'fechaInicio' existe en tu modelo
             val lista = repository.obtenerMisConversaciones().sortedByDescending { it.fechaInicio }

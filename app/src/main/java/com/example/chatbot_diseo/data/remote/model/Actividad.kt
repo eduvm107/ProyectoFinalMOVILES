@@ -8,7 +8,9 @@ class Actividad {
         val fechaCorta: String,     // "10 NOV"
         val estado: String,         // "Pendiente"
         val horaInicio: String,     // "09:00 AM"
-        val lugar: String           // "Auditorio Principal"
+        val lugar: String,          // "Auditorio Principal"
+        // Flag local/UI para mostrar si está en favoritos
+        val isFavorite: Boolean = false
     )
 
     data class Notificacion(
@@ -40,7 +42,9 @@ class Actividad {
         val actividadesSiguientes: List<String>,
         val estado: String,
         val fechaCreacion: String,
-        val fechaDeActividad: String
+        val fechaDeActividad: String,
+        // Flag opcional que puede ser inyectado por el backend/personalización
+        val isFavorite: Boolean? = null
     )
 
 

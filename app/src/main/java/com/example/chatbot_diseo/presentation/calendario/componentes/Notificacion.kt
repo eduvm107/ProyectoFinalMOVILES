@@ -16,12 +16,20 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,9 +39,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chatbot_diseo.data.remote.model.Actividad.ActividadUI
+import com.example.chatbot_diseo.data.api.TokenHolder
+import com.example.chatbot_diseo.data.repository.FavoritosRepository
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosViewModel
+import kotlinx.coroutines.launch
 
 @Composable
-fun NotificacionCard(actividad: ActividadUI) {
+fun NotificacionCard(actividad: ActividadUI, favoritosViewModel: FavoritosViewModel? = null) {
+    val coroutineScope = rememberCoroutineScope()
+    var isFav by remember { mutableStateOf(actividad.isFavorite) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -62,6 +77,8 @@ fun NotificacionCard(actividad: ActividadUI) {
                     color = Color.Black
                 )
                 Spacer(modifier = Modifier.weight(1f))
+
+                // Estado box
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
@@ -74,6 +91,38 @@ fun NotificacionCard(actividad: ActividadUI) {
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Corazón (toggle favorito)
+                IconButton(onClick = {
+                    // Optimistic update
+                    isFav = !isFav
+                    val usuarioId = TokenHolder.usuarioId
+                    if (favoritosViewModel != null && !usuarioId.isNullOrBlank()) {
+                        favoritosViewModel.toggleFavorito("actividad", actividad.id) { res ->
+                            if (!res.isSuccess) {
+                                isFav = !isFav
+                            }
+                        }
+                    } else {
+                        if (!usuarioId.isNullOrBlank()) {
+                            coroutineScope.launch {
+                                val repo = FavoritosRepository()
+                                val res = repo.toggleFavorito(usuarioId, "actividad", actividad.id)
+                                if (!res.isSuccess) {
+                                    isFav = !isFav
+                                }
+                            }
+                        }
+                    }
+                }) {
+                    Icon(
+                        imageVector = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFav) Color.Red else Color.Gray
                     )
                 }
             }
@@ -142,8 +191,8 @@ fun NotificacionCardPreview() {
                 estado = "Pendiente",
                 horaInicio = "02:00 PM",
                 lugar = "Sesión virtual"
-            )
+            ),
+            favoritosViewModel = null
         )
     }
 }
-

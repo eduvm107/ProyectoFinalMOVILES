@@ -1,6 +1,7 @@
-package com.example.chatbot_diseo.data.model
+package com.example.chatbot_diseo.presentation.favoritos
 
-data class RecursoFavorito(
+// Clase auxiliar para UI local de Favoritos (no reemplaza al modelo de datos en data.model)
+data class FavoritoUi(
     val id: String,
     val titulo: String,
     val descripcion: String,

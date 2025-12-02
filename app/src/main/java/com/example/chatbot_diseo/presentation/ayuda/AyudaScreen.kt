@@ -7,6 +7,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -121,10 +122,12 @@ fun AyudaScreen(
                 is AyudaUiState.Success -> {
                     val faqs = (uiState as AyudaUiState.Success).faqs
                     items(faqs) { faq ->
+                        // Usar clave estable: id si existe, si no usar pregunta (que debería ser única o suficientemente estable)
+                        val key = faq.id ?: faq.pregunta
                         FAQCard(
                             faq = faq,
-                            isExpanded = expandedFaqId == faq.id,
-                            onToggle = { viewModel.toggleFaqExpansion(faq.id) }
+                            isExpanded = expandedFaqId == key,
+                            onToggle = { viewModel.toggleFaqExpansion(key) }
                         )
                     }
                 }
@@ -204,12 +207,10 @@ fun TimelineItem(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        // Columna de la línea de tiempo (círculo + línea)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.width(56.dp)
         ) {
-            // Círculo con icono usando el color de fondo solicitado
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -225,7 +226,6 @@ fun TimelineItem(
                 )
             }
 
-            // Línea vertical (si no es el último)
             if (!isLast) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Box(
@@ -237,7 +237,6 @@ fun TimelineItem(
             }
         }
 
-        // Contenido de la guía
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -282,15 +281,16 @@ fun FAQCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .clickable { onToggle() },
+            .animateContentSize(), // anima cambios de tamaño del card
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .clickable { onToggle() }, // Permite tocar la tarjeta para alternar
             verticalAlignment = Alignment.Top
         ) {
             // Icono de pregunta ahora usa AccentBlue
@@ -345,11 +345,18 @@ fun FAQCard(
                         if (faq.categoria.isNotBlank()) {
                             Spacer(modifier = Modifier.height(10.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = faq.categoria,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = AccentBlue // sustituido morado por AccentBlue
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = AccentBlue.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = faq.categoria,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                        color = AccentBlue
+                                    )
+                                }
+
                                 if (faq.subcategoria != null) {
                                     Text(text = " • ", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                     Text(
@@ -364,16 +371,18 @@ fun FAQCard(
                 }
             }
 
-            // Icono de expansión con rotación animada
+            // Icono de expansión con rotación animada (ahora es un botón táctil)
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Default.ExpandMore, // Solo usamos ExpandMore
-                contentDescription = if (isExpanded) "Colapsar" else "Expandir",
-                tint = AccentBlue, // AccentBlue para la flecha
-                modifier = Modifier
-                    .size(24.dp)
-                    .rotate(rotationAngle) // Rotación animada
-            )
+            IconButton(onClick = { onToggle() }) {
+                Icon(
+                    imageVector = Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Colapsar" else "Expandir",
+                    tint = AccentBlue,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .rotate(rotationAngle)
+                )
+            }
         }
     }
 }

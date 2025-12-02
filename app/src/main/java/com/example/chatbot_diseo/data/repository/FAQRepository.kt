@@ -1,5 +1,6 @@
 package com.example.chatbot_diseo.data.repository
 
+import android.util.Log
 import com.example.chatbot_diseo.data.model.FAQ
 import com.example.chatbot_diseo.data.model.FAQRequest
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
@@ -10,6 +11,7 @@ import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 class FAQRepository {
 
     private val api = RetrofitInstance.faqApi
+    private val TAG = "FAQRepository"
 
     /**
      * Obtener todas las FAQs
@@ -17,12 +19,30 @@ class FAQRepository {
     suspend fun getAllFAQs(): Result<List<FAQ>> {
         return try {
             val response = api.getAllFAQs()
+            // Log para depuración
+            try {
+                Log.d(TAG, "getAllFAQs() HTTP ${response.code()} - ${response.message()}")
+                val body = response.body()
+                Log.d(TAG, "getAllFAQs() body present: ${body != null} size=${body?.size ?: 0}")
+            } catch (ignored: Exception) {
+                Log.d(TAG, "getAllFAQs() debug log failed: ${ignored.message}")
+            }
+
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                Result.failure(Exception("Error: ${response.code()} - ${response.message()}"))
+                // Intentar leer error body si existe para más contexto
+                val errMsg = try {
+                    response.errorBody()?.string()
+                } catch (e: Exception) {
+                    null
+                }
+                val message = "Error: ${response.code()} - ${response.message()}${if (errMsg != null) " - $errMsg" else ""}"
+                Log.e(TAG, message)
+                Result.failure(Exception(message))
             }
         } catch (e: Exception) {
+            Log.e(TAG, "getAllFAQs() exception: ${e.message}", e)
             Result.failure(e)
         }
     }

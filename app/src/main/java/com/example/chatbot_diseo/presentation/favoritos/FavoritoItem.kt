@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Star
@@ -15,11 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.chatbot_diseo.data.model.RecursoFavorito
 
 @Composable
@@ -71,7 +69,7 @@ fun FavoritoItem(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = item.descripcion,
+                    text = item.descripcion ?: "",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray,
                     maxLines = 1,
@@ -85,12 +83,12 @@ fun FavoritoItem(
                 )
             }
 
-            // 3. BOTÓN ELIMINAR
+            // 3. BOTÓN DESMARCAR (corazón)
             IconButton(onClick = onRemoveClick) {
                 Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = Color.Gray.copy(alpha = 0.6f)
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Desmarcar favorito",
+                    tint = Color.Red
                 )
             }
         }

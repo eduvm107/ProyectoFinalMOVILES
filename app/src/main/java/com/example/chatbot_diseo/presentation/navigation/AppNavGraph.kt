@@ -76,6 +76,12 @@ fun AppNavGraph(
             ChatScreen(navController = navController)
         }
 
+         // Ruta que recibe un chatId para abrir una conversación específica
+        composable("chat/{chatId}") { backStackEntry ->
+            val chatId = backStackEntry.arguments?.getString("chatId")
+            ChatScreen(navController = navController, initialConversacionId = chatId)
+        }
+
         composable("calendario") {
             PantallaCalendario()
         }
@@ -106,7 +112,13 @@ fun AppNavGraph(
         }
 
         composable("historial") {
-            HistorialScreen(onBack = { navController.popBackStack() })
+            HistorialScreen(
+                onBack = { navController.popBackStack() },
+                onOpenChat = { chatId ->
+                    // Navegar a la pantalla de chat con el id de la conversación
+                    navController.navigate("chat/$chatId")
+                }
+            )
         }
 
         composable("favoritos") {

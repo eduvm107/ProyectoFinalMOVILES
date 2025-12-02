@@ -8,7 +8,8 @@ data class FAQ(
     val id: String? = null,
     val pregunta: String,
     val respuesta: String,
-    val categoria: String,
+    // categoria puede venir ausente desde el backend; dar valor por defecto para evitar errores de deserialización
+    val categoria: String = "",
     val subcategoria: String? = null,
     val palabrasClave: List<String>? = null,
     val prioridad: String? = null,

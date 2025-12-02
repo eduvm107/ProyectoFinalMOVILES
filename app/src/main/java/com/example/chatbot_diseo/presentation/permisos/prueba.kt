@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 
+@Suppress("unused")
 @Composable
 fun PermissionScreen(navController: NavController) {
     val context = LocalContext.current
