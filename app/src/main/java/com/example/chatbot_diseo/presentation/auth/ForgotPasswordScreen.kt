@@ -38,13 +38,16 @@ fun ForgotPasswordScreen(
     LaunchedEffect(result) {
         result?.let {
             isLoading = false
-            it.onSuccess {
+            it.onSuccess { msg ->
                 successMessage = "Se ha enviado un correo con la contraseña temporal."
                 Toast.makeText(context, successMessage, Toast.LENGTH_LONG).show()
+                // Limpiar estado para permitir reintentos y evitar reprocesar el mismo resultado
+                vm.clearState()
             }
-            it.onFailure {
+            it.onFailure { _ ->
                 errorMessage = "No se pudo enviar el correo de recuperación."
                 Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                vm.clearState()
             }
         }
     }
@@ -118,6 +121,9 @@ fun ForgotPasswordScreen(
                     onClick = {
                         if (email.isNotBlank()) {
                             isLoading = true
+                            // limpiar mensajes anteriores
+                            successMessage = null
+                            errorMessage = null
                             vm.recoverPassword(email)
                         }
                     },
