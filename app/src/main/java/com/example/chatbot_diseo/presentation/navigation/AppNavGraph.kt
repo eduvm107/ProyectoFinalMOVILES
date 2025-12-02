@@ -74,7 +74,14 @@ fun AppNavGraph(
 
         composable("admin_panel") {
             AdminPanelScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onLogout = {
+                    // Limpiar token e ID del usuario
+                    TokenHolder.clear()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 

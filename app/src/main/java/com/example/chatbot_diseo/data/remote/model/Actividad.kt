@@ -20,7 +20,7 @@ class Actividad {
     )
 
 
-  
+
 
     // Modelo completo que antes se llamaba Actividad, ahora renombrado
     // para poder reutilizar el nombre Actividad en otro lugar.
@@ -79,7 +79,6 @@ class Actividad {
         @SerializedName("modalidad")
         val modalidad: String = "",
 
-
         @SerializedName("tipo")
         val tipo: String = "",
 
@@ -117,7 +116,10 @@ class Actividad {
         val fechaCreacion: String = "",
 
         @SerializedName("fecha_de_actividad")
-        val fechaDeActividad: String = ""
+        val fechaDeActividad: String = "",
+
+        @SerializedName("UsuarioId")
+        val UsuarioId: String = ""
     )
 
 }
