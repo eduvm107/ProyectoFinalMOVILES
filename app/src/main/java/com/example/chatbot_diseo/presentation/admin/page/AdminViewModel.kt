@@ -9,6 +9,9 @@ import com.example.chatbot_diseo.data.admin.ResourceItem
 import com.example.chatbot_diseo.data.common.Result
 import com.example.chatbot_diseo.network.dto.request.ActivityRequest
 import com.example.chatbot_diseo.network.dto.response.ActivityResponse
+import com.example.chatbot_diseo.network.dto.response.UsuarioCompleto
+import com.example.chatbot_diseo.network.api.AdminApiService
+import com.example.chatbot_diseo.network.client.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -20,6 +23,7 @@ import kotlinx.coroutines.launch
 class AdminPanelViewModel : ViewModel() {
 
     private val repository = AdminRepository()
+    private val apiService: AdminApiService = RetrofitClient.createService(AdminApiService::class.java)
 
     // ============== ESTADOS DE CARGA Y ERRORES ==============
 
@@ -31,6 +35,14 @@ class AdminPanelViewModel : ViewModel() {
 
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage
+
+    // ============== USUARIO ACTUAL Y VALIDACIÓN DE ROL ==============
+
+    private val _adminUser = MutableStateFlow<UsuarioCompleto?>(null)
+    val adminUser: StateFlow<UsuarioCompleto?> = _adminUser
+
+    private val _isAdmin = MutableStateFlow<Boolean>(false)
+    val isAdmin: StateFlow<Boolean> = _isAdmin
 
     // ============== CONTENIDOS ==============
 
@@ -478,6 +490,53 @@ class AdminPanelViewModel : ViewModel() {
     fun getCompletionRate() = _metrics.value?.completionRate ?: 0
     fun getAverageSatisfaction() = _metrics.value?.averageSatisfaction ?: 0.0
     fun getAverageTimeDays() = _metrics.value?.averageTimeDays ?: 0
+
+    // ============== USUARIO ACTUAL Y VALIDACIÓN DE ROL ==============
+
+    /**
+     * Cargar usuario actual por email y validar si es administrador
+     * @param email Email del usuario a buscar
+     */
+    fun loadUsuarioActual(email: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            try {
+                val response = apiService.getUsuarioByEmail(email)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val usuario = response.body()!!
+                    _adminUser.value = usuario
+
+                    // Validar el rol del usuario
+                    _isAdmin.value = usuario.rol.equals("admin", ignoreCase = true)
+
+                    if (!_isAdmin.value) {
+                        _errorMessage.value = "Acceso denegado: El usuario no tiene permisos de administrador"
+                    }
+                } else {
+                    _adminUser.value = null
+                    _isAdmin.value = false
+                    _errorMessage.value = "Usuario no encontrado o sin permisos"
+                }
+            } catch (e: Exception) {
+                _adminUser.value = null
+                _isAdmin.value = false
+                _errorMessage.value = "Error al cargar usuario: ${e.message}"
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Limpiar datos del usuario actual
+     */
+    fun clearUsuarioActual() {
+        _adminUser.value = null
+        _isAdmin.value = false
+    }
 
     // ============== UTILIDADES ==============
 
