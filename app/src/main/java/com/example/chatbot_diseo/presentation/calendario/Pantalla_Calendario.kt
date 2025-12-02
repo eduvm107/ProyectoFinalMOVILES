@@ -89,7 +89,7 @@ fun PantallaCalendario() {
 
 private fun ActividadRemota.toUI(): ActividadUI =
     ActividadUI(
-        id = id,
+        id = id ?: "",
         titulo = titulo,
         fechaCorta = fechaDeActividad.substringBefore("T"),
         estado = estado,
