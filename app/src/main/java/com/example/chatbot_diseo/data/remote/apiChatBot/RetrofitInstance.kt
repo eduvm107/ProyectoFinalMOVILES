@@ -241,6 +241,17 @@ object RetrofitInstance {
             .build()
     }
 
+    private val retrofitChatOrquestador: Retrofit by lazy {
+        Retrofit.Builder()
+            // URL completa de ejemplo:
+            // https://localhost:7095/api/ChatOrquestador/preguntar?pregunta=Hola&usuarioId=TU_ID_AQUI
+            // Para emulador Android se usa 10.0.2.2 en lugar de localhost
+            .baseUrl("https://10.0.2.2:7095/api/")
+            .client(chatbotClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     private val retrofitSlow: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
@@ -261,6 +272,11 @@ object RetrofitInstance {
     /** Servicio de Chatbot (optimizado para velocidad - SIN LOGGING) */
     val chatbotApi: ChatbotApiService by lazy {
         retrofitChatbot.create(ChatbotApiService::class.java)
+    }
+
+    /** Servicio de Chat orquestador (usa queries pregunta / usuarioId) */
+    val chatOrquestadorApi: ChatOrquestadorApiService by lazy {
+        retrofitChatOrquestador.create(ChatOrquestadorApiService::class.java)
     }
 
     /** Servicio de Usuarios (rápido) */

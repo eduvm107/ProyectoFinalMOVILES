@@ -8,15 +8,19 @@ import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
  */
 class ChatbotRepository {
 
-    private val api = RetrofitInstance.chatbotApi
+    private val chatbotApi = RetrofitInstance.chatbotApi
+    private val chatOrquestadorApi = RetrofitInstance.chatOrquestadorApi
 
     /**
      * Enviar una pregunta al chatbot y obtener respuesta generada por IA (Ollama)
      */
     suspend fun enviarPregunta(usuarioId: String, pregunta: String): Result<ChatbotAskResponse> {
         return try {
-            val request = ChatbotAskRequest(usuarioId, pregunta)
-            val response = api.ask(request)
+            // Nuevo flujo: usar ChatOrquestador con query params
+            val response = chatOrquestadorApi.preguntar(
+                pregunta = pregunta,
+                usuarioId = usuarioId
+            )
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -32,7 +36,7 @@ class ChatbotRepository {
      */
     suspend fun getHistorial(usuarioId: String): Result<ChatbotHistorialResponse> {
         return try {
-            val response = api.getHistorial(usuarioId)
+            val response = chatbotApi.getHistorial(usuarioId)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -49,7 +53,7 @@ class ChatbotRepository {
     suspend fun registrarSatisfaccion(conversacionId: String, satisfaccion: Int): Result<SatisfaccionResponse> {
         return try {
             val request = SatisfaccionRequest(satisfaccion)
-            val response = api.registrarSatisfaccion(conversacionId, request)
+            val response = chatbotApi.registrarSatisfaccion(conversacionId, request)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -65,7 +69,7 @@ class ChatbotRepository {
      */
     suspend fun getEstadisticas(): Result<ChatbotEstadisticasResponse> {
         return try {
-            val response = api.getEstadisticas()
+            val response = chatbotApi.getEstadisticas()
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -81,7 +85,7 @@ class ChatbotRepository {
      */
     suspend fun healthCheck(): Result<ChatbotHealthResponse> {
         return try {
-            val response = api.healthCheck()
+            val response = chatbotApi.healthCheck()
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
