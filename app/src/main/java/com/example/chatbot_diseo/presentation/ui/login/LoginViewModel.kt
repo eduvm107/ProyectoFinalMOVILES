@@ -39,9 +39,12 @@ class LoginViewModel : ViewModel() {
                         // Guardar token e ID del usuario de forma rápida
                         body.token?.let { token ->
                             TokenHolder.token = token
+                            println("DEBUG LOGIN - Token guardado: ${token.take(20)}...")
                         }
                         body.usuario?.id?.let { id ->
                             TokenHolder.usuarioId = id
+                            println("DEBUG LOGIN - UsuarioId guardado: '$id'")
+                            println("DEBUG LOGIN - Usuario completo: ${body.usuario}")
                         }
                         _state.value = Result.success(body)
                     } else {

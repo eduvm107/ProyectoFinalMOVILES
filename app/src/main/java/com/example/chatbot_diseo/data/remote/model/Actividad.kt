@@ -25,33 +25,6 @@ class Actividad {
         @SerializedName("titulo")
         val titulo: String = "",
 
-
-    data class Actividad(
-        val id: String,
-        val titulo: String,
-        val descripcion: String,
-        val dia: Int,
-        val duracionHoras: Double,
-        val horaInicio: String,
-        val horaFin: String,
-        val lugar: String,
-        val modalidad: String,
-        val tipo: String,
-        val categoria: String,
-        val responsable: String,
-        val emailResponsable: String,
-        val capacidadMaxima: Int,
-        val obligatorio: Boolean,
-        val materialesNecesarios: List<String>,
-        val materialesProporcionados: List<String>,
-        val preparacionPrevia: String,
-        val actividadesSiguientes: List<String>,
-        val estado: String,
-        val fechaCreacion: String,
-        val fechaDeActividad: String,
-        val UsuarioId: String,
-    )
-
         @SerializedName("descripcion")
         val descripcion: String = "",
 
@@ -72,7 +45,6 @@ class Actividad {
 
         @SerializedName("modalidad")
         val modalidad: String = "",
-
 
         @SerializedName("tipo")
         val tipo: String = "",
@@ -111,6 +83,9 @@ class Actividad {
         val fechaCreacion: String = "",
 
         @SerializedName("fecha_de_actividad")
-        val fechaDeActividad: String = ""
+        val fechaDeActividad: String = "",
+
+        @SerializedName("UsuarioId")
+        val UsuarioId: String = ""
     )
 }
