@@ -31,7 +31,7 @@ fun ChatScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F4F7))
+            .background(MaterialTheme.colorScheme.background)
     ) {
 
         // HEADER

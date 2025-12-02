@@ -6,6 +6,7 @@ data class Usuario(
     val email: String?,
     val nombreCompleto: String?,
     val nombre: String?,
+    val telefono: String?,
     val departamento: String?,
     val puesto: String?,
     val activo: Boolean? = null,

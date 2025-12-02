@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,11 +37,15 @@ fun PantallaCalendario() {
 
     LaunchedEffect(Unit) {
         try {
+            println("🔄 Cargando actividades desde API...")
             val remotas: List<ActividadRemota> = RetrofitInstance.actividadesApi.getAllActividades()
+            println("✅ Actividades cargadas: ${remotas.size}")
             actividades = remotas.map { it.toUI() }
             errorMessage = null
         } catch (e: Exception) {
-            errorMessage = e.message ?: "Error al cargar actividades"
+            println("❌ Error cargando actividades: ${e.message}")
+            e.printStackTrace()
+            errorMessage = "Error: ${e.message ?: "Desconocido"}\nTipo: ${e::class.simpleName}"
         } finally {
             isLoading = false
         }
@@ -49,7 +54,7 @@ fun PantallaCalendario() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF0F2F5))
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         HeaderCalendario(

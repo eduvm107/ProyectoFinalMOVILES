@@ -163,10 +163,14 @@ fun ResourceListFromApi(
 
     LaunchedEffect(Unit) {
         try {
+            println("🔄 Cargando recursos desde API...")
             resources = fetchDocumentos()
+            println("✅ Recursos cargados: ${resources.size}")
             errorMessage = null
         } catch (e: Exception) {
-            errorMessage = e.message ?: "Error desconocido"
+            println("❌ Error cargando recursos: ${e.message}")
+            e.printStackTrace()
+            errorMessage = "Error: ${e.message ?: "Desconocido"}\nTipo: ${e::class.simpleName}"
         } finally {
             isLoading = false
         }

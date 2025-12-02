@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ForgotPasswordViewModel(private val authRepository: AuthRepository = AuthRepository()) : ViewModel() {
+class ForgotPasswordViewModel : ViewModel() {
 
     private val _state = MutableStateFlow<Result<String>?>(null)
     val state = _state.asStateFlow()
@@ -15,7 +15,7 @@ class ForgotPasswordViewModel(private val authRepository: AuthRepository = AuthR
     fun recoverPassword(email: String) {
         viewModelScope.launch {
             try {
-                val response = authRepository.recoverPassword(email)
+                val response = AuthRepository.recoverPassword(email)
                 if (response.isSuccessful && response.body() != null) {
                     _state.value = Result.success(response.body()!!.message)
                 } else {
