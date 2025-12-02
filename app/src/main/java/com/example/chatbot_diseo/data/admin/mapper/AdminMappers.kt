@@ -1,54 +1,35 @@
 package com.example.chatbot_diseo.data.admin.mapper
 
 import com.example.chatbot_diseo.data.admin.ActivityItem
-import com.example.chatbot_diseo.data.admin.ContentItem
 import com.example.chatbot_diseo.data.admin.ResourceItem
 import com.example.chatbot_diseo.network.dto.response.ActivityResponse
-import com.example.chatbot_diseo.network.dto.response.ContentResponse
 import com.example.chatbot_diseo.network.dto.response.ResourceResponse
 
 /**
- * Mappers para convertir DTOs de red (backend en español) a modelos de dominio
+ * Mappers para convertir DTOs del backend a modelos de UI
  */
 
-// Content Mappers (MensajeAutomatico -> ContentItem)
-fun ContentResponse.toContentItem(): ContentItem {
-    return ContentItem(
-        id = id ?: "",
-        title = titulo,
-        type = tipo,
-        description = contenido
-    )
-}
-
-fun List<ContentResponse>.toContentItems(): List<ContentItem> {
-    return this.map { it.toContentItem() }
-}
-
-// Activity Mappers (Actividad -> ActivityItem)
+/**
+ * Convierte ActivityResponse (del backend) a ActivityItem (para UI)
+ */
 fun ActivityResponse.toActivityItem(): ActivityItem {
     return ActivityItem(
-        id = id ?: "",
-        title = titulo,
-        date = "Día $dia - $horaInicio",
-        modality = modalidad
+        id = this.id ?: "",
+        title = this.titulo,
+        date = "Día ${this.dia} - ${this.horaInicio}",
+        modality = this.modalidad
     )
 }
 
-fun List<ActivityResponse>.toActivityItems(): List<ActivityItem> {
-    return this.map { it.toActivityItem() }
-}
-
-// Resource Mappers (Documento -> ResourceItem)
+/**
+ * Convierte ResourceResponse (del backend) a ResourceItem (para UI)
+ */
 fun ResourceResponse.toResourceItem(): ResourceItem {
     return ResourceItem(
-        id = id ?: "",
-        title = titulo,
-        category = categoria,
-        url = url
+        id = this.id ?: "",
+        title = this.titulo,
+        category = this.categoria,
+        url = this.url
     )
 }
 
-fun List<ResourceResponse>.toResourceItems(): List<ResourceItem> {
-    return this.map { it.toResourceItem() }
-}

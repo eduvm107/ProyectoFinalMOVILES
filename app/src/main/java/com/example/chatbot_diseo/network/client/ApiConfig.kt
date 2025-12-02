@@ -19,7 +19,7 @@ object ApiConfig {
     const val MENSAJES_ENDPOINT = "mensajesautomaticos"
     const val ACTIVIDADES_ENDPOINT = "actividades"
     const val DOCUMENTOS_ENDPOINT = "documentos"
-    const val METRICAS_ENDPOINT = "metricas"
+
 
     // ========== URLs COMPLETAS ==========
     fun getFullUrl(endpoint: String) = BASE_URL + endpoint
@@ -29,7 +29,7 @@ object ApiConfig {
         println("Mensajes:    ${getFullUrl(MENSAJES_ENDPOINT)}")
         println("Actividades: ${getFullUrl(ACTIVIDADES_ENDPOINT)}")
         println("Documentos:  ${getFullUrl(DOCUMENTOS_ENDPOINT)}")
-        println("Métricas:    ${getFullUrl(METRICAS_ENDPOINT)}")
+
     }
 
     /**
