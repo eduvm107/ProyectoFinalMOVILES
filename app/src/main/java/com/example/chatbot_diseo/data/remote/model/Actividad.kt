@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 class Actividad {
 
+    // Modelo ligero para UI de calendario
     data class ActividadUI(
         val id: String,
         val titulo: String,
@@ -18,15 +19,12 @@ class Actividad {
         val fechaDeActividad: String
     )
 
-    data class Actividad(
-        @SerializedName("_id")
-        val id: String? = null,
 
-        @SerializedName("titulo")
-        val titulo: String = "",
+  
 
-
-    data class Actividad(
+    // Modelo completo que antes se llamaba Actividad, ahora renombrado
+    // para poder reutilizar el nombre Actividad en otro lugar.
+    data class Actividad_Calendario(
         val id: String,
         val titulo: String,
         val descripcion: String,
@@ -51,6 +49,14 @@ class Actividad {
         val fechaDeActividad: String,
         val UsuarioId: String,
     )
+    
+    
+     data class Actividad(
+        @SerializedName("_id")
+        val id: String? = null,
+
+        @SerializedName("titulo")
+        val titulo: String = "",
 
         @SerializedName("descripcion")
         val descripcion: String = "",
@@ -113,4 +119,5 @@ class Actividad {
         @SerializedName("fecha_de_actividad")
         val fechaDeActividad: String = ""
     )
+
 }
