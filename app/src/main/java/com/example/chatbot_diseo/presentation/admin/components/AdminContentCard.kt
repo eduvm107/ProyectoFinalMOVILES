@@ -16,12 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.example.chatbot_diseo.data.admin.ContentItem
+import com.example.chatbot_diseo.network.dto.response.ContentResponse
 import com.example.chatbot_diseo.ui.theme.*
 
 @Composable
 fun AdminContentCard(
-    item: ContentItem,
+    item: ContentResponse,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -38,38 +38,125 @@ fun AdminContentCard(
         ) {
             // Título principal con mejor estilo
             Text(
-                text = item.title,
+                text = item.titulo,
                 style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
                 color = TcsTextDark
             )
 
             Spacer(Modifier.height(12.dp))
 
-            // Tipo con badge mejorado
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(TcsBlueLight)
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            // Row con tipo y estado
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = item.type,
-                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
-                    color = TcsBlue
-                )
+                // Tipo con badge mejorado
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(TcsBlueLight)
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = item.tipo,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                        color = TcsBlue
+                    )
+                }
+
+                // Estado activo/inactivo
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (item.activo) TcsGreen.copy(alpha = 0.15f) else TcsGrayLight)
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = if (item.activo) "Activo" else "Inactivo",
+                        style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                        color = if (item.activo) TcsGreen else TcsGrayText
+                    )
+                }
             }
 
             Spacer(Modifier.height(14.dp))
 
-            // Descripción con mejor espaciado
+            // Contenido del mensaje
             Text(
-                text = item.description,
+                text = item.contenido,
                 style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
                 color = TcsTextLight,
-                lineHeight = androidx.compose.ui.unit.TextUnit(22f, androidx.compose.ui.unit.TextUnitType.Sp)
+                lineHeight = androidx.compose.ui.unit.TextUnit(22f, androidx.compose.ui.unit.TextUnitType.Sp),
+                maxLines = 3
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
+
+            // Información adicional
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Día gatillo
+                Column {
+                    Text(
+                        text = "Día",
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                        color = TcsGrayText
+                    )
+                    Text(
+                        text = item.diaGatillo.toString(),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                        color = TcsTextDark
+                    )
+                }
+
+                // Prioridad
+                Column {
+                    Text(
+                        text = "Prioridad",
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                        color = TcsGrayText
+                    )
+                    Text(
+                        text = item.prioridad,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                        color = when (item.prioridad.lowercase()) {
+                            "alta" -> TcsRed
+                            "media" -> TcsOrange
+                            else -> TcsGreen
+                        }
+                    )
+                }
+
+                // Hora de envío
+                Column {
+                    Text(
+                        text = "Hora",
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                        color = TcsGrayText
+                    )
+                    Text(
+                        text = item.horaEnvio,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                        color = TcsTextDark
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Canales
+            if (item.canal.isNotEmpty()) {
+                Text(
+                    text = "Canales: ${item.canal.joinToString(", ")}",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                    color = TcsGrayText
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+
+            Spacer(Modifier.height(8.dp))
 
             // Botones de acción mejorados
             Row(
