@@ -1,7 +1,6 @@
 package com.example.chatbot_diseo.presentation.footer
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -16,12 +15,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
@@ -36,53 +33,24 @@ import androidx.compose.ui.unit.dp
 
 data class BottomNavigationItem(
     val title: String,
-    val route: String, // Add route for navigation
+    val route: String,
     val icon: ImageVector,
-    val hasNews: Boolean
+    val hasNews: Boolean = false
 )
 
 @Composable
 fun BottomNavBar(navController: NavController) {
     val items = listOf(
-        BottomNavigationItem(
-            title = "Chat",
-            route = "chat",
-            icon = Icons.AutoMirrored.Filled.Chat,
-            hasNews = true
-        ),
-        BottomNavigationItem(
-            title = "Actividades",
-            route = "calendario",
-            icon = Icons.Filled.CalendarToday,
-            hasNews = false
-        ),
-        BottomNavigationItem(
-            title = "Recursos",
-            route = "recursos",
-            icon = Icons.AutoMirrored.Filled.MenuBook,
-            hasNews = false
-        ),
-        BottomNavigationItem(
-            title = "Perfil",
-            route = "perfil",
-            icon = Icons.Filled.Person,
-            hasNews = false
-        )
+        BottomNavigationItem("Chat", "chat", Icons.AutoMirrored.Filled.Chat, hasNews = true),
+        BottomNavigationItem("Actividades", "calendario", Icons.Filled.CalendarToday),
+        BottomNavigationItem("Recursos", "recursos", Icons.AutoMirrored.Filled.MenuBook),
+        BottomNavigationItem("Perfil", "perfil", Icons.Filled.Person)
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val context = LocalContext.current
-
-    // Log cuando cambia la ruta actual o se compone por primera vez
-    LaunchedEffect(currentDestination?.route) {
-        Log.d("BottomNavBar", "compose - currentRoute=${currentDestination?.route}")
-        Toast.makeText(context, "BottomNavBar composed (route=${currentDestination?.route})", Toast.LENGTH_SHORT).show()
-    }
-
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Divider para separar visualmente la barra del contenido
         HorizontalDivider(color = Color.Black.copy(alpha = 0.08f), thickness = 1.dp)
 
         NavigationBar(
@@ -90,16 +58,28 @@ fun BottomNavBar(navController: NavController) {
             containerColor = Color(0xFF4A6B8A)
         ) {
             items.forEach { item ->
-                val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                val selected = currentDestination?.hierarchy?.any { dest -> dest.route == item.route } == true
+
                 NavigationBarItem(
                     selected = selected,
+                    // Siempre navegar a la ruta al hacer click (evita clicks sin efecto)
                     onClick = {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+                        Log.d("BottomNavBar", "Clicked bottom item: ${item.title}, route=${item.route}")
+                        if (item.route == "chat") {
+                            // Forzar navegación explícita a "chat" usando popUpTo por ruta
+                            navController.navigate("chat") {
+                                popUpTo("chat") { inclusive = false }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
+                        } else {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     },
                     label = {
@@ -110,13 +90,9 @@ fun BottomNavBar(navController: NavController) {
                         )
                     },
                     icon = {
-                        BadgedBox(
-                            badge = {
-                                if (item.hasNews && !selected) { // Show badge only if not selected
-                                    Badge()
-                                }
-                            }
-                        ) {
+                        BadgedBox(badge = {
+                            if (item.hasNews && !selected) { Badge() }
+                        }) {
                             Icon(
                                 imageVector = item.icon,
                                 contentDescription = item.title,

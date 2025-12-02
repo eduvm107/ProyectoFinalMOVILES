@@ -1,5 +1,6 @@
 package com.example.chatbot_diseo.presentation.chat
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,10 +23,15 @@ fun ChatScreen(
 
     var drawerOpen by remember { mutableStateOf(false) }
 
+    // Asignar callbacks de navegación en cuanto la pantalla se crea (compatibilidad)
+    viewModel.navegarADocumentos = { navController.navigate("recursos") }
+    viewModel.navegarAActividades = { navController.navigate("calendario") }
+    viewModel.navegarAPerfil = { navController.navigate("perfil") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F4F7))
+            .background(MaterialTheme.colorScheme.background)
     ) {
 
         // HEADER
@@ -41,7 +47,33 @@ fun ChatScreen(
                 .padding(horizontal = 16.dp)
         ) {
             items(viewModel.mensajes) { msg ->
-                ChatBubble(msg.texto, msg.esUsuario)
+                ChatBubble(msg) { mensaje ->
+                    // Si la respuesta predefinida viene con una ruta, navegamos
+                    val route = mensaje.actionRoute
+                    if (!route.isNullOrBlank()) {
+                        try {
+                            Log.d("ChatAction", "Attempting to navigate to route from message: $route")
+
+                            // Primero intentar la lambda del ViewModel (fallback seguro si hay otro NavController)
+                            when (route) {
+                                "recursos" -> viewModel.navegarADocumentos?.invoke()
+                                "actividades" -> viewModel.navegarAActividades?.invoke()
+                                "perfil" -> viewModel.navegarAPerfil?.invoke()
+                            }
+
+                            // Luego intentar la navegación directa con navController (comportamiento estándar)
+                            navController.navigate(route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        } catch (ex: Exception) {
+                            Log.e("ChatAction", "Navigation failed for route=$route", ex)
+                        }
+                    } else {
+                        // Si no hay route, ejecutamos la acción si existe
+                        mensaje.accion?.invoke()
+                    }
+                }
             }
 
             item {
@@ -78,4 +110,5 @@ fun ChatScreen(
             }
         }
     }
+
 }

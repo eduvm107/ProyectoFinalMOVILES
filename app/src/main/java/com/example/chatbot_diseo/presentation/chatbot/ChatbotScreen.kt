@@ -65,7 +65,7 @@ fun ChatbotScreen(
 
     val unreadCount = messages.count { it.sender == "bot" } // demo
 
-    Surface(modifier = modifier.fillMaxSize(), color = Color(0xFF001827)) {
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
             Row(
@@ -93,7 +93,7 @@ fun ChatbotScreen(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "TCS Assistant", color = Color(0xFFE7F6FF), fontWeight = FontWeight.SemiBold)
+                    Text(text = "TCS Assistant", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
@@ -102,7 +102,7 @@ fun ChatbotScreen(
                                 .background(MaterialTheme.colorScheme.primary)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Siempre disponible para ti", color = Color(0xFF9FB9CA), fontSize = 13.sp)
+                        Text(text = "Siempre disponible para ti", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     }
                 }
 
@@ -110,10 +110,10 @@ fun ChatbotScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Brush.horizontalGradient(listOf(Color(0xFF001F3F), Color(0xFF002B6B))))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .padding(8.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Edit, contentDescription = null, tint = Color.White)
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
 
@@ -124,7 +124,7 @@ fun ChatbotScreen(
                         Icon(
                             imageVector = if (showMenu) Icons.Default.Close else Icons.Default.Menu,
                             contentDescription = null,
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                         if (!showMenu && unreadCount > 0) {
                             Box(
@@ -132,11 +132,11 @@ fun ChatbotScreen(
                                     .size(18.dp)
                                     .align(Alignment.TopEnd)
                                     .clip(CircleShape)
-                                    .background(Brush.linearGradient(listOf(Color(0xFF00BFFF), Color(0xFF0076CE))))
+                                    .background(MaterialTheme.colorScheme.error)
                             ) {
                                 Text(
                                     text = unreadCount.toString(),
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onError,
                                     fontSize = 10.sp,
                                     modifier = Modifier.align(Alignment.Center)
                                 )
@@ -174,24 +174,22 @@ fun ChatbotScreen(
                         }
 
                         // Bubble
-                        val bubbleBrush = if (message.sender == "user") {
-                            Brush.horizontalGradient(listOf(Color(0xFF00B4FF), Color(0xFF0066FF)))
-                        } else null
-
                         val bubbleModifier = Modifier
                             .widthIn(max = 320.dp)
                             .wrapContentHeight()
                             .clip(RoundedCornerShape(20.dp))
-                            .then(
-                                if (bubbleBrush != null) Modifier.background(bubbleBrush)
-                                else Modifier.background(MaterialTheme.colorScheme.surface.copy(alpha = 0.06f))
+                            .background(
+                                if (message.sender == "user")
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant
                             )
                             .padding(horizontal = 16.dp, vertical = 12.dp)
 
                         Box(modifier = bubbleModifier) {
                             Text(
                                 text = message.text,
-                                color = if (message.sender == "user") Color.White else Color(0xFFE7F6FF),
+                                color = if (message.sender == "user") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 15.sp
                             )
                         }

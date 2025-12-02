@@ -23,16 +23,60 @@ class ChatViewModel : ViewModel() {
     // ID de la conversación actual
     var conversacionId: String? = null
 
+    // Preguntas sugeridas del chatbot
     val sugerencias = listOf(
-        "Ver mi calendario 📅",
-        "Revisar documentos 📄",
-        "Consultar cursos 🎓",
-        "Hablar con RRHH 💬"
+        "¿Qué es el onboarding? 🧭",
+        "¿Dónde veo mis documentos? 📄",
+        "¿Qué actividades debo completar? 📌",
+        "¿Cómo contacto a mi supervisor? 🧑‍💼",
+        "¿Qué puedo hacer en esta aplicación? 🤖"
+    )
+
+    // Respuestas fijas a preguntas sugeridas (versión corta)
+    val respuestasPredefinidas = mapOf(
+
+        "¿Qué es el onboarding? 🧭" to Mensaje(
+            texto = "El onboarding es el proceso donde te integras a TCS. Aquí completas tus documentos, actividades y recibes la información inicial necesaria para tu ingreso ✨.",
+            esUsuario = false
+        ),
+
+        "¿Dónde veo mis documentos? 📄" to Mensaje(
+            texto = "Tus documentos cargados están en la sección Documentos. Ahí podrás revisar lo que ya enviaste y lo que aún te falta 👍.\n\nPresiona aquí para ir directo:",
+            esUsuario = false,
+            textoAccion = "Ir a Documentos",
+            accion = null,
+            actionRoute = "recursos"
+        ),
+
+        "¿Qué actividades debo completar? 📌" to Mensaje(
+            texto = "Tus actividades del onboarding aparecen en la sección Actividades. Ahí ves tus tareas pendientes, completadas y su detalle 📍.\n\nIngresa aquí:",
+            esUsuario = false,
+            textoAccion = "Ver Actividades",
+            accion = null,
+            actionRoute = "calendario"
+        ),
+
+        "¿Cómo contacto a mi supervisor? 🧑‍💼" to Mensaje(
+            texto = "Puedes ver a tu supervisor en tu perfil. Encontrarás su nombre, área y correo institucional para contactarlo fácilmente 💼.\n\nToca aquí para ir:",
+            esUsuario = false,
+            textoAccion = "Ver Supervisor",
+            accion = null,
+            actionRoute = "perfil"
+        ),
+
+        "¿Qué puedo hacer en esta aplicación? 🤖" to Mensaje(
+            texto = "Aquí puedes revisar tus documentos, ver tus actividades, consultar tu información personal y usar el asistente para resolver dudas del onboarding 🙌.",
+            esUsuario = false
+        )
     )
 
     init {
         mensajes.add(Mensaje("¡Hola! 👋 Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?", false))
     }
+
+    var navegarADocumentos: (() -> Unit)? = null
+    var navegarAActividades: (() -> Unit)? = null
+    var navegarAPerfil: (() -> Unit)? = null
 
     /**
      * Enviar mensaje al chatbot con IA
@@ -40,8 +84,31 @@ class ChatViewModel : ViewModel() {
     fun enviarMensaje(texto: String) {
         if (texto.isBlank()) return
 
+        val textoTrim = texto.trim()
+
         // Agregar mensaje del usuario
-        mensajes.add(Mensaje(texto, true))
+        mensajes.add(Mensaje(textoTrim, true))
+
+        // Respuesta predefinida sin llamar al backend
+        // Buscamos coincidencias de forma más tolerante: exacta (ignore case) o parcial
+        val matched = respuestasPredefinidas.entries.firstOrNull { (key, _) ->
+            val keyTrim = key.trim()
+            keyTrim.equals(textoTrim, ignoreCase = true) ||
+                    keyTrim.contains(textoTrim, ignoreCase = true) ||
+                    textoTrim.contains(keyTrim, ignoreCase = true)
+        }
+        matched?.value?.let { respuesta ->
+            // Si la respuesta tiene actionRoute, adjuntamos la accion correspondiente como fallback
+            val respuestaConAccion = when (respuesta.actionRoute) {
+                "recursos" -> respuesta.copy(accion = { navegarADocumentos?.invoke() })
+                "calendario", "actividades" -> respuesta.copy(accion = { navegarAActividades?.invoke() })
+                "perfil" -> respuesta.copy(accion = { navegarAPerfil?.invoke() })
+                else -> respuesta
+            }
+            // Añadimos el Mensaje predefinido tal cual (mantiene textoAccion y actionRoute)
+            mensajes.add(respuestaConAccion)
+            return
+        }
 
         // Verificar si hay usuario logueado
         val userId = usuarioId
@@ -58,7 +125,7 @@ class ChatViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val result = chatbotRepository.enviarPregunta(userId, texto)
+                val result = chatbotRepository.enviarPregunta(userId, textoTrim)
 
                 result.onSuccess { response ->
                     // Remover mensaje de carga

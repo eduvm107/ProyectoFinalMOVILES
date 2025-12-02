@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    // Usa RetrofitInstance unificado por defecto
-    private val repository = AuthRepository()
 
     private val _state = MutableStateFlow<Result<LoginResponse>?>(null)
     val state: StateFlow<Result<LoginResponse>?> = _state
@@ -33,7 +31,7 @@ class LoginViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val resp = repository.login(email, password)
+                val resp = AuthRepository.login(email, password)
                 val body = resp.body()
 
                 if (resp.isSuccessful) {
