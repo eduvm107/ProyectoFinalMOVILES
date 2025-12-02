@@ -172,29 +172,7 @@ fun NotificacionCard(
 @Composable
 fun NotificacionCardPreview() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // Ejemplo de tarjeta que SÍ se mostrará con el filtro "Próximas"
-        NotificacionCard(
-            actividad = ActividadUI(
-                id = "1",
-                titulo = "Actividad de Hoy",
-                fechaCorta = LocalDate.now().toString(),
-                estado = "pendiente",
-                horaInicio = "10:00",
-                lugar = "Virtual"
-            ),
-            filtro = "Próximas"
-        )
-        // Ejemplo de tarjeta que NO se mostrará con el filtro "Próximas"
-        NotificacionCard(
-            actividad = ActividadUI(
-                id = "2",
-                titulo = "Actividad de Mañana",
-                fechaCorta = LocalDate.now().plusDays(1).toString(),
-                estado = "pendiente",
-                horaInicio = "11:00",
-                lugar = "Oficina"
-            ),
-            filtro = "Próximas"
-        )
+
+
     }
 }
