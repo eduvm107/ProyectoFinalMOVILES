@@ -84,4 +84,13 @@ interface ApiActividadService {
      */
     @GET("Actividad/obligatorias")
     suspend fun getObligatorias(): List<ActividadRemota>
+
+    /**
+     * Obtener actividades asignadas a un usuario
+     * GET /api/Actividad/usuario/{usuarioId}
+     */
+    @GET("Actividad/usuario/{usuarioId}")
+    suspend fun getByUsuario(
+        @Path("usuarioId") usuarioId: String
+    ): List<ActividadRemota>
 }
