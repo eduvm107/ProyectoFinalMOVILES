@@ -37,8 +37,8 @@ fun Pantalla_Calendario() {
     var actividades by remember { mutableStateOf<List<ActividadUI>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    // Filtro por defecto: "Proximas"
-    var selectedFilter by remember { mutableStateOf("Proximas") }
+    // Filtro por defecto: "Todas" para mostrar todas las actividades al inicio
+    var selectedFilter by remember { mutableStateOf("Todas") }
 
     LaunchedEffect(Unit) {
         try {
@@ -52,19 +52,16 @@ fun Pantalla_Calendario() {
             // Log para debug
             println("DEBUG CALENDARIO - UserId actual: '$userId'")
 
-            // Workaround: usar getAllActividades y filtrar por usuario
-            val todasActividades: List<ActividadRemota> =
-                RetrofitInstance.actividadesApi.getAllActividades()
+            // Usar el endpoint específico para obtener actividades del usuario
+            val remotas: List<ActividadRemota> =
+                RetrofitInstance.actividadesApi.getByUsuario(userId)
 
-            println("DEBUG CALENDARIO - Total actividades recibidas: ${todasActividades.size}")
+            println("DEBUG CALENDARIO - Actividades del usuario recibidas: ${remotas.size}")
 
-            // Mostrar los primeros UsuarioIds para debug
-            todasActividades.take(5).forEachIndexed { index, actividad ->
+            // Mostrar las primeras actividades para debug
+            remotas.take(5).forEachIndexed { index, actividad ->
                 println("DEBUG CALENDARIO - Actividad[$index] UsuarioId: '${actividad.UsuarioId}' | Titulo: '${actividad.titulo}'")
             }
-
-            val remotas = todasActividades.filter { it.UsuarioId == userId }
-            println("DEBUG CALENDARIO - Actividades filtradas para usuario: ${remotas.size}")
 
             actividades = remotas.map { it.toUI() }
             errorMessage = null
@@ -103,11 +100,16 @@ fun Pantalla_Calendario() {
             else -> {
                 val filtradas = actividades.filter { matchesActividadFilter(it, selectedFilter) }
 
+                // Log para debug de filtrado
+                println("DEBUG FILTRO - Filtro seleccionado: '$selectedFilter'")
+                println("DEBUG FILTRO - Total actividades: ${actividades.size}, Filtradas: ${filtradas.size}")
+
                 if (filtradas.isEmpty()) {
-                    val mensaje = if (selectedFilter == "Proximas") {
-                        "No hay actividades para hoy."
-                    } else {
-                        "No hay actividades para este filtro."
+                    val mensaje = when (selectedFilter) {
+                        "Proximas" -> "No hay actividades para hoy o mañana."
+                        "Pendientes" -> "No hay actividades pendientes."
+                        "Completadas" -> "No hay actividades completadas."
+                        else -> "No hay actividades."
                     }
                     Text(
                         text = mensaje,
@@ -144,21 +146,35 @@ private fun ActividadRemota.toUI(): ActividadUI =
 
 private fun matchesActividadFilter(actividad: ActividadUI, filtro: String): Boolean {
     val estado = actividad.estado.lowercase()
+    val hoy = LocalDate.now()
+    val manana = hoy.plusDays(1)
+    val fecha = parseFechaActividad(actividad.fechaCorta, hoy.year)
 
     return when (filtro) {
         "Todas" -> true
 
-        // Pendientes: todas las que aún no se han completado (incluye próximas)
-        "Pendientes" -> !estado.contains("complet")
-
         // Completadas: estado contiene "complet"
         "Completadas" -> estado.contains("complet")
 
-        // Proximas: SOLO actividades que inician HOY e incompletas
+        // Pendientes: actividades que no están completadas
+        // Si tiene fecha válida, debe ser hoy o futura
+        // Si no tiene fecha válida, se incluye igual si no está completada
+        "Pendientes" -> {
+            val noCompletada = !estado.contains("complet")
+            if (fecha == null) {
+                // Si no se puede parsear la fecha, incluir si no está completada
+                noCompletada
+            } else {
+                // Si tiene fecha válida, debe ser hoy o futura
+                noCompletada && (fecha.isEqual(hoy) || fecha.isAfter(hoy))
+            }
+        }
+
+        // Proximas: actividades de HOY o MAÑANA que no están completadas
         "Proximas" -> {
-            val hoy = LocalDate.now()
-            val fecha = parseFechaActividad(actividad.fechaCorta, hoy.year)
-            fecha != null && !estado.contains("complet") && fecha.isEqual(hoy)
+            !estado.contains("complet") &&
+            fecha != null &&
+            (fecha.isEqual(hoy) || fecha.isEqual(manana))
         }
 
         else -> true

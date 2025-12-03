@@ -8,7 +8,8 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
-typealias ActividadRemota = Actividad.Actividad_Calendario
+// Usar Actividad.Actividad porque tiene las anotaciones @SerializedName necesarias para deserialización
+typealias ActividadRemota = Actividad.Actividad
 
 /**
  * Servicio API para gestión de Actividades
