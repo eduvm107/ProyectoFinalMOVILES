@@ -1,5 +1,6 @@
 package com.example.chatbot_diseo.presentation.chat
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -12,10 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.outlined.SmartToy
+import com.example.chatbot_diseo.R
 @Composable
 fun ChatHeader(
     onNewChat: () -> Unit,
@@ -36,11 +38,10 @@ fun ChatHeader(
                     .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.SmartToy,
-                    contentDescription = "TCS Bot",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(28.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.logo_tata),
+                    contentDescription = "Logo TCS Assistant",
+                    modifier = Modifier.size(32.dp)
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
