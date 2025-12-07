@@ -36,7 +36,7 @@ object RetrofitInstance {
 
     // Interceptor de logging para debug
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BASIC
+        level = HttpLoggingInterceptor.Level.BODY  // ✅ Cambiar a BODY para ver JSON completo
     }
 
     // Interceptor SIN logging para máxima velocidad (chatbot)
@@ -312,5 +312,10 @@ object RetrofitInstance {
     /** Servicio de Configuración (rápido) */
     val configuracionApi: ConfiguracionApiService by lazy {
         retrofitFast.create(ConfiguracionApiService::class.java)
+    }
+
+    /** Servicio de Favoritos (rápido) */
+    val favoritosApi: FavoritosApi by lazy {
+        retrofitFast.create(FavoritosApi::class.java)
     }
 }

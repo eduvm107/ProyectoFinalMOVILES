@@ -2,6 +2,8 @@ package com.example.chatbot_diseo.presentation.recursos.componentes
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,16 +27,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,26 +42,109 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.remote.model.Documento
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosViewModel
+import com.example.chatbot_diseo.presentation.recursos.RecursosViewModel
 
-data class DocumentoRecurso(
-    val titulo: String,
-    val descripcion: String,
-    val tag: String,
-    val url: String
-)
-
+/**
+ * Lista de recursos con integración completa del ViewModel
+ */
 @Composable
-fun ResourceCard(
-    titulo: String = "Manual de bienvenida",
-    descripcion: String = "Guía completa para nuevos colaboradores de TCS",
-    tag: String = "Manual",
-    url: String = "",
-    onCardClick: () -> Unit = {},
+fun ResourceListFromApi(
+    modifier: Modifier = Modifier,
+    selectedFilter: String = "Todos",
+    recursosViewModel: RecursosViewModel = viewModel(),
+    favoritosViewModel: FavoritosViewModel? = null
 ) {
     val context = LocalContext.current
-    var isFavorite by remember { mutableStateOf(false) }
+    val recursos by recursosViewModel.recursosList.collectAsState()
+    val isLoading by recursosViewModel.isLoading.collectAsState()
+    val errorMessage by recursosViewModel.errorMessage.collectAsState()
+    val mensajeFeedback by recursosViewModel.mensajeFeedback.collectAsState()
+    val usuarioId = TokenHolder.usuarioId ?: ""
+
+    // Mostrar Toast cuando hay mensaje de feedback
+    LaunchedEffect(mensajeFeedback) {
+        mensajeFeedback?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            recursosViewModel.limpiarMensaje()
+        }
+    }
+
+    when {
+        isLoading -> {
+            Column(
+                modifier = modifier,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF007AFF))
+                Spacer(modifier = Modifier.padding(8.dp))
+                Text("Cargando recursos...", color = Color.Gray)
+            }
+        }
+        errorMessage != null -> {
+            Column(
+                modifier = modifier,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Error al cargar recursos", fontWeight = FontWeight.Bold)
+                Text(errorMessage ?: "", fontSize = 12.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.padding(8.dp))
+                Button(onClick = { recursosViewModel.recargarRecursos() }) {
+                    Text("Reintentar")
+                }
+            }
+        }
+        recursos.isEmpty() -> {
+            Column(
+                modifier = modifier,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("No hay recursos disponibles")
+            }
+        }
+        else -> {
+            val filtered = recursos.filter { matchesFilter(it, selectedFilter) }
+
+            LazyColumn(
+                modifier = modifier,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(filtered) { documento ->
+                    // 🔍 LOG DEBUG: Verificar ID del documento antes de renderizar
+                    Log.d("RECURSOS_DEBUG", "📋 Renderizando documento: id=${documento.id}, titulo=${documento.titulo}, favorito=${documento.favorito}")
+
+                    ResourceCard(
+                        documento = documento,
+                        isFavorite = documento.favorito,
+                        onToggleFavorito = {
+                            // 🔍 LOG DEBUG: Verificar ID justo antes de llamar toggleFavorito
+                            Log.d("RECURSOS_DEBUG", "💓 onClick corazón - ID: ${documento.id}, titulo: ${documento.titulo}")
+                            Log.d("RECURSOS_DEBUG", "💓 onClick corazón - ID es null? ${documento.id == null}")
+                            Log.d("RECURSOS_DEBUG", "💓 onClick corazón - ID es empty? ${documento.id?.isEmpty()}")
+
+                            recursosViewModel.toggleFavorito(usuarioId, documento, favoritosViewModel)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Card de recurso con botón de favorito conectado al ViewModel
+ */
+@Composable
+fun ResourceCard(
+    documento: Documento,
+    isFavorite: Boolean = false,
+    onToggleFavorito: () -> Unit = {}
+) {
+    val context = LocalContext.current
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -71,7 +152,6 @@ fun ResourceCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onCardClick)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -95,22 +175,28 @@ fun ResourceCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = titulo,
+                        text = documento.titulo,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
-                    Text(
-                        text = descripcion,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                    documento.descripcion?.let { desc ->
+                        Text(
+                            text = desc,
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    }
                 }
 
-                IconButton(onClick = { isFavorite = !isFavorite }, modifier = Modifier.size(24.dp)) {
+                // 🎯 BOTÓN DE FAVORITO CONECTADO AL VIEWMODEL
+                IconButton(
+                    onClick = onToggleFavorito,
+                    modifier = Modifier.size(24.dp)
+                ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite",
+                        contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos",
                         tint = if (isFavorite) Color.Red else Color(0xFF007AFF)
                     )
                 }
@@ -130,13 +216,17 @@ fun ResourceCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(tag, color = Color.Gray, fontSize = 14.sp)
+                Text(
+                    documento.tags?.firstOrNull() ?: "Sin categoría",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
                 Spacer(modifier = Modifier.weight(1f))
 
                 Button(
                     onClick = {
-                        if (url.isNotBlank()) {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        if (documento.url.isNotBlank()) {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(documento.url))
                             context.startActivity(intent)
                         }
                     },
@@ -152,82 +242,8 @@ fun ResourceCard(
     }
 }
 
-@Composable
-fun ResourceListFromApi(
-    modifier: Modifier = Modifier,
-    selectedFilter: String = "Todos"
-) {
-    var resources by remember { mutableStateOf<List<DocumentoRecurso>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        try {
-            println("🔄 Cargando recursos desde API...")
-            resources = fetchDocumentos()
-            println("✅ Recursos cargados: ${resources.size}")
-            errorMessage = null
-        } catch (e: Exception) {
-            println("❌ Error cargando recursos: ${e.message}")
-            e.printStackTrace()
-            errorMessage = "Error: ${e.message ?: "Desconocido"}\nTipo: ${e::class.simpleName}"
-        } finally {
-            isLoading = false
-        }
-    }
-
-    when {
-        isLoading -> {
-            Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Cargando recursos...")
-            }
-        }
-        errorMessage != null -> {
-            Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Error al cargar recursos")
-                Text(errorMessage ?: "", fontSize = 12.sp, color = Color.Gray)
-            }
-        }
-        resources.isEmpty() -> {
-            Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("No hay recursos disponibles")
-            }
-        }
-        else -> {
-            val filtered = resources.filter { matchesFilter(it, selectedFilter) }
-
-            LazyColumn(
-                modifier = modifier,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(filtered) { doc ->
-                    ResourceCard(
-                        titulo = doc.titulo,
-                        descripcion = doc.descripcion,
-                        tag = doc.tag,
-                        url = doc.url
-                    )
-                }
-            }
-        }
-    }
-}
-
-suspend fun fetchDocumentos(): List<DocumentoRecurso> {
-    val documentos: List<Documento> = RetrofitInstance.documentosApi.getAllDocumentos()
-
-    return documentos.map { doc ->
-        DocumentoRecurso(
-            titulo = doc.titulo,
-            descripcion = doc.descripcion ?: "",
-            tag = doc.tags?.firstOrNull() ?: "",
-            url = doc.url
-        )
-    }
-}
-
-private fun matchesFilter(doc: DocumentoRecurso, filter: String): Boolean {
-    val text = (doc.tag + " " + doc.descripcion).lowercase()
+private fun matchesFilter(doc: Documento, filter: String): Boolean {
+    val text = ((doc.tags?.firstOrNull() ?: "") + " " + (doc.descripcion ?: "")).lowercase()
 
     return when (filter) {
         "Todos" -> true
@@ -242,6 +258,15 @@ private fun matchesFilter(doc: DocumentoRecurso, filter: String): Boolean {
 @Composable
 fun ResourceCardPreview() {
     Box(modifier = Modifier.padding(16.dp)) {
-        ResourceCard()
+        ResourceCard(
+            documento = Documento(
+                id = "1",
+                titulo = "Manual de bienvenida",
+                descripcion = "Guía completa para nuevos colaboradores de TCS",
+                url = "https://example.com",
+                tags = listOf("Manual"),
+                favorito = false
+            )
+        )
     }
 }
