@@ -9,11 +9,12 @@ package com.example.chatbot_diseo.network.client
  * - MensajeAutomatico
  * - Actividad
  * - Documento
- */
+ *
+**/
 object ApiConfig {
 
     // ========== BASE URL ==========
-    const val BASE_URL = "http://10.185.24.6:5288/api/"
+    const val BASE_URL = com.example.chatbot_diseo.config.ApiEnvironment.BASE_URL
 
     // ========== ENDPOINTS EN ESPAÑOL ==========
     const val MENSAJES_ENDPOINT = "mensajesautomaticos"
@@ -32,10 +33,10 @@ object ApiConfig {
 
     }
 
-    /**
-     * URLs completas para probar en el navegador:
-     * - http://10.185.24.6:5288/api/mensajesautomaticos
-     * - http://10.185.24.6:5288/api/actividades
-     * - http://10.185.24.6:5288/api/documentos
-     */
+/**
+     * URLs completas para probar en el navegador usando la BASE_URL global:
+     * - ${BASE_URL}mensajesautomaticos
+     * - ${BASE_URL}actividades
+     * - ${BASE_URL}documentos
+     **/
 }

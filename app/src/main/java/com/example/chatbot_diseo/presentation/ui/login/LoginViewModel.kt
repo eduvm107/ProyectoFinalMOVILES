@@ -2,6 +2,7 @@ package com.example.chatbot_diseo.presentation.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatbot_diseo.config.ApiEnvironment
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.models.LoginResponse
 import com.example.chatbot_diseo.data.repository.AuthRepository
@@ -73,7 +74,7 @@ class LoginViewModel : ViewModel() {
                     e.message?.contains("timeout", ignoreCase = true) == true ->
                         "Tiempo de espera agotado. Verifica la conexión del servidor."
                     e.message?.contains("UnknownHostException") == true ->
-                        "No se puede conectar al servidor. Verifica la IP: 10.0.2.2:5288"
+                        "No se puede conectar al servidor. Verifica la URL: ${ApiEnvironment.BASE_URL}"
                     else -> "Error de conexión: ${e.message ?: "Desconocido"}"
                 }
                 _state.value = Result.failure(Exception(errorMessage))

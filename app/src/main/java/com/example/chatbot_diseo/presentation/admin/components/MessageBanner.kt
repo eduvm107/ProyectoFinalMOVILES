@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.chatbot_diseo.config.ApiEnvironment
 import com.example.chatbot_diseo.ui.theme.*
 
 /**
@@ -143,7 +144,7 @@ fun DiagnosticCard(
             Spacer(Modifier.height(12.dp))
 
             Text(
-                "Backend: http://10.185.24.6:5288/api/",
+                "Backend: ${ApiEnvironment.BASE_URL}",
                 style = MaterialTheme.typography.bodySmall,
                 color = TcsTextDark
             )

@@ -2,6 +2,7 @@ package com.example.chatbot_diseo.presentation.admin.page
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatbot_diseo.config.ApiEnvironment
 import com.example.chatbot_diseo.data.admin.ActivityItem
 import com.example.chatbot_diseo.data.admin.AdminRepository
 import com.example.chatbot_diseo.data.admin.AdminStats
@@ -206,7 +207,7 @@ class AdminPanelViewModel : ViewModel() {
                             result.message.contains("404") ->
                                 "❌ Error 404:\n\nEl endpoint /api/Actividad no fue encontrado.\n\n🔧 Verifica que el controlador ActividadController esté registrado."
                             result.message.contains("conexión") || result.message.contains("UnknownHost") ->
-                                "❌ Error de red:\n\nNo se puede conectar al servidor en http://10.185.24.6:5288\n\n🔧 Verifica:\n• El backend está ejecutándose\n• El firewall permite conexiones\n• La IP es correcta"
+                                "❌ Error de red:\n\nNo se puede conectar al servidor en ${ApiEnvironment.BASE_URL}\n\n🔧 Verifica:\n• El backend está ejecutándose\n• El firewall permite conexiones\n• La URL es correcta"
                             else ->
                                 "❌ Error: ${result.message}"
                         }
