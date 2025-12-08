@@ -1,5 +1,6 @@
 package com.example.chatbot_diseo.data.remote.apiChatBot
 
+import com.example.chatbot_diseo.config.ApiEnvironment
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.api.ApiService
 import com.example.chatbot_diseo.data.remote.*
@@ -25,7 +26,7 @@ object ApiConfig {
     // - Modelo precargado al iniciar servidor (89s)
     // - Respuestas rápidas: 15-20s (simples), 40-60s (con FAQ)
     // - Mejora de hasta 78% en tiempos de respuesta
-    const val BASE_URL = "http://10.0.2.2:5288/api/"
+    const val BASE_URL = ApiEnvironment.BASE_URL
 }
 
 /**
@@ -243,10 +244,8 @@ object RetrofitInstance {
 
     private val retrofitChatOrquestador: Retrofit by lazy {
         Retrofit.Builder()
-            // URL completa de ejemplo:
-            // https://localhost:7095/api/ChatOrquestador/preguntar?pregunta=Hola&usuarioId=TU_ID_AQUI
-            // Para emulador Android se usa 10.0.2.2 en lugar de localhost
-            .baseUrl("https://10.0.2.2:7095/api/")
+            // Usa la misma BASE_URL global configurada en ApiEnvironment
+            .baseUrl(ApiConfig.BASE_URL)
             .client(chatbotClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

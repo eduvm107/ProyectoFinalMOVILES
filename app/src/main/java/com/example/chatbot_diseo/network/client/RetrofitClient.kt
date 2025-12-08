@@ -1,5 +1,6 @@
 package com.example.chatbot_diseo.network.client
 
+import com.example.chatbot_diseo.config.ApiEnvironment
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -26,7 +27,7 @@ object RetrofitClient {
      * ✅ API corriendo en: http://localhost:5288 (puerto HTTP)
      * Para emulador Android: http://10.0.2.2:5288/api/
      */
-    private const val BASE_URL = "http://10.0.2.2:5288/api/"
+    private const val BASE_URL = ApiEnvironment.BASE_URL
 
     /**
      * Configuración de Gson para serialización/deserialización
