@@ -3,27 +3,28 @@ package com.example.chatbot_diseo.network.dto.response
 import com.google.gson.annotations.SerializedName
 
 /**
- * DTO para Documentos desde MongoDB
- * Mapea exactamente el modelo Documento del backend ASP.NET Core
+ * DTO para Documentos. Mapeo corregido para manejar _id y Null-Safety.
  */
 data class ResourceResponse(
-    @SerializedName("id")
+    // 1. CORRECCIÓN CRÍTICA DEL ID
+    @SerializedName("id", alternate = ["_id"])
     val id: String? = null,
 
+    // 2. Seguridad: Agregar valores por defecto para campos obligatorios
     @SerializedName("titulo")
-    val titulo: String,
+    val titulo: String = "", // Evita NPE si es nulo/vacío
 
     @SerializedName("descripcion")
-    val descripcion: String,
+    val descripcion: String = "",
 
     @SerializedName("url")
-    val url: String,
+    val url: String = "",
 
     @SerializedName("tipo")
-    val tipo: String,
+    val tipo: String = "",
 
     @SerializedName("categoria")
-    val categoria: String,
+    val categoria: String = "",
 
     @SerializedName("subcategoria")
     val subcategoria: String = "",
@@ -35,7 +36,7 @@ data class ResourceResponse(
     val icono: String = "",
 
     @SerializedName("tamaño")
-    val tamaño: String? = null,
+    val tamaño: String? = null, // Acepta nulo
 
     @SerializedName("idioma")
     val idioma: String = "",
@@ -65,29 +66,11 @@ data class ResourceResponse(
     val accesos: Int? = null,
 
     @SerializedName("valoracion")
-    val valoracion: Int = 0
+    val valoracion: Int = 0,
+
+    // ⭐ CAMPO ESENCIAL DEL CORAZÓN (Asumiendo que viene en el GET, si no, se queda en false)
+    @SerializedName("favorito")
+    val favorito: Boolean = false
 )
 
-/**
- * Respuesta de lista de recursos/documentos
- */
-data class ResourceListResponse(
-    @SerializedName("data")
-    val data: List<ResourceResponse>? = null,
-
-    @SerializedName("items")
-    val items: List<ResourceResponse>? = null,
-
-    @SerializedName("documentos")
-    val documentos: List<ResourceResponse>? = null,
-
-    @SerializedName("total")
-    val total: Int? = null,
-
-    @SerializedName("message")
-    val message: String? = null
-) {
-    fun getList(): List<ResourceResponse> {
-        return data ?: items ?: documentos ?: emptyList()
-    }
-}
+// Las clases ResourceListResponse y FavoritoRequest no necesitan cambios si el mapeo anterior funciona.

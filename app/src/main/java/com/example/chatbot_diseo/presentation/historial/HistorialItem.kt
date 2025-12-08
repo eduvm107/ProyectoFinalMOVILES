@@ -20,7 +20,7 @@ import com.example.chatbot_diseo.data.model.Conversacion
 @Composable
 fun HistorialItem(
     chat: Conversacion,
-    onClick: () -> Unit
+    onClick: (conversacionId: String?) -> Unit
 ) {
     val colorEstado = if (chat.activa) Color(0xFF4CAF50) else Color.Gray
     val textoEstado = if (chat.activa) "Activo" else "Cerrado"
@@ -32,7 +32,7 @@ fun HistorialItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clickable { onClick() },
+            .clickable { onClick(chat.id) },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
