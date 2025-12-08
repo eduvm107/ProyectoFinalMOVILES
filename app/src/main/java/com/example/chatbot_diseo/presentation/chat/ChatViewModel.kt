@@ -1,15 +1,21 @@
 package com.example.chatbot_diseo.presentation.chat
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatbot_diseo.data.api.TokenHolder
+import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 import com.example.chatbot_diseo.data.repository.ChatbotRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ChatViewModel : ViewModel() {
+
+    companion object {
+        private const val TAG = "ChatViewModel"
+    }
 
     private val chatbotRepository = ChatbotRepository()
 
@@ -199,6 +205,7 @@ class ChatViewModel : ViewModel() {
                         mensajes.add(Mensaje(errorMsg, false))
                     }
             } catch (e: Exception) {
+                Log.e(TAG, "enviarMensaje excepción", e)
                 val elapsed = System.currentTimeMillis() - startTime
                 if (elapsed < 1000L) {
                     delay(1000L - elapsed)
@@ -219,6 +226,7 @@ class ChatViewModel : ViewModel() {
     /**
      * Registrar satisfacción con la respuesta (1-5)
      */
+    @Suppress("unused")
     fun registrarSatisfaccion(satisfaccion: Int) {
         val convId = conversacionId ?: return
 
@@ -226,6 +234,7 @@ class ChatViewModel : ViewModel() {
             try {
                 chatbotRepository.registrarSatisfaccion(convId, satisfaccion)
             } catch (e: Exception) {
+                Log.e(TAG, "registrarSatisfaccion excepción", e)
                 // Error silencioso
             }
         }
@@ -255,14 +264,54 @@ class ChatViewModel : ViewModel() {
     /**
      * Verificar estado del servicio de chatbot
      */
+    @Suppress("unused")
     fun verificarEstadoChatbot() {
         viewModelScope.launch {
             try {
                 chatbotRepository.healthCheck()
             } catch (e: Exception) {
+                Log.e(TAG, "verificarEstadoChatbot excepción", e)
                 // Error silencioso
             }
         }
     }
-}
 
+    /**
+     * Cargar una conversacion completa (historial) por su ID desde la API y poblar los mensajes
+     */
+    @Suppress("unused")
+    fun cargarConversacionPorId(id: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            try {
+                val response = RetrofitInstance.conversacionApi.getConversacionById(id)
+                if (response.isSuccessful) {
+                    val conversacionCompleta = response.body()
+                    if (conversacionCompleta != null) {
+                        // Limpiar mensajes actuales y agregar los de la conversacion
+                        mensajes.clear()
+
+                        // Manejar caso nullable y mapear MensajeChat -> Mensaje (estructura UI)
+                        val listaMensajes = conversacionCompleta.mensajes ?: emptyList()
+                        listaMensajes.forEach { m ->
+                            val esUsuario = m.tipo.equals("usuario", ignoreCase = true)
+                            mensajes.add(Mensaje(m.contenido ?: "", esUsuario))
+                        }
+
+                        conversacionId = id
+                        mostrarSugerencias.value = false
+                    } else {
+                        error.value = "Conversación vacía"
+                    }
+                } else {
+                    error.value = "Error al cargar conversación: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "cargarConversacionPorId excepción", e)
+                error.value = e.message
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+}

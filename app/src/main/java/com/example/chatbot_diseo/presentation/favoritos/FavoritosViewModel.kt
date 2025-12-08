@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class FavoritosViewModel : ViewModel() {
-
     private val api = RetrofitInstance.favoritosApi
 
     // Lista de favoritos desde la API

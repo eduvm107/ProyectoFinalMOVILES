@@ -19,8 +19,20 @@ import com.example.chatbot_diseo.presentation.menu.SideMenu
 @Composable
 fun ChatScreen(
     navController: NavHostController,
+    initialConversacionId: String? = null,
     viewModel: ChatViewModel = viewModel()
 ) {
+
+    // Si se abrió con un id de conversación, cargarla al montar la pantalla
+    LaunchedEffect(initialConversacionId) {
+        initialConversacionId?.let { id ->
+            try {
+                viewModel.cargarConversacionPorId(id)
+            } catch (e: Exception) {
+                Log.e("ChatScreen", "Error cargando conversacion id=$id", e)
+            }
+        }
+    }
 
     var drawerOpen by remember { mutableStateOf(false) }
 

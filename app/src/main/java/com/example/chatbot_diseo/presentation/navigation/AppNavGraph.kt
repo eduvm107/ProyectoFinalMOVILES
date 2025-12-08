@@ -11,6 +11,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.ForgotPasswordScreen
@@ -118,8 +120,20 @@ fun AppNavGraph(
             NotificacionesScreen(onBack = { navController.popBackStack() })
         }
 
+        // Historial: pasamos usuarioId desde TokenHolder
         composable("historial") {
-            HistorialScreen(onBack = { navController.popBackStack() })
+            val usuarioId = TokenHolder.usuarioId ?: ""
+            HistorialScreen(
+                usuarioId = usuarioId,
+                onBack = { navController.popBackStack() },
+                onOpenChat = { conversacionId ->
+                    // Navegar a chat con el id de conversacion
+                    navController.navigate("chat/$conversacionId") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
 
         composable("favoritos") {
@@ -128,6 +142,16 @@ fun AppNavGraph(
 
         composable("ayuda") {
             AyudaScreen(onBack = { navController.popBackStack() })
+        }
+
+        // Ruta para abrir chat con una conversacionId opcional
+        composable(
+            route = "chat/{conversacionId}",
+            arguments = listOf(navArgument("conversacionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val convId = backStackEntry.arguments?.getString("conversacionId")
+            // usar llamada posicional para evitar problemas con nombres de parámetros
+            ChatScreen(navController, convId)
         }
     }
 }
