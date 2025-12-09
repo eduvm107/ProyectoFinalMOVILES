@@ -137,7 +137,15 @@ fun AppNavGraph(
         }
 
         composable("favoritos") {
-            FavoritosScreen(onBack = { navController.popBackStack() })
+            FavoritosScreen(
+                onBack = { navController.popBackStack() },
+                onOpenRecurso = { /* navegar a la pantalla de recursos */
+                    navController.navigate("recursos") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
 
         composable("ayuda") {

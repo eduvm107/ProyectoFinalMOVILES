@@ -1,16 +1,11 @@
 package com.example.chatbot_diseo.presentation.notificaciones
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,11 +26,10 @@ fun NotificacionesScreen(
     val filtroActual by viewModel.filtroSeleccionado.collectAsState()
     val tipos by viewModel.tiposDisponibles.collectAsState()
 
-    var expandido by remember { mutableStateOf(false) }
     var seleccionada by remember { mutableStateOf<MensajeAutomatico?>(null) }
 
-    // 👉 Chips visibles en la barra (scroll horizontal)
-    val chipsVisibles = tipos.take(3)
+    // Mostrar filtros siempre: 3 por fila, estático
+    val mostrar = listOf("Todos") + tipos
 
     Scaffold(
         topBar = {
@@ -43,7 +37,7 @@ fun NotificacionesScreen(
                 title = { Text("Notificaciones") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Regresar")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -58,95 +52,31 @@ fun NotificacionesScreen(
                 .fillMaxSize()
         ) {
 
-            // =====================================================
-            // BARRA SUPERIOR — SCROLL + BOTÓN MÁS
-            // =====================================================
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                // 🔹 Si NO está expandido → mostrar scroll horizontal
-                if (!expandido) {
-                    LazyRow(
+            // FILTROS SUPERIORES — filas de 3
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                mostrar.chunked(3).forEach { fila ->
+                    Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        item {
-                            ChipFiltro(
-                                texto = "Todos",
-                                seleccionado = filtroActual == "Todos",
-                                onClick = { viewModel.seleccionarFiltro("Todos") }
-                            )
-                        }
-
-                        items(chipsVisibles) { tipo ->
+                        fila.forEach { tipo ->
                             ChipFiltro(
                                 texto = tipo,
                                 seleccionado = filtroActual == tipo,
-                                onClick = { viewModel.seleccionarFiltro(tipo) }
+                                onClick = { viewModel.seleccionarFiltro(tipo) },
+                                modifier = Modifier.weight(1f)
                             )
                         }
+                        // rellenar si la fila no tiene 3 elementos
+                        val faltan = 3 - fila.size
+                        repeat(faltan) { Spacer(modifier = Modifier.weight(1f)) }
                     }
-                } else {
-                    // 🔹 Si está expandido → QUITAR scroll horizontal y dejar espacio vacío
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // ===== BOTÓN MÁS (SIEMPRE EN EL MISMO SITIO) =====
-                FilledTonalButton(
-                    onClick = { expandido = !expandido },
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(0xFFE8EBF0),
-                        contentColor = Color(0xFF1A73E8)
-                    ),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Icon(
-                        imageVector = if (expandido) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = null
-                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
-            // =====================================================
-            // PANEL INFERIOR — REJILLA DE TODOS LOS CHIPS
-            // =====================================================
-            AnimatedVisibility(visible = expandido) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                ) {
-
-                    val chipsGrid = listOf("Todos") + tipos
-
-                    chipsGrid.chunked(3).forEach { fila ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            fila.forEach { tipo ->
-                                ChipFiltro(
-                                    texto = tipo,
-                                    seleccionado = filtroActual == tipo,
-                                    onClick = { viewModel.seleccionarFiltro(tipo) }
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            }
-
-            // =====================================================
             // LISTA DE NOTIFICACIONES
-            // =====================================================
             LazyColumn(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -166,19 +96,17 @@ fun NotificacionesScreen(
                 }
             }
 
-            // =====================================================
             // DIÁLOGO DETALLES
-            // =====================================================
             if (seleccionada != null) {
                 val item = seleccionada!!
                 AlertDialog(
                     onDismissRequest = { seleccionada = null },
-                    title = { Text(item.titulo ?: "Notificación", fontWeight = FontWeight.Bold) },
+                    title = { Text(item.titulo, fontWeight = FontWeight.Bold) },
                     text = {
                         Column {
-                            Text(item.contenido ?: "")
+                            Text(item.contenido)
                             Spacer(modifier = Modifier.height(10.dp))
-                            Text("Enviado: ${item.horaEnvio ?: "--"}", color = Color.Gray)
+                            Text("Enviado: ${item.horaEnvio}", color = Color.Gray)
                         }
                     },
                     confirmButton = {
@@ -196,12 +124,18 @@ fun NotificacionesScreen(
 fun ChipFiltro(
     texto: String,
     seleccionado: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     FilterChip(
+        modifier = modifier,
         selected = seleccionado,
         onClick = onClick,
-        label = { Text(texto) },
+        label = {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(texto)
+            }
+        },
         colors = FilterChipDefaults.filterChipColors(
             selectedContainerColor = Color(0xFF1A73E8),
             selectedLabelColor = Color.White,

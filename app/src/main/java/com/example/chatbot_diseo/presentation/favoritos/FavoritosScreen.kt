@@ -32,6 +32,7 @@ import com.example.chatbot_diseo.data.model.RecursoFavorito
 @Composable
 fun FavoritosScreen(
     onBack: () -> Unit,
+    onOpenRecurso: (RecursoFavorito) -> Unit = {},
     viewModel: FavoritosViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -151,19 +152,23 @@ fun FavoritosScreen(
                             when (recurso.tipo.lowercase()) {
                                 "documento" -> DocumentoFavoritoItem(
                                     recurso = recurso,
-                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) }
+                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) },
+                                    onOpenRecurso = { onOpenRecurso(recurso) }
                                 )
                                 "actividad" -> ActividadFavoritoItem(
                                     recurso = recurso,
-                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) }
+                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) },
+                                    onOpenRecurso = { onOpenRecurso(recurso) }
                                 )
                                 "chat" -> ChatFavoritoItem(
                                     recurso = recurso,
-                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) }
+                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) },
+                                    onOpenRecurso = { onOpenRecurso(recurso) }
                                 )
                                 else -> RecursoGenericoItem(
                                     recurso = recurso,
-                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) }
+                                    onToggleFavorito = { viewModel.toggleFavorito(usuarioId, recurso) },
+                                    onOpenRecurso = { onOpenRecurso(recurso) }
                                 )
                             }
                         }
@@ -182,7 +187,8 @@ fun FavoritosScreen(
 @Composable
 fun DocumentoFavoritoItem(
     recurso: RecursoFavorito,
-    onToggleFavorito: () -> Unit
+    onToggleFavorito: () -> Unit,
+    onOpenRecurso: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -191,11 +197,8 @@ fun DocumentoFavoritoItem(
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 16.dp)
             .clickable {
-                // Abrir URL si existe
-                recurso.url?.let { url ->
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                    context.startActivity(intent)
-                }
+                // Ahora al hacer click se navega a la pantalla de recursos (por onOpenRecurso)
+                onOpenRecurso()
             },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -268,12 +271,14 @@ fun DocumentoFavoritoItem(
 @Composable
 fun ActividadFavoritoItem(
     recurso: RecursoFavorito,
-    onToggleFavorito: () -> Unit
+    onToggleFavorito: () -> Unit,
+    onOpenRecurso: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp),
+            .padding(vertical = 6.dp, horizontal = 16.dp)
+            .clickable { onOpenRecurso() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -356,12 +361,14 @@ fun ActividadFavoritoItem(
 @Composable
 fun ChatFavoritoItem(
     recurso: RecursoFavorito,
-    onToggleFavorito: () -> Unit
+    onToggleFavorito: () -> Unit,
+    onOpenRecurso: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp),
+            .padding(vertical = 6.dp, horizontal = 16.dp)
+            .clickable { onOpenRecurso() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -433,12 +440,14 @@ fun ChatFavoritoItem(
 @Composable
 fun RecursoGenericoItem(
     recurso: RecursoFavorito,
-    onToggleFavorito: () -> Unit
+    onToggleFavorito: () -> Unit,
+    onOpenRecurso: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp),
+            .padding(vertical = 6.dp, horizontal = 16.dp)
+            .clickable { onOpenRecurso() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
