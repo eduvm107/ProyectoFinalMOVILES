@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
+import org.json.JSONObject
 
 // 💡 Nota: Asegúrate de tener una forma de inyectar o pasar el HistorialRepository.
 class HistorialViewModel(
@@ -188,8 +189,22 @@ class HistorialViewModel(
                             cargarHistorial(usuarioId)
                         }
                         404 -> {
-                            _uiEvent.value = "Conversación no encontrada (404)"
-                            // Ya la removimos localmente; recargar para sincronizar
+                            // Intentar mostrar el mensaje que devuelve el backend si existe
+                            val errorBody = resp.errorBody()?.string()
+                            var mensaje = "Conversación no encontrada (404)"
+                            if (!errorBody.isNullOrBlank()) {
+                                try {
+                                    val json = JSONObject(errorBody)
+                                    mensaje = json.optString("message", mensaje)
+                                } catch (e: Exception) {
+                                    // Si no es JSON, usar el body como mensaje
+                                    mensaje = errorBody
+                                }
+                            }
+
+                            _uiEvent.value = mensaje
+                            // Ya no hay que mantener la conversación localmente si el backend dice que no existe
+                            // Recargar para sincronizar el estado desde el servidor usando el usuarioId provisto
                             cargarHistorial(usuarioId)
                         }
                         in 500..599 -> {

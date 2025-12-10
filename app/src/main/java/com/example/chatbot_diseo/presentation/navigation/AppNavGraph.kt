@@ -26,13 +26,11 @@ import com.example.chatbot_diseo.presentation.historial.HistorialScreen
 import com.example.chatbot_diseo.presentation.notificaciones.NotificacionesScreen
 import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
 import com.example.chatbot_diseo.presentation.userperfil.PerfilScreen
-import com.example.chatbot_diseo.presentation.theme.ThemeViewModel
 
 @Composable
 fun AppNavGraph(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
-    themeViewModel: ThemeViewModel? = null
+    navController: NavHostController
 ) {
     val context = LocalContext.current
 
@@ -101,7 +99,6 @@ fun AppNavGraph(
         }
 
         composable("perfil") {
-            val isDarkTheme by themeViewModel?.isDarkTheme?.collectAsState() ?: remember { mutableStateOf(false) }
             PerfilScreen(
                 onLogout = {
                     // Limpiar token e ID del usuario
@@ -109,10 +106,6 @@ fun AppNavGraph(
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
-                },
-                isDarkTheme = isDarkTheme,
-                onThemeToggle = { newValue ->
-                    themeViewModel?.setDarkTheme(newValue)
                 }
             )
         }
