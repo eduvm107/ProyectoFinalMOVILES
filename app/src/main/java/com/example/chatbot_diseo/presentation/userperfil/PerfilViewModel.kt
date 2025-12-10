@@ -1,5 +1,6 @@
 package com.example.chatbot_diseo.presentation.userperfil
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatbot_diseo.data.api.ApiService
@@ -27,8 +28,8 @@ class PerfilViewModel : ViewModel() {
     // Observar el usuario directamente desde AuthRepository
     val currentUser: StateFlow<Usuario?> = AuthRepository.currentUser
 
-    // Usar la instancia centralizada con configuración SSL correcta
-    private val apiService: ApiService = RetrofitInstance.authApi
+    // Usar la versión segura que incluye el interceptor para enviar el Bearer token
+    private val apiService: ApiService = RetrofitInstance.authSecureApi
 
     fun changePassword(currentPassword: String, newPassword: String) {
         val userEmail = currentUser.value?.email
@@ -56,16 +57,29 @@ class PerfilViewModel : ViewModel() {
                     val message = response.body()?.message ?: "Contraseña cambiada exitosamente"
                     _changePasswordState.value = ChangePasswordState.Success(message)
                 } else {
-                    val errorMessage = when (response.code()) {
-                        400 -> "La nueva contraseña debe ser diferente a la actual"
-                        401 -> "La contraseña actual es incorrecta"
-                        else -> "Error al cambiar la contraseña. Intenta nuevamente"
+                    // Intentar extraer el body de error para mostrar mensaje más útil
+                    val errorBody = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        null
                     }
+
+                    val errorMessage = when {
+                        !errorBody.isNullOrBlank() -> "Error: $errorBody"
+                        response.code() == 400 -> "La nueva contraseña debe ser diferente a la actual"
+                        response.code() == 401 -> "La contraseña actual es incorrecta"
+                        else -> "Error al cambiar la contraseña. Intenta nuevamente (code ${response.code()})"
+                    }
+
+                    Log.e("PerfilViewModel", "changePassword failed: code=${response.code()} body=$errorBody")
+
                     _changePasswordState.value = ChangePasswordState.Error(errorMessage)
                 }
-            } catch (e: Exception) {
+            } catch (ex: Exception) {
+                val msg = ex.message ?: "Verifica tu conexión a internet"
+                Log.e("PerfilViewModel", "changePassword exception", ex)
                 _changePasswordState.value = ChangePasswordState.Error(
-                    "Error de conexión: ${e.message ?: "Verifica tu conexión a internet"}"
+                    "Error de conexión: $msg"
                 )
             }
         }

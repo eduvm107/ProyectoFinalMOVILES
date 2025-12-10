@@ -133,10 +133,16 @@ fun PerfilScreen(
                             .background(Color.White),
                         contentAlignment = Alignment.Center
                     ) {
-                        val initials = profile.name.split(" ")
-                            .mapNotNull { it.firstOrNull() }
+                        // Mostrar iniciales robustas: hasta 2 letras, en mayúsculas, con fallback
+                        val initials = profile.name
+                            .trim()
+                            .split(Regex("\\s+"))
+                            .mapNotNull { it.firstOrNull()?.toString() }
+                            .filter { it.isNotBlank() }
                             .take(2)
                             .joinToString("")
+                            .uppercase()
+                            .ifEmpty { "U" }
                         Text(
                             text = initials,
                             fontSize = 28.sp,
@@ -239,8 +245,9 @@ fun PerfilScreen(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
+                    // Icono disponible en la librería actual
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        imageVector = Icons.Filled.Logout,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
                         tint = Color.White
