@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,7 +56,7 @@ fun BottomNavBar(navController: NavController) {
 
         NavigationBar(
             modifier = Modifier.navigationBarsPadding(),
-            containerColor = Color(0xFF4A6B8A)
+            containerColor = TcsBlue
         ) {
             items.forEach { item ->
                 val selected = currentDestination?.hierarchy?.any { dest -> dest.route == item.route } == true

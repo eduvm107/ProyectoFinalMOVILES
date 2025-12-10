@@ -1,43 +1,111 @@
+@file:Suppress("DEPRECATION", "UNUSED_PARAMETER", "UNUSED_VARIABLE")
+
 package com.example.chatbot_diseo.presentation.menu
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
+
 @Composable
 fun SideMenu(
     onNavigate: (String) -> Unit,
     onClose: () -> Unit
 ) {
-    Column(modifier = Modifier.padding(20.dp)) {
+    // No usar onClose aquí (parámetro preservado por API) — suprimir advertencias a nivel de archivo
 
-        Text(
-            text = "Menú",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color(0xFF1A1A1A)
-        )
+    // Fondo blanco y padding horizontal 20dp
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(horizontal = 20.dp, vertical = 20.dp)
+    ) {
 
-        Spacer(modifier = Modifier.height(30.dp))
+        // Header: título + subtítulo y switch alineado a la derecha
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Menú",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1A1A1A)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Accesos rápidos",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFF6B7280)
+                )
+            }
 
+            // Switch puramente visual (no cambia lógica del menú)
+            val isDark = remember { mutableStateOf(false) }
+            Switch(
+                checked = isDark.value,
+                onCheckedChange = { isDark.value = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF4A6B8A),
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color(0xFFE5E7EB)
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Items: usar estilo consistente, separadores sutiles y padding entre items (16dp)
         DrawerItem("Inicio", Icons.Outlined.Home, "chat", onNavigate)
+        HorizontalDivider(color = Color(0xFFE5E7EB).copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(16.dp))
+
         DrawerItem("Notificaciones", Icons.Outlined.Notifications, "notificaciones", onNavigate)
-        DrawerItem("Favoritos", Icons.Outlined.StarBorder, "favoritos", onNavigate)
+        HorizontalDivider(color = Color(0xFFE5E7EB).copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Favoritos: cambiar a icono de corazón amigable
+        DrawerItem("Favoritos", Icons.Filled.Favorite, "favoritos", onNavigate)
+        HorizontalDivider(color = Color(0xFFE5E7EB).copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(16.dp))
+
         DrawerItem("Historial", Icons.Outlined.ChatBubbleOutline, "historial", onNavigate)
+        HorizontalDivider(color = Color(0xFFE5E7EB).copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(16.dp))
+
         DrawerItem("Configuración", Icons.Outlined.Settings, "configuracion", onNavigate)
+        HorizontalDivider(color = Color(0xFFE5E7EB).copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(16.dp))
+
         DrawerItem("Ayuda", Icons.Outlined.HelpOutline, "ayuda", onNavigate)
+
         Spacer(modifier = Modifier.height(40.dp))
+
         DrawerItem(
             "Cerrar sesión",
             Icons.Outlined.Logout,
             "logout",
             onNavigate,
-            color = Color.Red
+            color = Color(0xFFE53935)
         )
     }
 }
@@ -48,7 +116,8 @@ fun DrawerItem(
     icon: ImageVector,
     route: String,
     onNavigate: (String) -> Unit,
-    color: Color = Color.Black
+    color: Color = Color(0xFF1A1A1A),
+    subtitle: String? = null
 ) {
     Row(
         modifier = Modifier
@@ -57,8 +126,28 @@ fun DrawerItem(
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.Start
     ) {
-        Icon(icon, contentDescription = null, tint = color)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color(0xFF6B6B6B)
+        )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(label, color = color)
+        Column {
+            Text(
+                text = label,
+                color = color,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            subtitle?.let {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = it,
+                    color = Color(0xFF6B7280),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
+        }
     }
 }

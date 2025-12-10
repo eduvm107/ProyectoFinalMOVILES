@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Email
@@ -48,6 +49,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -179,20 +181,21 @@ fun LoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.offset(y = (-24).dp)
                 ) {
-                    // Logo animado principal CON TU IMAGEN
+                    // Logo animado principal CON TU IMAGEN (ahora circular)
                     Box(
                         modifier = Modifier
                             .size(96.dp)
                             .rotate(offsetAnim)
-                            .clip(RoundedCornerShape(20.dp))
-                            .shadow(elevation = 6.dp, shape = RoundedCornerShape(20.dp))
+                            .clip(CircleShape)
+                            .shadow(elevation = 6.dp, shape = CircleShape)
                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.logo_tata),
                             contentDescription = "Logo TCS Assistant",
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
                     }
 

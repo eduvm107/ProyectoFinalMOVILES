@@ -169,4 +169,3 @@ fun ChatBubble(mensaje: Mensaje, onAction: (Mensaje) -> Unit = {}) {
         }
     }
 }
-

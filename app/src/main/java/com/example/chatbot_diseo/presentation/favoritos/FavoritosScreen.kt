@@ -1,7 +1,5 @@
 package com.example.chatbot_diseo.presentation.favoritos
 
-import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -18,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,16 +55,21 @@ fun FavoritosScreen(
                 title = { Text("Mis Favoritos") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.White)
                     }
                 },
                 actions = {
                     // Botón para recargar
                     IconButton(onClick = { viewModel.recargarFavoritos() }) {
-                        Icon(Icons.Outlined.Refresh, contentDescription = "Recargar")
+                        Icon(Icons.Outlined.Refresh, contentDescription = "Recargar", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TcsBlue,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                )
             )
         },
         containerColor = Color(0xFFF8F9FA)
@@ -190,8 +194,6 @@ fun DocumentoFavoritoItem(
     onToggleFavorito: () -> Unit,
     onOpenRecurso: () -> Unit
 ) {
-    val context = LocalContext.current
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -217,7 +219,7 @@ fun DocumentoFavoritoItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Outlined.MenuBook,
+                    Icons.Filled.MenuBook,
                     contentDescription = null,
                     tint = Color(0xFF007AFF),
                     modifier = Modifier.size(24.dp)

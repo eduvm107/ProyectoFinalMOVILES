@@ -1,6 +1,5 @@
 package com.example.chatbot_diseo.presentation.calendario.componentes
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,7 +43,7 @@ fun NotificacionCard(
 ) {
     // --- LÓGICA DE FILTRADO ---
     val hoy = LocalDate.now()
-    val fechaActividad = try { LocalDate.parse(actividad.fechaCorta) } catch (e: DateTimeParseException) { null }
+    val fechaActividad = try { LocalDate.parse(actividad.fechaCorta) } catch (_: DateTimeParseException) { null }
 
     val mostrarTarjeta = when (filtro) {
         "Próximas" -> fechaActividad != null && fechaActividad.isEqual(hoy) // <-- LÓGICA PARA "PRÓXIMAS"
@@ -59,84 +58,92 @@ fun NotificacionCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), // sombra muy leve
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
+        // quitar border para apariencia más limpia
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp) // padding interno 20dp
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Icon(
-                    imageVector = Icons.Filled.CalendarToday,
-                    contentDescription = "Date Icon",
-                    tint = Color.Gray
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = actividad.fechaCorta,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.weight(1f))
+                // Ícono superior izquierdo dentro de cuadrado suave
+                Box(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFE9EEF5)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarToday,
+                        contentDescription = "Date Icon",
+                        tint = Color(0xFF4B5563),
+                        modifier = Modifier.width(20.dp).height(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = actividad.titulo,
+                        fontWeight = FontWeight.SemiBold, // Inter Semibold aproximado
+                        fontSize = 16.sp,
+                        color = Color(0xFF1A1A1A)
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp)) // entre título y hora: 6dp
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Schedule,
+                            contentDescription = "Time Icon",
+                            tint = Color(0xFFEF4444), // rosado/rojizo suave
+                            modifier = Modifier.width(16.dp).height(16.dp) // tamaño 16dp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = actividad.horaInicio, color = Color.DarkGray, fontSize = 14.sp)
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp)) // entre hora y lugar 6-8dp
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Videocam,
+                            contentDescription = "Session Icon",
+                            tint = Color(0xFF1976D2), // icono azul
+                            modifier = Modifier.width(16.dp).height(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = actividad.lugar, color = Color(0xFF1976D2), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+
+                // Etiqueta "activo" más pequeña y alineada arriba a la derecha
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFF007AFF))
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .background(Color(0xFF1976D2))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = actividad.estado,
                         color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 11.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp)) // entre lugar y línea: 10dp
 
-            Text(
-                text = actividad.titulo,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                color = Color.Black
-            )
+            HorizontalDivider(color = Color(0xFFE5E7EB), thickness = 0.5.dp) // línea muy suave
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.Schedule,
-                    contentDescription = "Time Icon",
-                    tint = Color(0xFFE91E63)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = actividad.horaInicio, color = Color.DarkGray, fontSize = 16.sp)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.Videocam,
-                    contentDescription = "Session Icon",
-                    tint = Color.Gray
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = actividad.lugar, color = Color(0xFF007AFF), fontSize = 16.sp)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp)) // entre línea y "Próxima actividad": 12dp
 
             val estadoLower = actividad.estado.lowercase()
             val etiqueta = try {
@@ -159,10 +166,11 @@ fun NotificacionCard(
                 Icon(
                     imageVector = Icons.Filled.Build,
                     contentDescription = "Activity Icon",
-                    tint = Color(0xFF9C27B0)
+                    tint = Color(0xFF6C63FF),
+                    modifier = Modifier.width(16.dp).height(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = etiqueta, color = Color(0xFF007AFF), fontSize = 16.sp)
+                Text(text = etiqueta, color = Color(0xFF6C63FF), fontSize = 14.sp)
             }
         }
     }

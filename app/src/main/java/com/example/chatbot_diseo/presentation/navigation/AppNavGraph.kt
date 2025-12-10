@@ -18,6 +18,7 @@ import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.ForgotPasswordScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
 import com.example.chatbot_diseo.presentation.ayuda.AyudaScreen
+import com.example.chatbot_diseo.presentation.configuracion.ConfiguracionScreen
 import com.example.chatbot_diseo.presentation.calendario.Pantalla_Calendario
 import com.example.chatbot_diseo.presentation.chat.ChatScreen
 import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
@@ -150,6 +151,10 @@ fun AppNavGraph(
 
         composable("ayuda") {
             AyudaScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("configuracion") {
+            ConfiguracionScreen(onBack = { navController.popBackStack() })
         }
 
         // Ruta para abrir chat con una conversacionId opcional

@@ -1,18 +1,21 @@
 package com.example.chatbot_diseo.presentation.notificaciones
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatbot_diseo.data.model.MensajeAutomatico
 
@@ -33,15 +36,64 @@ fun NotificacionesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Notificaciones") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Regresar")
+            // Header azul full-width, padding interno 24/20
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(TcsBlue)
+                    .padding(vertical = 24.dp, horizontal = 20.dp)
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Back icon inside small translucent box
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.White.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.White)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = "Notificaciones",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Chips de filtros dentro del header (pueden ocupar 2 filas)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        mostrar.chunked(3).forEach { fila ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                fila.forEach { tipo ->
+                                    ChipFiltro(
+                                        texto = tipo,
+                                        seleccionado = filtroActual == tipo,
+                                        onClick = { viewModel.seleccionarFiltro(tipo) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                val faltan = 3 - fila.size
+                                repeat(faltan) { Spacer(modifier = Modifier.weight(1f)) }
+                            }
+                        }
+                    }
+                }
+            }
         },
         containerColor = Color(0xFFF8F9FA)
     ) { padding ->
@@ -51,30 +103,6 @@ fun NotificacionesScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-
-            // FILTROS SUPERIORES — filas de 3
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                mostrar.chunked(3).forEach { fila ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        fila.forEach { tipo ->
-                            ChipFiltro(
-                                texto = tipo,
-                                seleccionado = filtroActual == tipo,
-                                onClick = { viewModel.seleccionarFiltro(tipo) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        // rellenar si la fila no tiene 3 elementos
-                        val faltan = 3 - fila.size
-                        repeat(faltan) { Spacer(modifier = Modifier.weight(1f)) }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
 
             // LISTA DE NOTIFICACIONES
             LazyColumn(
@@ -133,19 +161,19 @@ fun ChipFiltro(
         onClick = onClick,
         label = {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text(texto)
+                Text(texto, color = if (seleccionado) Color.White else Color(0xFF6B7280))
             }
         },
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Color(0xFF1A73E8),
+            selectedContainerColor = Color(0xFF0F5FB8),
             selectedLabelColor = Color.White,
             containerColor = Color.White,
-            labelColor = Color.Gray
+            labelColor = Color(0xFF6B7280)
         ),
         border = FilterChipDefaults.filterChipBorder(
             enabled = true,
             selected = seleccionado,
-            borderColor = if (seleccionado) Color.Transparent else Color.LightGray
+            borderColor = if (seleccionado) Color.Transparent else Color(0xFFE5E7EB)
         ),
         shape = RoundedCornerShape(50)
     )

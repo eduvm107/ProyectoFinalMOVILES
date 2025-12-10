@@ -1,7 +1,9 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.chatbot_diseo.presentation.userperfil
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -100,7 +102,6 @@ fun PerfilScreen(
     // Usar colores del tema de Material3 para soportar modo oscuro
     val primaryColor = MaterialTheme.colorScheme.primary
     val backgroundColor = MaterialTheme.colorScheme.background
-    val cardColor = MaterialTheme.colorScheme.surfaceVariant
     val textPrimary = MaterialTheme.colorScheme.onBackground
     val textSecondary = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -113,24 +114,23 @@ fun PerfilScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header con fondo de color
+            // Header azul institucional full-width, sin padding externo, con padding interno 24/20
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(primaryColor)
-                    .padding(vertical = 32.dp, horizontal = 24.dp),
+                    .background(Color(0xFF4A6B8A))
+                    .padding(vertical = 24.dp, horizontal = 20.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Avatar con iniciales
+                    // Avatar circular más pequeña (foto o iniciales)
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(72.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .border(4.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), CircleShape),
+                            .background(Color.White),
                         contentAlignment = Alignment.Center
                     ) {
                         val initials = profile.name.split(" ")
@@ -139,25 +139,25 @@ fun PerfilScreen(
                             .joinToString("")
                         Text(
                             text = initials,
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = primaryColor
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF4A6B8A)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
                         text = profile.name,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
                     )
 
                     Text(
                         text = profile.position,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.9f)
                     )
                 }
             }
@@ -171,7 +171,7 @@ fun PerfilScreen(
             ) {
                 Text(
                     text = "Información Personal",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = textPrimary
                 )
@@ -180,8 +180,6 @@ fun PerfilScreen(
                     icon = Icons.Default.Email,
                     label = "Correo Electrónico",
                     value = profile.email,
-                    primaryColor = primaryColor,
-                    cardColor = cardColor,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary
                 )
@@ -190,8 +188,6 @@ fun PerfilScreen(
                     icon = Icons.Default.Phone,
                     label = "Teléfono",
                     value = profile.phone.ifEmpty { "No disponible" },
-                    primaryColor = primaryColor,
-                    cardColor = cardColor,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary
                 )
@@ -200,8 +196,6 @@ fun PerfilScreen(
                     icon = Icons.Default.Work,
                     label = "Departamento",
                     value = profile.department,
-                    primaryColor = primaryColor,
-                    cardColor = cardColor,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary
                 )
@@ -211,7 +205,7 @@ fun PerfilScreen(
                 // Botones de acción
                 Text(
                     text = "Acciones",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = textPrimary
                 )
@@ -219,43 +213,44 @@ fun PerfilScreen(
                 ActionButton(
                     icon = Icons.Default.Lock,
                     text = "Cambiar Contraseña",
-                    onClick = { showChangePasswordDialog = true },
-                    primaryColor = primaryColor
+                    onClick = { showChangePasswordDialog = true }
                 )
 
-                // Switch de tema oscuro/claro
+                // Switch de tema oscuro/claro dentro de card
                 ThemeToggleCard(
                     isDarkTheme = isDarkTheme,
                     onToggle = onThemeToggle,
                     primaryColor = primaryColor,
-                    cardColor = cardColor,
                     textPrimary = textPrimary,
                     textSecondary = textSecondary
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Botón de cerrar sesión
+                // Botón de cerrar sesión remodelado
                 Button(
                     onClick = { showLogoutDialog = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFDC2626)
+                        containerColor = Color(0xFFE53935),
+                        contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Logout,
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.White
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Cerrar Sesión",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
                     )
                 }
 
@@ -318,7 +313,6 @@ fun PerfilScreen(
                 showChangePasswordDialog = false
             },
             primaryColor = primaryColor,
-            textPrimary = textPrimary,
             textSecondary = textSecondary,
             isLoading = changePasswordState is ChangePasswordState.Loading
         )
@@ -349,7 +343,7 @@ fun PerfilScreen(
                         onLogout()
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFFDC2626)
+                        contentColor = Color(0xFFE53935)
                     )
                 ) {
                     Text("Cerrar Sesión", fontWeight = FontWeight.SemiBold)
@@ -374,18 +368,16 @@ fun ProfileInfoCard(
     icon: ImageVector,
     label: String,
     value: String,
-    primaryColor: Color,
-    cardColor: Color,
     textPrimary: Color,
     textSecondary: Color
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = cardColor
+            containerColor = Color.White
         ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(0.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -395,16 +387,16 @@ fun ProfileInfoCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(primaryColor.copy(alpha = 0.1f)),
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color(0xFFF2F3F5)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = primaryColor,
-                    modifier = Modifier.size(24.dp)
+                    tint = Color(0xFF6B6B6B),
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
@@ -413,14 +405,14 @@ fun ProfileInfoCard(
             Column {
                 Text(
                     text = label,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     color = textSecondary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = value,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     color = textPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -433,41 +425,57 @@ fun ProfileInfoCard(
 fun ActionButton(
     icon: ImageVector,
     text: String,
-    onClick: () -> Unit,
-    primaryColor: Color
+    onClick: () -> Unit
 ) {
-    OutlinedButton(
-        onClick = onClick,
+    // Usar card blanca con elevación suave para mantener consistencia visual
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = primaryColor
+            .height(56.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
         ),
-        border = ButtonDefaults.outlinedButtonBorder.copy(
-            width = 1.5.dp,
-            brush = androidx.compose.ui.graphics.SolidColor(primaryColor.copy(alpha = 0.3f))
-        )
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = text,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Start
-        )
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color(0xFFF2F3F5)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color(0xFF6B6B6B),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = text,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f)
+            )
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = Color(0xFFB0B0B0)
+            )
+        }
     }
 }
 
@@ -476,17 +484,16 @@ fun ThemeToggleCard(
     isDarkTheme: Boolean,
     onToggle: (Boolean) -> Unit,
     primaryColor: Color,
-    cardColor: Color,
     textPrimary: Color,
     textSecondary: Color
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = cardColor
+            containerColor = Color.White
         ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(0.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -501,16 +508,16 @@ fun ThemeToggleCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(primaryColor.copy(alpha = 0.1f)),
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Color(0xFFF2F3F5)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
                         contentDescription = null,
-                        tint = primaryColor,
-                        modifier = Modifier.size(24.dp)
+                        tint = Color(0xFF6B6B6B),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
@@ -519,16 +526,16 @@ fun ThemeToggleCard(
                 Column {
                     Text(
                         text = "Tema",
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         color = textPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (isDarkTheme) "Modo Oscuro" else "Modo Claro",
-                        fontSize = 12.sp,
+                        fontSize = 13.sp,
                         color = textSecondary,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Normal
                     )
                 }
             }
@@ -552,7 +559,6 @@ fun ChangePasswordDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String) -> Unit,
     primaryColor: Color,
-    textPrimary: Color,
     textSecondary: Color,
     isLoading: Boolean = false
 ) {

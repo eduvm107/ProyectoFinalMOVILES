@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatbot_diseo.data.model.FAQ
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 
 private val AccentBlue = Color(0xFF1A73E8)
 private val BackgroundLight = Color(0xFFF8F9FA)
-private val HeaderBackground = Color.White
 private val HeaderTextColor = Color(0xFF1A1A1A)
 
 /**
@@ -55,16 +56,16 @@ fun AyudaScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ayuda y Guía", color = HeaderTextColor) },
+                title = { Text("Ayuda y Guía", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = HeaderTextColor)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HeaderBackground,
-                    titleContentColor = HeaderTextColor,
-                    navigationIconContentColor = HeaderTextColor
+                    containerColor = TcsBlue,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         },
@@ -169,7 +170,7 @@ fun OnboardingTimelineSection() {
             OnboardingStep(
                 title = "Cómo ver tus actividades pendientes",
                 description = "Consulta tu progreso en el proceso de onboarding.",
-                icon = Icons.Default.ListAlt,
+                icon = Icons.AutoMirrored.Filled.ListAlt,
                 bgColor = Color(0xFFFFF4E0), // naranja suave
                 iconTint = Color(0xFFFFA726)
             ),
