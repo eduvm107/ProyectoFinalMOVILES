@@ -105,6 +105,15 @@ class ChatViewModel : ViewModel() {
         )
     )
 
+    // Lista de sugerencias inicial (para restaurar cuando se limpia el chat)
+    private val sugerenciasIniciales = listOf(
+        "❓ ¿Qué es el onboarding?",
+        "📄 ¿Dónde veo mis documentos?",
+        "📋 ¿Qué actividades debo completar?",
+        "👤 ¿Cómo contacto a mi supervisor?",
+        "📱 ¿Qué puedo hacer en esta aplicación?"
+    )
+
     init {
         mensajes.add(Mensaje("¡Hola! Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?", false))
     }
