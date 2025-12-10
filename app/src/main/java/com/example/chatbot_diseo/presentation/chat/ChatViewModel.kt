@@ -121,119 +121,26 @@ class ChatViewModel : ViewModel() {
 
     /**
      * Crear una conversación vacía en el backend (sin mensajes) y guardar el id en el ViewModel.
-     * Usado por el botón "Nuevo chat".
+     * ⚠️ YA NO SE USA - El botón de lápiz ahora solo limpia el chat localmente
      */
     fun crearConversacionVacia() {
-        val userId = usuarioId
-        if (userId.isNullOrBlank()) {
-            mensajes.add(Mensaje("Por favor inicia sesión para usar el chatbot.", false))
-            return
-        }
-
-        viewModelScope.launch {
-            // Evitar múltiples creaciones concurrentes del mismo recurso
-            crearConversacionMutex.withLock {
-                // Re-check: otra coroutine pudo crear la conversacion mientras esperamos el lock
-                if (!conversacionId.isNullOrBlank()) {
-                    Log.d(TAG, "crearConversacionVacia: ya existe conversacionId=${conversacionId}; no se crea de nuevo")
-                    return@withLock
-                }
-
-                isLoading.value = true
-                try {
-                    val nueva = DataConversacion(
-                        id = "",
-                        usuarioId = userId,
-                        tituloBackend = "",
-                        mensajes = emptyList(),
-                        fechaInicio = ahoraIso(),
-                        activa = true,
-                        favorito = false
-                    )
-
-                    val resp = RetrofitInstance.conversacionApi.crearConversacion(nueva)
-                    if (resp.isSuccessful) {
-                        val created = resp.body()
-                        if (created != null) {
-                            created.id?.let { id ->
-                                conversacionId = id
-                                Log.d(TAG, "crearConversacionVacia: conversacion creada con id=$id")
-
-                                // Forzar recarga desde el backend para obtener la conversación completa
-                                try {
-                                    cargarConversacionPorId(id)
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "Error recargando conversacion creada id=$id", e)
-                                }
-                            }
-
-                            // update favorito state (simplificado)
-                            conversacionFavorito = created.favorito ?: false
-
-                            // Si la recarga por id no pobló mensajes por alguna razón, garantizamos un mensaje inicial
-                            if (mensajes.isEmpty()) {
-                                mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
-                                mostrarSugerencias.value = true
-                            }
-                        } else {
-                            mensajes.add(Mensaje("Conversación creada pero no se recibió el objeto creado.", false))
-                        }
-                    } else {
-                        mensajes.add(Mensaje("No se pudo crear conversación (code=${resp.code()}). Intenta de nuevo.", false))
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "crearConversacionVacia excepción", e)
-                    mensajes.add(Mensaje("Error creando conversación. Por favor intenta de nuevo.", false))
-                } finally {
-                    isLoading.value = false
-                }
-            } // fin withLock
-         }
-     }
+        // ❌ YA NO CREAMOS conversación vacía manualmente
+        // Solo limpiamos el chat localmente
+        Log.d(TAG, "⚠️ crearConversacionVacia: Ya NO se usa, solo limpiamos chat")
+        limpiarChat()
+    }
 
     /**
      * Crear una conversación en backend incluyendo el primer mensaje del usuario.
-     * ⚠️ ACTUALIZACIÓN: NO guardamos el mensaje aquí, dejamos que el orquestador lo haga
+     * ⚠️ ACTUALIZACIÓN: Ya NO se usa, el orquestador crea la conversación automáticamente
      * Devuelve true si se creó y se asignó conversacionId.
      */
     private suspend fun crearConversacionConPrimerMensaje(userId: String, primerMensaje: String): Boolean {
-        return try {
-            // ✅ FIX: Crear conversación VACÍA sin mensajes
-            // El orquestador agregará el primer mensaje cuando lo enviemos
-            val nueva = DataConversacion(
-                id = "",
-                usuarioId = userId,
-                tituloBackend = "",
-                mensajes = emptyList(),  // ⚠️ CAMBIO: Ya NO incluimos el primer mensaje aquí
-                fechaInicio = ahoraIso(),
-                activa = true,
-                favorito = false
-            )
-
-            Log.d(TAG, "🆕 Creando conversación vacía para primer mensaje")
-            val resp = RetrofitInstance.conversacionApi.crearConversacion(nueva)
-
-            if (resp.isSuccessful) {
-                val created = resp.body()
-                if (created != null) {
-                    created.id?.let { id ->
-                        conversacionId = id
-                        Log.d(TAG, "✅ Conversación vacía creada con id=$id")
-                        // ⚠️ NO recargamos aquí porque aún no tiene mensajes
-                        // El orquestador agregará el primer mensaje después
-                    }
-                    // set favorito
-                    conversacionFavorito = created.favorito ?: false
-                }
-                true
-            } else {
-                Log.e(TAG, "❌ crearConversacionConPrimerMensaje failed: ${resp.code()} ${resp.message()}")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ crearConversacionConPrimerMensaje excepción", e)
-            false
-        }
+        // ❌ YA NO CREAMOS conversación manualmente
+        // El orquestador la creará automáticamente cuando enviemos el primer mensaje
+        Log.d(TAG, "⚠️ crearConversacionConPrimerMensaje: Ya NO se crea conversación manualmente")
+        Log.d(TAG, "   El orquestador creará la conversación automáticamente")
+        return false  // Indicar que NO se creó aquí
     }
 
     // --- FIN: funciones de conversación ---

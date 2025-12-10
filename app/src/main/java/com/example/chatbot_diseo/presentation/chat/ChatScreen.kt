@@ -23,8 +23,8 @@ fun ChatScreen(
     viewModel: ChatViewModel = viewModel()
 ) {
 
-    // ✅ FIX CRÍTICO: Cargar conversación cuando cambia el initialConversacionId
-    // Si initialConversacionId es null, limpiamos el chat para iniciar uno nuevo
+    // ✅ FIX: Solo cargar conversación si hay un ID específico
+    // NO limpiar el chat si initialConversacionId es null (mantener conversación actual)
     LaunchedEffect(initialConversacionId) {
         Log.d("ChatScreen", "🔍 LaunchedEffect triggered - initialConversacionId=$initialConversacionId")
 
@@ -36,14 +36,9 @@ fun ChatScreen(
             } catch (e: Exception) {
                 Log.e("ChatScreen", "❌ Error cargando conversacion id=$initialConversacionId", e)
             }
-        } else {
-            // Si no hay ID, asegurarse de que el chat esté limpio para nuevo chat
-            Log.d("ChatScreen", "🆕 No hay conversacionId - Chat nuevo")
-            // Solo limpiar si hay mensajes previos de otra conversación
-            if (viewModel.conversacionId != null) {
-                viewModel.limpiarChat()
-            }
         }
+        // ✅ Si initialConversacionId es null, NO hacer nada (mantener chat actual)
+        // Ya NO limpiamos el chat aquí
     }
 
     var drawerOpen by remember { mutableStateOf(false) }
