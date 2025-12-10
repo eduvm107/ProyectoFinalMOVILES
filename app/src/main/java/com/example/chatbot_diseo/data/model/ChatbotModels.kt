@@ -32,7 +32,8 @@ data class ConversacionCompleta(
     val fechaUltimaMensaje: String? = null,
     val activa: Boolean = true,
     val satisfaccion: Int? = null,
-    val resuelto: Boolean = false
+    val resuelto: Boolean = false,
+    val favorito: Boolean? = null // Nuevo campo: favorito (opcional) para indicar si la conversación está marcada como favorita
 )
 
 // Mensaje dentro de una conversación

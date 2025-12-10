@@ -55,6 +55,10 @@ data class Conversacion(
             return "Conversación - ${formatearFechaSimple(fechaInicio)}"
         }
 
+    // Función helper para crear una copia con favorito actualizado
+    fun conFavorito(nuevoEstado: Boolean): Conversacion {
+        return this.copy(favorito = nuevoEstado)
+    }
 }
 
 // Utilidad para formatear la fecha de inicio en un formato simple legible.

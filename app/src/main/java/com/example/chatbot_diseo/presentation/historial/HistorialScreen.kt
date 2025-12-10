@@ -40,6 +40,16 @@ fun HistorialScreen(
         }
     }
 
+    // Estado para diálogo de confirmación de eliminación
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var toDeleteId by remember { mutableStateOf<String?>(null) }
+
+    // Función que abre diálogo
+    val requestDelete: (String) -> Unit = { id ->
+        toDeleteId = id
+        showConfirmDialog = true
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -79,15 +89,50 @@ fun HistorialScreen(
             ) {
                 items(chats) { chat ->
                     // Pasamos el id de la conversación al hacer click. Si es null, mostramos Snackbar
-                    HistorialItem(chat = chat, onClick = { id ->
-                        if (id != null) {
-                            onOpenChat(id)
-                        } else {
-                            coroutineScope.launch { snackbarHostState.showSnackbar("ID de conversación inválido") }
+                    HistorialItem(
+                        chat = chat,
+                        onClick = { id ->
+                            if (id != null) {
+                                onOpenChat(id)
+                            } else {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("ID de conversación inválido") }
+                            }
+                        },
+                        onDelete = { id ->
+                            // Abrir diálogo de confirmación
+                            requestDelete(id)
+                        },
+                        onToggleFavorito = { id, estadoActual ->
+                            // Toggle favorito usando el endpoint unificado
+                            viewModel.toggleFavoritoConversacion(id, estadoActual)
                         }
-                    })
+                    )
                 }
             }
+        }
+
+        // Diálogo de confirmación
+        if (showConfirmDialog && toDeleteId != null) {
+            AlertDialog(
+                onDismissRequest = { showConfirmDialog = false; toDeleteId = null },
+                title = { Text("Eliminar conversación") },
+                text = { Text("¿Seguro que deseas eliminar esta conversación? Esta acción no se puede deshacer.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        // Llamada al ViewModel para eliminar
+                        toDeleteId?.let { id -> viewModel.eliminarConversacion(id, usuarioId) }
+                        showConfirmDialog = false
+                        toDeleteId = null
+                    }) {
+                        Text("Eliminar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showConfirmDialog = false; toDeleteId = null }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }

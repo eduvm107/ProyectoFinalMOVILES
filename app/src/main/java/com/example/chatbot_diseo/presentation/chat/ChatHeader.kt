@@ -72,7 +72,7 @@ fun ChatHeader(
                 }
             }
 
-            // Botones a la derecha, sin cambiar lógica
+            // Botones a la derecha
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onNewChat) {
                     Icon(

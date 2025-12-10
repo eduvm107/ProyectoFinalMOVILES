@@ -38,13 +38,16 @@ class ChatViewModel : ViewModel() {
     // ID de la conversación actual
     var conversacionId: String? = null
 
+    // Estado de favorito de la conversacion actual (nullable hasta cargar)
+    var conversacionFavorito: Boolean? = null
+
     // Preguntas sugeridas del chatbot (visibles en UI, se pueden ir removiendo)
     val sugerencias = mutableStateListOf(
-        "¿Qué es el onboarding?",
-        "¿Dónde veo mis documentos?",
-        "¿Qué actividades debo completar?",
-        "¿Cómo contacto a mi supervisor?",
-        "¿Qué puedo hacer en esta aplicación?"
+        "❓ ¿Qué es el onboarding?",
+        "📄 ¿Dónde veo mis documentos?",
+        "📋 ¿Qué actividades debo completar?",
+        "👤 ¿Cómo contacto a mi supervisor?",
+        "📱 ¿Qué puedo hacer en esta aplicación?"
     )
 
     // Respuestas fijas a preguntas sugeridas (versión corta)
@@ -127,6 +130,8 @@ class ChatViewModel : ViewModel() {
                 if (resp.isSuccessful) {
                     val created = resp.body()
                     created?.id?.let { conversacionId = it }
+                    // update favorito state (simplificado)
+                    conversacionFavorito = created?.favorito ?: false
                     // Limpiamos el chat para la nueva conversacion localmente
                     mensajes.clear()
                     mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
@@ -168,6 +173,8 @@ class ChatViewModel : ViewModel() {
             if (resp.isSuccessful) {
                 val created = resp.body()
                 created?.id?.let { conversacionId = it }
+                // set favorito
+                conversacionFavorito = created?.favorito ?: false
                 true
             } else {
                 Log.e(TAG, "crearConversacionConPrimerMensaje failed: ${resp.code()} ${resp.message()}")
@@ -476,6 +483,8 @@ class ChatViewModel : ViewModel() {
                         }
 
                         conversacionId = id
+                        // set favorito desde la conversacion completa
+                        conversacionFavorito = conversacionCompleta.favorito ?: false
                         mostrarSugerencias.value = false
                     } else {
                         error.value = "Conversación vacía"
@@ -488,6 +497,64 @@ class ChatViewModel : ViewModel() {
                 error.value = e.message
             } finally {
                 isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Cambiar estado de favorito de la conversación actual
+     * Usa el endpoint unificado POST /api/Usuario/{usuarioId}/favoritos con tipoRecurso="chat"
+     */
+    fun toggleFavoritoConversacion(conversacionId: String, estadoActual: Boolean) {
+        if (conversacionId.isBlank()) {
+            Log.e(TAG, "toggleFavoritoConversacion: conversacionId vacío")
+            return
+        }
+
+        val userId = usuarioId
+        if (userId.isNullOrBlank()) {
+            Log.e(TAG, "toggleFavoritoConversacion: usuarioId es nulo")
+            return
+        }
+
+        val nuevoEstado = !estadoActual
+
+        // Optimistic UI update
+        val before = conversacionFavorito
+        conversacionFavorito = nuevoEstado
+
+        viewModelScope.launch {
+            try {
+                // Usar el endpoint unificado de Favoritos (igual que documentos/actividades)
+                val requestBody = com.example.chatbot_diseo.network.dto.request.FavoritoRequest(
+                    tipoRecurso = "chat",
+                    recursoId = conversacionId
+                )
+
+                Log.d(TAG, "Enviando toggle favorito: tipoRecurso=chat, recursoId=$conversacionId, usuarioId=$userId")
+
+                val resp = RetrofitInstance.favoritosApi.toggleFavorito(userId, requestBody)
+
+                if (resp.isSuccessful) {
+                    val body = resp.body()
+                    val esFavoritoBackend = body?.esFavorito ?: nuevoEstado
+
+                    Log.d(TAG, "toggleFavoritoConversacion: SUCCESS, esFavorito=$esFavoritoBackend")
+
+                    // Actualizar estado local con el valor real del backend
+                    conversacionFavorito = esFavoritoBackend
+
+                    // Notificar a FavoritosViewModel para que recargue la lista unificada
+                    com.example.chatbot_diseo.presentation.favoritos.FavoritosBus.emitFavoritosChanged()
+                } else {
+                    val errorBody = resp.errorBody()?.string()
+                    Log.e(TAG, "toggleFavoritoConversacion: ERROR code=${resp.code()}, body=$errorBody")
+                    // rollback
+                    conversacionFavorito = before
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "toggleFavoritoConversacion excepción: ${e.message}", e)
+                conversacionFavorito = before
             }
         }
     }

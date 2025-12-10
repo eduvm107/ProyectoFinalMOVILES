@@ -36,6 +36,17 @@ class FavoritosViewModel : ViewModel() {
         if (!usuarioId.isNullOrEmpty()) {
             obtenerFavoritos(usuarioId)
         }
+
+        // Suscribirse al bus de favoritos para recargar cuando alguien haga toggle
+        viewModelScope.launch {
+            FavoritosBus.events.collect {
+                val uid = TokenHolder.usuarioId
+                if (!uid.isNullOrEmpty()) {
+                    Log.d("FAVORITOS_BUS", "Evento recibido - recargando favoritos para $uid")
+                    obtenerFavoritos(uid)
+                }
+            }
+        }
     }
 
     /**
