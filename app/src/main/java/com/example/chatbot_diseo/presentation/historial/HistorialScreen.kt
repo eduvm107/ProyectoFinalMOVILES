@@ -40,6 +40,17 @@ fun HistorialScreen(
         }
     }
 
+    // Observa el id de conversación creado para navegar automáticamente
+    val openConvId by viewModel.openConversationId.collectAsState(initial = null)
+    LaunchedEffect(openConvId) {
+        openConvId?.let { id ->
+            // Navegar a chat/{id} a través del callback proporcionado por el NavGraph
+            onOpenChat(id)
+            // Marcar como consumido
+            viewModel.openConversationConsumed()
+        }
+    }
+
     // Estado para diálogo de confirmación de eliminación
     var showConfirmDialog by remember { mutableStateOf(false) }
     var toDeleteId by remember { mutableStateOf<String?>(null) }

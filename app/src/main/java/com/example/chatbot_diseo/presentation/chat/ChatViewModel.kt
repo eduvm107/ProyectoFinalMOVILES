@@ -12,17 +12,26 @@ import com.example.chatbot_diseo.data.model.MensajeRequest
 import com.example.chatbot_diseo.data.model.Mensaje as DataMensaje
 import com.example.chatbot_diseo.data.model.Conversacion as DataConversacion
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class ChatViewModel : ViewModel() {
 
     companion object {
         private const val TAG = "ChatViewModel"
+        const val TYPING_MESSAGE_TEXT = "escribiendo..."
     }
 
     private val chatbotRepository = ChatbotRepository()
+
+    // Mutex para asegurar que la creación de la conversación (POST /api/Conversacion) solo
+    // se dispare una vez cuando varios mensajes se envían casi al mismo tiempo.
+    private val crearConversacionMutex = Mutex()
 
     val mensajes = mutableStateListOf<Mensaje>()
     val isLoading = mutableStateOf(false)
@@ -31,12 +40,20 @@ class ChatViewModel : ViewModel() {
     // Controlar visibilidad de FAQs / sugerencias
     val mostrarSugerencias = mutableStateOf(true)
 
+    // Estado para mostrar diálogo de confirmación al crear nuevo chat
+    val mostrarDialogoNuevoChat = mutableStateOf(false)
+
     // ID del usuario actual - se obtiene de TokenHolder después del login
     val usuarioId: String?
         get() = TokenHolder.usuarioId
 
-    // ID de la conversación actual
-    var conversacionId: String? = null
+    // ConversacionId como StateFlow + propiedad de compatibilidad
+    private val _conversacionId = MutableStateFlow<String?>(null)
+    val conversacionIdState: StateFlow<String?> = _conversacionId
+
+    var conversacionId: String?
+        get() = _conversacionId.value
+        set(value) { _conversacionId.value = value }
 
     // Estado de favorito de la conversacion actual (nullable hasta cargar)
     var conversacionFavorito: Boolean? = null
@@ -114,74 +131,107 @@ class ChatViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            isLoading.value = true
-            try {
-                val nueva = DataConversacion(
-                    id = "",
-                    usuarioId = userId,
-                    tituloBackend = "",
-                    mensajes = emptyList(),
-                    fechaInicio = ahoraIso(),
-                    activa = true,
-                    favorito = false
-                )
-
-                val resp = RetrofitInstance.conversacionApi.crearConversacion(nueva)
-                if (resp.isSuccessful) {
-                    val created = resp.body()
-                    created?.id?.let { conversacionId = it }
-                    // update favorito state (simplificado)
-                    conversacionFavorito = created?.favorito ?: false
-                    // Limpiamos el chat para la nueva conversacion localmente
-                    mensajes.clear()
-                    mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
-                    mostrarSugerencias.value = true
-                } else {
-                    mensajes.add(Mensaje("No se pudo crear conversación (code=${resp.code()}). Intenta de nuevo.", false))
+            // Evitar múltiples creaciones concurrentes del mismo recurso
+            crearConversacionMutex.withLock {
+                // Re-check: otra coroutine pudo crear la conversacion mientras esperamos el lock
+                if (!conversacionId.isNullOrBlank()) {
+                    Log.d(TAG, "crearConversacionVacia: ya existe conversacionId=${conversacionId}; no se crea de nuevo")
+                    return@withLock
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "crearConversacionVacia excepción", e)
-                mensajes.add(Mensaje("Error creando conversación. Por favor intenta de nuevo.", false))
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
+
+                isLoading.value = true
+                try {
+                    val nueva = DataConversacion(
+                        id = "",
+                        usuarioId = userId,
+                        tituloBackend = "",
+                        mensajes = emptyList(),
+                        fechaInicio = ahoraIso(),
+                        activa = true,
+                        favorito = false
+                    )
+
+                    val resp = RetrofitInstance.conversacionApi.crearConversacion(nueva)
+                    if (resp.isSuccessful) {
+                        val created = resp.body()
+                        if (created != null) {
+                            created.id?.let { id ->
+                                conversacionId = id
+                                Log.d(TAG, "crearConversacionVacia: conversacion creada con id=$id")
+
+                                // Forzar recarga desde el backend para obtener la conversación completa
+                                try {
+                                    cargarConversacionPorId(id)
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "Error recargando conversacion creada id=$id", e)
+                                }
+                            }
+
+                            // update favorito state (simplificado)
+                            conversacionFavorito = created.favorito ?: false
+
+                            // Si la recarga por id no pobló mensajes por alguna razón, garantizamos un mensaje inicial
+                            if (mensajes.isEmpty()) {
+                                mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
+                                mostrarSugerencias.value = true
+                            }
+                        } else {
+                            mensajes.add(Mensaje("Conversación creada pero no se recibió el objeto creado.", false))
+                        }
+                    } else {
+                        mensajes.add(Mensaje("No se pudo crear conversación (code=${resp.code()}). Intenta de nuevo.", false))
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "crearConversacionVacia excepción", e)
+                    mensajes.add(Mensaje("Error creando conversación. Por favor intenta de nuevo.", false))
+                } finally {
+                    isLoading.value = false
+                }
+            } // fin withLock
+         }
+     }
 
     /**
      * Crear una conversación en backend incluyendo el primer mensaje del usuario.
+     * ⚠️ ACTUALIZACIÓN: NO guardamos el mensaje aquí, dejamos que el orquestador lo haga
      * Devuelve true si se creó y se asignó conversacionId.
      */
     private suspend fun crearConversacionConPrimerMensaje(userId: String, primerMensaje: String): Boolean {
         return try {
-            val dataMsg = DataMensaje(
-                tipo = "usuario",
-                contenido = primerMensaje,
-                timestamp = ahoraIso()
-            )
+            // ✅ FIX: Crear conversación VACÍA sin mensajes
+            // El orquestador agregará el primer mensaje cuando lo enviemos
             val nueva = DataConversacion(
                 id = "",
                 usuarioId = userId,
                 tituloBackend = "",
-                mensajes = listOf(dataMsg),
+                mensajes = emptyList(),  // ⚠️ CAMBIO: Ya NO incluimos el primer mensaje aquí
                 fechaInicio = ahoraIso(),
                 activa = true,
                 favorito = false
             )
 
+            Log.d(TAG, "🆕 Creando conversación vacía para primer mensaje")
             val resp = RetrofitInstance.conversacionApi.crearConversacion(nueva)
+
             if (resp.isSuccessful) {
                 val created = resp.body()
-                created?.id?.let { conversacionId = it }
-                // set favorito
-                conversacionFavorito = created?.favorito ?: false
+                if (created != null) {
+                    created.id?.let { id ->
+                        conversacionId = id
+                        Log.d(TAG, "✅ Conversación vacía creada con id=$id")
+                        // ⚠️ NO recargamos aquí porque aún no tiene mensajes
+                        // El orquestador agregará el primer mensaje después
+                    }
+                    // set favorito
+                    conversacionFavorito = created.favorito ?: false
+                }
                 true
             } else {
-                Log.e(TAG, "crearConversacionConPrimerMensaje failed: ${resp.code()} ${resp.message()}")
+                Log.e(TAG, "❌ crearConversacionConPrimerMensaje failed: ${resp.code()} ${resp.message()}")
                 false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "crearConversacionConPrimerMensaje excepción", e)
+            Log.e(TAG, "❌ crearConversacionConPrimerMensaje excepción", e)
             false
         }
     }
@@ -264,77 +314,70 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             val startTime = System.currentTimeMillis()
             try {
-                // Si no hay conversacionId, crearla primero (incluyendo el primer mensaje)
+                // Si no hay conversacionId, crearla primero (incluyendo el primer mensaje).
+                // Usar un Mutex para evitar que múltiples coroutines creen la misma conversación
+                // (ej: usuario presiona enviar varias veces o hay llamadas concurrentes).
                 if (conversacionId.isNullOrBlank()) {
-                    val created = crearConversacionConPrimerMensaje(userId, textoTrim)
-                    // Si no se pudo crear, dejar como estaba y proceder a usar el orquestador como fallback
-                    if (!created) {
-                        Log.w(TAG, "No se creó conversación antes de enviar; usando fallback a orquestador")
+                    crearConversacionMutex.withLock {
+                        // Re-check dentro del lock porque otra coroutine pudo crear la conversacion mientras esperábamos
+                        if (conversacionId.isNullOrBlank()) {
+                            val created = crearConversacionConPrimerMensaje(userId, textoTrim)
+                            if (!created) {
+                                Log.w(TAG, "No se creó conversación antes de enviar; usando fallback a orquestador")
+                            }
+                        } else {
+                            Log.d(TAG, "Conversación ya fue creada por otra coroutine; no se crea de nuevo")
+                        }
                     }
                 }
 
                 // Si existe conversacionId, preferimos enviar mensaje a /api/Conversacion/{id}/mensajes
                 if (!conversacionId.isNullOrBlank()) {
                     try {
-                        val resp = RetrofitInstance.conversacionApi.enviarMensaje(conversacionId!!, MensajeRequest(contenido = textoTrim, tipo = "usuario"))
-                        // Intentar obtener respuesta del body si el endpoint la retorna
-                        var botRespuesta: String? = null
-                        if (resp.isSuccessful) {
-                            val body = resp.body()
-                            when (body) {
-                                is String -> botRespuesta = body
-                                is Map<*, *> -> {
-                                    botRespuesta = (body["respuesta"] ?: body["respuestaBot"] ?: body["contenido"])?.toString()
-                                }
-                                else -> {
-                                    // no sabemos el formato; lo dejamos nulo para fallback
-                                }
-                            }
-                        }
+                        Log.d(TAG, "📤 Enviando mensaje a conversación existente: id=$conversacionId")
 
-                        // Si no obtuvimos respuesta útil del endpoint, usar orquestador (fallback)
-                        if (botRespuesta == null) {
-                            val result = chatbotRepository.enviarPregunta(userId, textoTrim)
-                            result
-                                .onSuccess { response ->
-                                    response.conversacionId?.let { conversacionId = it }
-                                    botRespuesta = response.respuesta
-                                }
-                                .onFailure { e ->
-                                    throw e
-                                }
-                        }
+                        // ✅ FIX: Pasar el conversacionId al orquestador
+                        val result = chatbotRepository.enviarPregunta(
+                            usuarioId = userId,
+                            pregunta = textoTrim,
+                            conversacionId = conversacionId  // ⚡ NUEVO: Ahora pasamos el ID
+                        )
 
-                        // Garantizar mínimo 1 segundo de "escribiendo..."
-                        val elapsed = System.currentTimeMillis() - startTime
-                        if (elapsed < 1000L) {
-                            delay(1000L - elapsed)
-                        }
-
-                        if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
-                            mensajes.removeAt(mensajes.size - 1)
-                        }
-
-                        botRespuesta?.let { mensajes.add(Mensaje(it, false)) } ?: run {
-                            mensajes.add(Mensaje("No hubo respuesta del servidor. Intenta de nuevo.", false))
-                        }
-
-                    } catch (e: Exception) {
-                        Log.e(TAG, "enviarMensaje vía Conversacion API excepción", e)
-                        // Fallback: usar orquestador para obtener respuesta
-                        val result = chatbotRepository.enviarPregunta(userId, textoTrim)
                         result
                             .onSuccess { response ->
-                                response.conversacionId?.let { conversacionId = it }
+                                // Actualizar conversacionId si el orquestador devuelve uno diferente
+                                response.conversacionId?.let { newId ->
+                                    if (newId != conversacionId) {
+                                        Log.w(TAG, "⚠️ Orquestador devolvió conversacionId diferente: $newId (esperaba: $conversacionId)")
+                                        conversacionId = newId
+                                    }
+                                }
+
+                                // Garantizar mínimo 1 segundo de "escribiendo..."
+                                val elapsed = System.currentTimeMillis() - startTime
+                                if (elapsed < 1000L) {
+                                    delay(1000L - elapsed)
+                                }
+
                                 if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
                                     mensajes.removeAt(mensajes.size - 1)
                                 }
+
                                 mensajes.add(Mensaje(response.respuesta, false))
+                                Log.d(TAG, "✅ Mensaje enviado y respuesta recibida exitosamente")
                             }
                             .onFailure { e ->
+                                Log.e(TAG, "❌ Error enviando mensaje al orquestador", e)
+
+                                val elapsed = System.currentTimeMillis() - startTime
+                                if (elapsed < 1000L) {
+                                    delay(1000L - elapsed)
+                                }
+
                                 if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
                                     mensajes.removeAt(mensajes.size - 1)
                                 }
+
                                 error.value = e.message
                                 val errorMsg = when {
                                     e.message?.contains("timeout", ignoreCase = true) == true ->
@@ -347,11 +390,31 @@ class ChatViewModel : ViewModel() {
                                 }
                                 mensajes.add(Mensaje(errorMsg, false))
                             }
+
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ enviarMensaje excepción al procesar respuesta", e)
+
+                        val elapsed = System.currentTimeMillis() - startTime
+                        if (elapsed < 1000L) {
+                            delay(1000L - elapsed)
+                        }
+
+                        if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                            mensajes.removeAt(mensajes.size - 1)
+                        }
+
+                        error.value = e.message
+                        mensajes.add(Mensaje("Error de conexión. Por favor intenta de nuevo.", false))
                     }
 
                 } else {
                     // No se creó conversacion: fallback a orquestador (mismo flujo anterior)
-                    val result = chatbotRepository.enviarPregunta(userId, textoTrim)
+                    // ⚠️ Sin conversacionId, el orquestador creará una nueva
+                    val result = chatbotRepository.enviarPregunta(
+                        usuarioId = userId,
+                        pregunta = textoTrim,
+                        conversacionId = null  // Primer mensaje, sin ID aún
+                    )
 
                     // Garantizar mínimo 1 segundo de "escribiendo..."
                     val elapsed = System.currentTimeMillis() - startTime
@@ -430,8 +493,13 @@ class ChatViewModel : ViewModel() {
     fun limpiarChat() {
         mensajes.clear()
         conversacionId = null
-        mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
+        // Limpiar estado de favorito
+        conversacionFavorito = null
+        isLoading.value = false
+        error.value = null
         mostrarSugerencias.value = true
+        mostrarDialogoNuevoChat.value = false // Asegurarse que el diálogo esté cerrado
+
         // Restaurar todas las sugerencias iniciales si se han ido removiendo
         sugerencias.clear()
         sugerencias.addAll(
@@ -443,6 +511,8 @@ class ChatViewModel : ViewModel() {
                 "¿Qué puedo hacer en esta aplicación?"
             )
         )
+
+        mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
     }
 
     /**
@@ -465,38 +535,90 @@ class ChatViewModel : ViewModel() {
      */
     @Suppress("unused")
     fun cargarConversacionPorId(id: String) {
+        Log.d(TAG, "🔵 cargarConversacionPorId INICIADO - id=$id")
+
         viewModelScope.launch {
             isLoading.value = true
             try {
+                Log.d(TAG, "📡 Llamando a API: getConversacionById($id)")
                 val response = RetrofitInstance.conversacionApi.getConversacionById(id)
+
+                Log.d(TAG, "📨 Respuesta recibida: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+
                 if (response.isSuccessful) {
                     val conversacionCompleta = response.body()
+                    Log.d(TAG, "📦 Body recibido: ${conversacionCompleta != null}")
+
                     if (conversacionCompleta != null) {
-                        // Limpiar mensajes actuales y agregar los de la conversacion
+                        // ✅ IMPORTANTE: Limpiar COMPLETAMENTE mensajes antes de cargar desde historial
+                        val mensajesAnteriores = mensajes.size
                         mensajes.clear()
+                        Log.d(TAG, "🗑️ Mensajes limpiados: $mensajesAnteriores -> 0")
+
+                        // Ocultar sugerencias al cargar conversación del historial
+                        mostrarSugerencias.value = false
 
                         // Manejar caso nullable y mapear MensajeChat -> Mensaje (estructura UI)
                         val listaMensajes = conversacionCompleta.mensajes ?: emptyList()
-                        listaMensajes.forEach { m ->
-                            val esUsuario = m.tipo.equals("usuario", ignoreCase = true)
-                            mensajes.add(Mensaje(m.contenido, esUsuario))
+
+                        Log.d(TAG, "📋 Total mensajes en conversación: ${listaMensajes.size}")
+
+                        if (listaMensajes.isEmpty()) {
+                            Log.w(TAG, "⚠️ La conversación NO tiene mensajes")
+                            mensajes.add(Mensaje("Esta conversación no tiene mensajes aún.", false))
+                        } else {
+                            // ✅ FIX: Agregar mensajes uno por uno para evitar duplicados
+                            listaMensajes.forEachIndexed { index, m ->
+                                val esUsuario = m.tipo.equals("usuario", ignoreCase = true)
+                                val nuevoMensaje = Mensaje(m.contenido, esUsuario)
+                                mensajes.add(nuevoMensaje)
+
+                                val preview = if (m.contenido.length > 50) {
+                                    m.contenido.take(50) + "..."
+                                } else {
+                                    m.contenido
+                                }
+                                Log.d(TAG, "  ✅ [$index] Mensaje agregado: tipo=${m.tipo}, contenido=$preview")
+                            }
                         }
 
                         conversacionId = id
                         // set favorito desde la conversacion completa
                         conversacionFavorito = conversacionCompleta.favorito ?: false
-                        mostrarSugerencias.value = false
+
+                        Log.d(TAG, "✅ cargarConversacionPorId COMPLETADO")
+                        Log.d(TAG, "   - conversacionId asignado: $id")
+                        Log.d(TAG, "   - Total mensajes en UI: ${mensajes.size}")
+                        Log.d(TAG, "   - Favorito: $conversacionFavorito")
                     } else {
-                        error.value = "Conversación vacía"
+                        val errorMsg = "Conversación vacía (body null)"
+                        error.value = errorMsg
+                        Log.e(TAG, "❌ $errorMsg")
+                        mensajes.clear()
+                        mensajes.add(Mensaje("Error: No se pudo cargar la conversación.", false))
                     }
                 } else {
-                    error.value = "Error al cargar conversación: ${response.code()}"
+                    val errorBody = response.errorBody()?.string()
+                    val errorMsg = "Error al cargar conversación: ${response.code()}"
+                    error.value = errorMsg
+                    Log.e(TAG, "❌ $errorMsg")
+                    Log.e(TAG, "   ErrorBody: $errorBody")
+
+                    mensajes.clear()
+                    mensajes.add(Mensaje("Error al cargar la conversación (${response.code()}). Por favor, intenta de nuevo.", false))
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "cargarConversacionPorId excepción", e)
+                Log.e(TAG, "❌ cargarConversacionPorId EXCEPCIÓN", e)
+                Log.e(TAG, "   Tipo: ${e.javaClass.simpleName}")
+                Log.e(TAG, "   Mensaje: ${e.message}")
+                Log.e(TAG, "   StackTrace: ${e.stackTraceToString()}")
+
                 error.value = e.message
+                mensajes.clear()
+                mensajes.add(Mensaje("Error de conexión al cargar conversación: ${e.message}", false))
             } finally {
                 isLoading.value = false
+                Log.d(TAG, "🔵 cargarConversacionPorId FINALIZADO")
             }
         }
     }
@@ -559,3 +681,4 @@ class ChatViewModel : ViewModel() {
         }
     }
 }
+

@@ -13,14 +13,23 @@ class ChatbotRepository {
 
     /**
      * Enviar una pregunta al chatbot y obtener respuesta generada por IA (Ollama)
+     * @param usuarioId ID del usuario que hace la pregunta
+     * @param pregunta Texto de la pregunta
+     * @param conversacionId ID de la conversación existente (opcional, para continuar un chat)
      */
-    suspend fun enviarPregunta(usuarioId: String, pregunta: String): Result<ChatbotAskResponse> {
+    suspend fun enviarPregunta(
+        usuarioId: String,
+        pregunta: String,
+        conversacionId: String? = null
+    ): Result<ChatbotAskResponse> {
         return try {
-            // Nuevo flujo: usar ChatOrquestador con query params
+            // ✅ Llamar al orquestador con conversacionId (siempre, sea null o no)
             val response = chatOrquestadorApi.preguntar(
                 pregunta = pregunta,
-                usuarioId = usuarioId
+                usuarioId = usuarioId,
+                conversacionId = conversacionId  // Se pasa siempre (puede ser null)
             )
+
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {

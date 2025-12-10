@@ -32,6 +32,10 @@ class HistorialViewModel(
     private val _uiEvent = MutableStateFlow<String?>(null)
     val uiEvent: StateFlow<String?> = _uiEvent
 
+    // Nuevo: evento para abrir una conversación creada (navegación)
+    private val _openConversationId = MutableStateFlow<String?>(null)
+    val openConversationId: StateFlow<String?> = _openConversationId
+
     init {
         cargarHistorial()
     }
@@ -135,6 +139,13 @@ class HistorialViewModel(
 
                 if (nuevoChat != null) {
                     _uiEvent.value = "Nuevo chat creado exitosamente"
+
+                    // Emitir evento de navegación con el id creado para que la UI abra el chat
+                    nuevoChat.id?.let { id ->
+                        Log.d("HISTORIAL_VM", "crearNuevoChat: nuevoChat.id=$id, emitiendo openConversationId")
+                        _openConversationId.value = id
+                    }
+
                     cargarHistorial() // Recargar la lista para mostrar el nuevo chat
 
                     // TODO: Puedes agregar lógica para navegar automáticamente al nuevo chat aquí.
@@ -154,6 +165,13 @@ class HistorialViewModel(
      */
     fun uiEventConsumed() {
         _uiEvent.value = null
+    }
+
+    /**
+     * Marcar como consumido el evento de abrir conversación (navegación)
+     */
+    fun openConversationConsumed() {
+        _openConversationId.value = null
     }
 
     /**
