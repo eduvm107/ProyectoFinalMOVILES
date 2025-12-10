@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.example.chatbot_diseo.data.admin.ResourceItem
 import com.example.chatbot_diseo.ui.theme.TcsBlue
@@ -36,7 +37,7 @@ fun AdminResourceDialog(
     var categoria by remember { mutableStateOf(initialItem?.category ?: "") }
     var subcategoria by remember { mutableStateOf("") }
     var icono by remember { mutableStateOf("📄") }
-    var tamaño by remember { mutableStateOf<String?>(null) }
+    var tamano by remember { mutableStateOf<String?>(null) }
     var idioma by remember { mutableStateOf("Español") }
     var version by remember { mutableStateOf("1.0") }
     var publico by remember { mutableStateOf("Nuevos empleados") }
@@ -120,7 +121,7 @@ fun AdminResourceDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = tituloError,
-                    supportingText = if (tituloError) { { Text("Campo obligatorio", color = TcsRed) } } else null
+                    supportingText = if (tituloError) { { Text("Campo obligatorio", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 2. Descripción *
@@ -136,7 +137,7 @@ fun AdminResourceDialog(
                     minLines = 2,
                     maxLines = 4,
                     isError = descripcionError,
-                    supportingText = if (descripcionError) { { Text("Campo obligatorio", color = TcsRed) } } else null
+                    supportingText = if (descripcionError) { { Text("Campo obligatorio", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 3. URL *
@@ -152,7 +153,7 @@ fun AdminResourceDialog(
                     singleLine = true,
                     placeholder = { Text("https://ejemplo.com/documento.pdf") },
                     isError = urlError,
-                    supportingText = if (urlError) { { Text("Debe ser una URL válida", color = TcsRed) } } else null
+                    supportingText = if (urlError) { { Text("Debe ser una URL válida", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 4. Tipo - Dropdown
@@ -168,7 +169,7 @@ fun AdminResourceDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tipoExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -201,7 +202,7 @@ fun AdminResourceDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -297,8 +298,8 @@ fun AdminResourceDialog(
 
                 // 9. Tamaño
                 OutlinedTextField(
-                    value = tamaño ?: "",
-                    onValueChange = { tamaño = it.ifBlank { null } },
+                    value = tamano ?: "",
+                    onValueChange = { tamano = it.ifBlank { null } },
                     label = { Text("Tamaño del archivo") },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth(),
@@ -431,7 +432,7 @@ fun AdminResourceDialog(
                             subcategoria,
                             tags.toList(),
                             icono,
-                            tamaño,
+                            tamano,
                             idioma,
                             version,
                             publico,

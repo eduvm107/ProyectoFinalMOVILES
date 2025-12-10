@@ -1,6 +1,7 @@
 package com.example.chatbot_diseo.data.repository
 
-import com.example.chatbot_diseo.data.model.UsuarioCompleto
+// ⚠️ CAMBIADO: Usar el modelo correcto que mapea "id" en lugar de "_id"
+import com.example.chatbot_diseo.network.dto.response.UsuarioCompleto
 import com.example.chatbot_diseo.data.model.UsuarioRequest
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 

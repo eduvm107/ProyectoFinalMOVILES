@@ -6,7 +6,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.chatbot_diseo.data.admin.ActivityItem
 import com.example.chatbot_diseo.network.dto.request.ActivityRequest
+import com.example.chatbot_diseo.network.dto.response.UsuarioCompleto
 import com.example.chatbot_diseo.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,7 +27,8 @@ fun AdminActivityDialog2(
     titleDialog: String,
     initialItem: ActivityItem? = null,
     onDismiss: () -> Unit,
-    onConfirm: (ActivityRequest) -> Unit
+    onConfirm: (ActivityRequest) -> Unit,
+    usuariosAsignables: List<UsuarioCompleto> = emptyList()
 ) {
     // Estados para todos los campos
     var titulo by remember { mutableStateOf(initialItem?.title ?: "") }
@@ -46,13 +47,13 @@ fun AdminActivityDialog2(
     var fechaCreacion by remember { mutableStateOf(initialItem?.let { "Fecha de creación existente" } ?: "") }
 
     // Listas editables
-    var materialesNecesarios by remember { mutableStateOf(mutableListOf<String>()) }
+    val materialesNecesarios = remember { mutableStateListOf<String>() }
     var nuevoMaterialNecesario by remember { mutableStateOf("") }
 
-    var materialesProporcionados by remember { mutableStateOf(mutableListOf<String>()) }
+    val materialesProporcionados = remember { mutableStateListOf<String>() }
     var nuevoMaterialProporcionado by remember { mutableStateOf("") }
 
-    var actividadesSiguientes by remember { mutableStateOf(mutableListOf<String>()) }
+    val actividadesSiguientes = remember { mutableStateListOf<String>() }
     var nuevaActividadSiguiente by remember { mutableStateOf("") }
 
     // Dropdowns
@@ -67,6 +68,11 @@ fun AdminActivityDialog2(
     var estadoExpanded by remember { mutableStateOf(false) }
     var estado by remember { mutableStateOf("activo") }
     val estadoOpciones = listOf("activo", "completado", "cancelado")
+
+    // Nuevo: Usuario asignable
+    var usuarioExpanded by remember { mutableStateOf(false) }
+    var usuarioSeleccionadoId by remember { mutableStateOf<String?>(null) }
+    var usuarioSeleccionadoNombre by remember { mutableStateOf("Sin asignar") }
 
     // Selector de fecha
     var fechaActividad by remember { mutableStateOf("") }
@@ -210,7 +216,7 @@ fun AdminActivityDialog2(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modalidadExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -220,7 +226,7 @@ fun AdminActivityDialog2(
                     ) {
                         modalidadOpciones.forEach { opcion ->
                             DropdownMenuItem(
-                                text = { Text(opcion.capitalize()) },
+                                text = { Text(opcion.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }) },
                                 onClick = {
                                     modalidad = opcion
                                     modalidadExpanded = false
@@ -243,7 +249,7 @@ fun AdminActivityDialog2(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tipoExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -253,7 +259,7 @@ fun AdminActivityDialog2(
                     ) {
                         tipoOpciones.forEach { opcion ->
                             DropdownMenuItem(
-                                text = { Text(opcion.capitalize()) },
+                                text = { Text(opcion.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }) },
                                 onClick = {
                                     tipo = opcion
                                     tipoExpanded = false
@@ -486,7 +492,7 @@ fun AdminActivityDialog2(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = estadoExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -496,7 +502,7 @@ fun AdminActivityDialog2(
                     ) {
                         estadoOpciones.forEach { opcion ->
                             DropdownMenuItem(
-                                text = { Text(opcion.capitalize()) },
+                                text = { Text(opcion.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }) },
                                 onClick = {
                                     estado = opcion
                                     estadoExpanded = false
@@ -506,7 +512,49 @@ fun AdminActivityDialog2(
                     }
                 }
 
-                // 20. Fecha de Actividad - Selector de fecha
+                // 20. Asignar Usuario - Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = usuarioExpanded,
+                    onExpandedChange = { usuarioExpanded = !usuarioExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = usuarioSeleccionadoNombre,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Asignar usuario") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = usuarioExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = usuarioExpanded,
+                        onDismissRequest = { usuarioExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sin asignar") },
+                            onClick = {
+                                usuarioSeleccionadoId = null
+                                usuarioSeleccionadoNombre = "Sin asignar"
+                                usuarioExpanded = false
+                            }
+                        )
+                        usuariosAsignables.forEach { usuario ->
+                            DropdownMenuItem(
+                                text = { Text(usuario.nombreCompleto ?: "Usuario sin nombre") },
+                                onClick = {
+                                    usuarioSeleccionadoId = usuario.id
+                                    usuarioSeleccionadoNombre = usuario.nombreCompleto ?: "Usuario sin nombre"
+                                    usuarioExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // 21. Fecha de Actividad - Selector de fecha
                 Button(
                     onClick = { showDatePicker = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -519,7 +567,7 @@ fun AdminActivityDialog2(
                     )
                 }
 
-                // 21. Fecha de Creación - No editable
+                // 22. Fecha de Creación - No editable
                 if (fechaCreacion.isNotEmpty()) {
                     OutlinedTextField(
                         value = fechaCreacion,
@@ -566,7 +614,8 @@ fun AdminActivityDialog2(
                             preparacionPrevia = preparacionPrevia.ifBlank { null },
                             actividadesSiguientes = actividadesSiguientes.toList(),
                             estado = estado,
-                            fechaActividad = fechaActividad
+                            fechaActividad = fechaActividad,
+                            usuarioID = usuarioSeleccionadoId
                         )
                         onConfirm(activityRequest)
                     } catch (e: Exception) {
@@ -618,8 +667,4 @@ fun AdminActivityDialog2(
         )
 
     }
-}
-
-private fun String.capitalize(): String {
-    return this.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 }

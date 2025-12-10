@@ -64,7 +64,7 @@ object AuthRepository {
                                 activo = usuarioCompleto.activo,
                                 verificado = usuarioCompleto.verificado,
                                 estadoOnboarding = usuarioCompleto.estadoOnboarding,
-                                progresoOnboarding = usuarioCompleto.progresoOnboarding,
+                                progresoOnboarding = usuarioCompleto.progresoOnboarding?.toInt(),  // Convertir Double a Int
                                 rol = usuarioCompleto.rol
                             )
                         }

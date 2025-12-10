@@ -12,10 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.chatbot_diseo.network.dto.request.ActivityRequest
 import com.example.chatbot_diseo.network.dto.response.ActivityResponse
+import com.example.chatbot_diseo.network.dto.response.UsuarioCompleto
 import com.example.chatbot_diseo.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,7 +27,8 @@ import java.util.*
 fun EditarActividadDialog(
     actividadInicial: ActivityResponse,
     onDismiss: () -> Unit,
-    onConfirm: (ActivityRequest) -> Unit
+    onConfirm: (ActivityRequest) -> Unit,
+    usuariosAsignables: List<UsuarioCompleto> = emptyList()
 ) {
     // Estados para todos los campos - inicializados con los valores existentes
     var titulo by remember { mutableStateOf(actividadInicial.titulo) }
@@ -77,6 +80,19 @@ fun EditarActividadDialog(
     var estadoExpanded by remember { mutableStateOf(false) }
     var estado by remember { mutableStateOf(actividadInicial.estado) }
     val estadoOpciones = listOf("activo", "completado", "cancelado")
+
+    // Nuevo: Usuario asignable - preseleccionar si existe
+    var usuarioExpanded by remember { mutableStateOf(false) }
+    var usuarioSeleccionadoId by remember { mutableStateOf(actividadInicial.usuarioId) }
+    var usuarioSeleccionadoNombre by remember {
+        mutableStateOf(
+            if (actividadInicial.usuarioId != null) {
+                usuariosAsignables.find { it.id == actividadInicial.usuarioId }?.nombreCompleto ?: "Sin asignar"
+            } else {
+                "Sin asignar"
+            }
+        )
+    }
 
     // Selector de fecha - inicializado con valor existente
     var fechaActividad by remember { mutableStateOf(actividadInicial.fechaDeActividad ?: "") }
@@ -152,7 +168,7 @@ fun EditarActividadDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = tituloError,
-                    supportingText = if (tituloError) { { Text("Campo obligatorio", color = TcsRed) } } else null
+                    supportingText = if (tituloError) { { Text("Campo obligatorio", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 2. Descripción *
@@ -168,7 +184,7 @@ fun EditarActividadDialog(
                     minLines = 3,
                     maxLines = 5,
                     isError = descripcionError,
-                    supportingText = if (descripcionError) { { Text("Campo obligatorio", color = TcsRed) } } else null
+                    supportingText = if (descripcionError) { { Text("Campo obligatorio", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 3. Día *
@@ -186,7 +202,7 @@ fun EditarActividadDialog(
                     singleLine = true,
                     placeholder = { Text("Ejemplo: 1, 2, 3...") },
                     isError = diaError,
-                    supportingText = if (diaError) { { Text("Debe ser un número mayor a 0", color = TcsRed) } } else null
+                    supportingText = if (diaError) { { Text("Debe ser un número mayor a 0", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 4. Duración en horas *
@@ -204,7 +220,7 @@ fun EditarActividadDialog(
                     singleLine = true,
                     placeholder = { Text("Ejemplo: 8.0, 4.5") },
                     isError = duracionError,
-                    supportingText = if (duracionError) { { Text("Debe ser un número mayor a 0", color = TcsRed) } } else null
+                    supportingText = if (duracionError) { { Text("Debe ser un número mayor a 0", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 5 y 6. Hora Inicio y Fin
@@ -224,7 +240,7 @@ fun EditarActividadDialog(
                         singleLine = true,
                         placeholder = { Text("09:00") },
                         isError = horaInicioError,
-                        supportingText = if (horaInicioError) { { Text("Formato HH:mm", color = TcsRed, style = MaterialTheme.typography.bodySmall) } } else null
+                        supportingText = if (horaInicioError) { { Text("Formato HH:mm", style = MaterialTheme.typography.bodySmall.copy(color = TcsRed)) } } else null
                     )
 
                     OutlinedTextField(
@@ -239,7 +255,7 @@ fun EditarActividadDialog(
                         singleLine = true,
                         placeholder = { Text("17:00") },
                         isError = horaFinError,
-                        supportingText = if (horaFinError) { { Text("Formato HH:mm", color = TcsRed, style = MaterialTheme.typography.bodySmall) } } else null
+                        supportingText = if (horaFinError) { { Text("Formato HH:mm", style = MaterialTheme.typography.bodySmall.copy(color = TcsRed)) } } else null
                     )
                 }
 
@@ -256,7 +272,7 @@ fun EditarActividadDialog(
                     singleLine = true,
                     placeholder = { Text("Ejemplo: Sala de conferencias, Zoom") },
                     isError = lugarError,
-                    supportingText = if (lugarError) { { Text("Campo obligatorio", color = TcsRed) } } else null
+                    supportingText = if (lugarError) { { Text("Campo obligatorio", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 8. Modalidad * - Dropdown
@@ -272,7 +288,7 @@ fun EditarActividadDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modalidadExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -305,7 +321,7 @@ fun EditarActividadDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tipoExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -347,7 +363,7 @@ fun EditarActividadDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = responsableError,
-                    supportingText = if (responsableError) { { Text("Campo obligatorio", color = TcsRed) } } else null
+                    supportingText = if (responsableError) { { Text("Campo obligatorio", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 12. Email Responsable
@@ -376,7 +392,7 @@ fun EditarActividadDialog(
                     singleLine = true,
                     placeholder = { Text("Ejemplo: 50") },
                     isError = capacidadError,
-                    supportingText = if (capacidadError) { { Text("Debe ser un número mayor a 0", color = TcsRed) } } else null
+                    supportingText = if (capacidadError) { { Text("Debe ser un número mayor a 0", style = TextStyle(color = TcsRed)) } } else null
                 )
 
                 // 14. Obligatorio - Switch
@@ -566,7 +582,7 @@ fun EditarActividadDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = estadoExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         shape = RoundedCornerShape(10.dp),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
@@ -586,7 +602,64 @@ fun EditarActividadDialog(
                     }
                 }
 
-                // 20. Fecha de Actividad - Selector de fecha
+                // 20. Asignar Usuario - Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = usuarioExpanded,
+                    onExpandedChange = { usuarioExpanded = !usuarioExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = usuarioSeleccionadoNombre,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Asignar usuario") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = usuarioExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = usuarioExpanded,
+                        onDismissRequest = { usuarioExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sin asignar") },
+                            onClick = {
+                                usuarioSeleccionadoId = null
+                                usuarioSeleccionadoNombre = "Sin asignar"
+                                usuarioExpanded = false
+                            }
+                        )
+
+                        if (usuariosAsignables.isEmpty()) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "No hay usuarios disponibles",
+                                        style = TextStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
+                                        color = Color.Gray
+                                    )
+                                },
+                                onClick = { usuarioExpanded = false },
+                                enabled = false
+                            )
+                        }
+
+                        usuariosAsignables.forEach { usuario ->
+                            DropdownMenuItem(
+                                text = { Text(usuario.nombreCompleto ?: "Usuario sin nombre") },
+                                onClick = {
+                                    usuarioSeleccionadoId = usuario.id
+                                    usuarioSeleccionadoNombre = usuario.nombreCompleto ?: "Usuario sin nombre"
+                                    usuarioExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // 21. Fecha de Actividad - Selector de fecha
                 Button(
                     onClick = { showDatePicker = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -599,7 +672,7 @@ fun EditarActividadDialog(
                     )
                 }
 
-                // 21. Fecha de Creación - No editable
+                // 22. Fecha de Creación - No editable
                 if (fechaCreacion.isNotEmpty()) {
                     OutlinedTextField(
                         value = fechaCreacion,
@@ -655,7 +728,8 @@ fun EditarActividadDialog(
                             preparacionPrevia = preparacionPrevia.ifBlank { null },
                             actividadesSiguientes = actividadesSiguientes.toList(),
                             estado = estado,
-                            fechaActividad = fechaActividad
+                            fechaActividad = fechaActividad,
+                            usuarioID = usuarioSeleccionadoId
                         )
                         onConfirm(activityRequest)
                     } catch (e: Exception) {
@@ -708,4 +782,3 @@ fun EditarActividadDialog(
         )
     }
 }
-

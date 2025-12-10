@@ -67,7 +67,7 @@ data class ActivityRequest(
     @SerializedName("fecha_de_actividad")      // ✔ NOMBRE CORRECTO DEL BACKEND
     val fechaActividad: String? = null,
 
-    @SerializedName("usuarioID")               // ✔ Si quieres asignar usuario
+    @SerializedName("usuarioId")               // ✔ CORREGIDO: Backend usa "usuarioId" (minúscula)
     val usuarioID: String? = null,
 
     @SerializedName("favorito")                // ✔ Para documentos

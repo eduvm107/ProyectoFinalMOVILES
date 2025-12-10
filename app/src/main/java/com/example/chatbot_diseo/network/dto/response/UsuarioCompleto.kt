@@ -1,5 +1,6 @@
 package com.example.chatbot_diseo.network.dto.response
 
+import com.example.chatbot_diseo.data.model.EstadisticasUsuario
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -7,16 +8,16 @@ import com.google.gson.annotations.SerializedName
  */
 data class UsuarioCompleto(
     @SerializedName("id")
-    val id: String,
+    val id: String?,
 
     @SerializedName("nombre")
-    val nombre: String,
+    val nombre: String?,
 
     @SerializedName("apellidos")
-    val apellidos: String,
+    val apellidos: String?,
 
     @SerializedName("nombreCompleto")
-    val nombreCompleto: String,
+    val nombreCompleto: String?,
 
     @SerializedName("email")
     val email: String,
@@ -73,16 +74,16 @@ data class UsuarioCompleto(
     val progresoOnboarding: Double?,
 
     @SerializedName("actividadesCompletadas")
-    val actividadesCompletadas: Int?,
+    val actividadesCompletadas: List<String>?,
 
     @SerializedName("actividadesPendientes")
-    val actividadesPendientes: Int?,
+    val actividadesPendientes: List<String>?,
 
     @SerializedName("documentosEntregados")
-    val documentosEntregados: Int?,
+    val documentosEntregados: List<String>?,
 
     @SerializedName("documentosPendientes")
-    val documentosPendientes: Int?,
+    val documentosPendientes: List<String>?,
 
     @SerializedName("cursosAsignados")
     val cursosAsignados: List<String>?,
@@ -96,17 +97,23 @@ data class UsuarioCompleto(
     @SerializedName("favoritosChat")
     val favoritosChat: List<String>?,
 
+    @SerializedName("favoritosDocumentos")
+    val favoritosDocumentos: List<String>?,
+
+    @SerializedName("favoritosActividades")
+    val favoritosActividades: List<String>?,
+
     @SerializedName("preferencias")
     val preferencias: Preferencias?,
 
     @SerializedName("estadisticas")
-    val estadisticas: Estadisticas?,
+    val estadisticas: EstadisticasUsuario?,
 
     @SerializedName("activo")
-    val activo: Boolean,
+    val activo: Boolean?,
 
     @SerializedName("verificado")
-    val verificado: Boolean,
+    val verificado: Boolean?,
 
     @SerializedName("primerLogin")
     val primerLogin: String?,
@@ -115,7 +122,7 @@ data class UsuarioCompleto(
     val ultimoLogin: String?,
 
     @SerializedName("fechaCreacion")
-    val fechaCreacion: String,
+    val fechaCreacion: String?,
 
     @SerializedName("fechaActualizacion")
     val fechaActualizacion: String?,
@@ -124,7 +131,13 @@ data class UsuarioCompleto(
     val creadoPor: String?,
 
     @SerializedName("rol")
-    val rol: String
+    val rol: String?,
+
+    @SerializedName("resetPasswordToken")
+    val resetPasswordToken: String?,
+
+    @SerializedName("resetPasswordExpires")
+    val resetPasswordExpires: String?
 )
 
 /**
@@ -212,4 +225,3 @@ data class Estadisticas(
     @SerializedName("ultimaActividad")
     val ultimaActividad: String?
 )
-

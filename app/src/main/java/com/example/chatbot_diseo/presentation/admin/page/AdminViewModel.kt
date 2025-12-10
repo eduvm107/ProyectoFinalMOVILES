@@ -13,6 +13,7 @@ import com.example.chatbot_diseo.network.dto.response.ActivityResponse
 import com.example.chatbot_diseo.network.dto.response.UsuarioCompleto
 import com.example.chatbot_diseo.network.api.AdminApiService
 import com.example.chatbot_diseo.network.client.RetrofitClient
+import com.example.chatbot_diseo.data.remote.UsuarioApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,6 +26,7 @@ class AdminPanelViewModel : ViewModel() {
 
     private val repository = AdminRepository()
     private val apiService: AdminApiService = RetrofitClient.createService(AdminApiService::class.java)
+    private val usuarioApiService: UsuarioApiService = RetrofitClient.createService(UsuarioApiService::class.java)
 
     // ============== ESTADOS DE CARGA Y ERRORES ==============
 
@@ -45,6 +47,11 @@ class AdminPanelViewModel : ViewModel() {
     private val _isAdmin = MutableStateFlow<Boolean>(false)
     val isAdmin: StateFlow<Boolean> = _isAdmin
 
+    // ============== USUARIOS ASIGNABLES ==============
+
+    private val _usuariosAsignables = MutableStateFlow<List<UsuarioCompleto>>(emptyList())
+    val usuariosAsignables: StateFlow<List<UsuarioCompleto>> = _usuariosAsignables
+
     // ============== CONTENIDOS ==============
 
     private val _contents = MutableStateFlow<List<com.example.chatbot_diseo.network.dto.response.ContentResponse>>(emptyList())
@@ -54,9 +61,27 @@ class AdminPanelViewModel : ViewModel() {
     private val _selectedContent = MutableStateFlow<com.example.chatbot_diseo.network.dto.response.ContentResponse?>(null)
     val selectedContent: StateFlow<com.example.chatbot_diseo.network.dto.response.ContentResponse?> = _selectedContent
 
+    // ============== ACTIVIDADES ==============
+
+    private val _activities = MutableStateFlow<List<ActivityItem>>(emptyList())
+    val activities: StateFlow<List<ActivityItem>> = _activities
+
+    // Nueva: Actividad completa para edición
+    private val _selectedActivity = MutableStateFlow<ActivityResponse?>(null)
+    val selectedActivity: StateFlow<ActivityResponse?> = _selectedActivity
+
+    // ============== RECURSOS ==============
+
+    private val _resources = MutableStateFlow<List<ResourceItem>>(emptyList())
+    val resources: StateFlow<List<ResourceItem>> = _resources
+
+    // ============== MÉTRICAS ==============
+
+    private val _metrics = MutableStateFlow<AdminStats?>(null)
+    val metrics: StateFlow<AdminStats?> = _metrics
+
     init {
-        // No cargar datos automáticamente para evitar crash
-        // Los datos se cargarán cuando el usuario abra el panel de administración
+        loadAllData()
     }
 
     /**
@@ -67,6 +92,7 @@ class AdminPanelViewModel : ViewModel() {
         loadActivities()
         loadResources()
         loadMetrics()
+        loadUsuariosAsignables()  // Habilitado nuevamente con manejo de errores
     }
 
     /**
@@ -79,7 +105,9 @@ class AdminPanelViewModel : ViewModel() {
 
             when (val result = repository.getContents()) {
                 is Result.Success<*> -> {
-                    _contents.value = result.data as List<com.example.chatbot_diseo.network.dto.response.ContentResponse>
+                    // Cast seguro con verificación de tipo
+                    @Suppress("UNCHECKED_CAST")
+                    _contents.value = (result.data as? List<com.example.chatbot_diseo.network.dto.response.ContentResponse>) ?: emptyList()
                 }
                 is Result.Error -> {
                     _errorMessage.value = "Error al cargar contenidos: ${result.message}"
@@ -182,13 +210,6 @@ class AdminPanelViewModel : ViewModel() {
 
     // ============== ACTIVIDADES ==============
 
-    private val _activities = MutableStateFlow<List<ActivityItem>>(emptyList())
-    val activities: StateFlow<List<ActivityItem>> = _activities
-
-    // Nueva: Actividad completa para edición
-    private val _selectedActivity = MutableStateFlow<ActivityResponse?>(null)
-    val selectedActivity: StateFlow<ActivityResponse?> = _selectedActivity
-
     fun loadActivities() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -197,7 +218,9 @@ class AdminPanelViewModel : ViewModel() {
             try {
                 when (val result = repository.getActivities()) {
                     is Result.Success<*> -> {
-                        _activities.value = result.data as List<ActivityItem>
+                        // Cast seguro con verificación de tipo
+                        @Suppress("UNCHECKED_CAST")
+                        _activities.value = (result.data as? List<ActivityItem>) ?: emptyList()
                         // NO mostrar error si la lista está vacía, solo actualizar la lista
                     }
                     is Result.Error -> {
@@ -337,9 +360,6 @@ class AdminPanelViewModel : ViewModel() {
 
     // ============== RECURSOS ==============
 
-    private val _resources = MutableStateFlow<List<ResourceItem>>(emptyList())
-    val resources: StateFlow<List<ResourceItem>> = _resources
-
     fun loadResources() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -348,7 +368,9 @@ class AdminPanelViewModel : ViewModel() {
             try {
                 when (val result = repository.getResources()) {
                     is Result.Success<*> -> {
-                        _resources.value = result.data as List<ResourceItem>
+                        // Cast seguro con verificación de tipo
+                        @Suppress("UNCHECKED_CAST")
+                        _resources.value = (result.data as? List<ResourceItem>) ?: emptyList()
                         // NO mostrar error si la lista está vacía, solo actualizar la lista
                     }
                     is Result.Error -> {
@@ -447,9 +469,6 @@ class AdminPanelViewModel : ViewModel() {
 
     // ============== MÉTRICAS ==============
 
-    private val _metrics = MutableStateFlow<AdminStats?>(null)
-    val metrics: StateFlow<AdminStats?> = _metrics
-
     /**
      * Cargar métricas desde el backend
      */
@@ -461,11 +480,11 @@ class AdminPanelViewModel : ViewModel() {
                         _metrics.value = result.data as AdminStats
                     }
                     is Result.Error -> {
-                        // Si falla, usar valores locales como fallback
+                        // Si falla, usar valores locales como fallback (con verificación de null)
                         _metrics.value = AdminStats(
-                            totalContents = _contents.value.size,
-                            totalActivities = _activities.value.size,
-                            totalResources = _resources.value.size,
+                            totalContents = _contents.value?.size ?: 0,
+                            totalActivities = _activities.value?.size ?: 0,
+                            totalResources = _resources.value?.size ?: 0,
                             completionRate = 0,
                             averageSatisfaction = 0.0,
                             averageTimeDays = 0
@@ -474,11 +493,11 @@ class AdminPanelViewModel : ViewModel() {
                     is Result.Loading -> { /* No action needed */ }
                 }
             } catch (e: Exception) {
-                // Fallback silencioso - usar valores locales
+                // Fallback silencioso - usar valores locales (con verificación de null)
                 _metrics.value = AdminStats(
-                    totalContents = _contents.value.size,
-                    totalActivities = _activities.value.size,
-                    totalResources = _resources.value.size,
+                    totalContents = _contents.value?.size ?: 0,
+                    totalActivities = _activities.value?.size ?: 0,
+                    totalResources = _resources.value?.size ?: 0,
                     completionRate = 0,
                     averageSatisfaction = 0.0,
                     averageTimeDays = 0
@@ -487,10 +506,10 @@ class AdminPanelViewModel : ViewModel() {
         }
     }
 
-    // Métodos compatibles con la UI existente - ahora retornan StateFlow para actualización en tiempo real
-    fun getTotalContents() = _contents.value.size
-    fun getTotalActivities() = _activities.value.size
-    fun getTotalResources() = _resources.value.size
+    // Métodos compatibles con la UI existente - con verificación de null
+    fun getTotalContents() = _contents.value?.size ?: 0
+    fun getTotalActivities() = _activities.value?.size ?: 0
+    fun getTotalResources() = _resources.value?.size ?: 0
     fun getCompletionRate() = _metrics.value?.completionRate ?: 0
     fun getAverageSatisfaction() = _metrics.value?.averageSatisfaction ?: 0.0
     fun getAverageTimeDays() = _metrics.value?.averageTimeDays ?: 0
@@ -511,6 +530,7 @@ class AdminPanelViewModel : ViewModel() {
 
                 if (response.isSuccessful && response.body() != null) {
                     val usuario = response.body()!!
+
                     _adminUser.value = usuario
 
                     // Validar el rol del usuario
@@ -540,6 +560,50 @@ class AdminPanelViewModel : ViewModel() {
     fun clearUsuarioActual() {
         _adminUser.value = null
         _isAdmin.value = false
+    }
+
+    // ============== USUARIOS ASIGNABLES ==============
+
+    /**
+     * Cargar usuarios asignables (rol "Usuario") desde el backend
+     */
+    fun loadUsuariosAsignables() {
+        viewModelScope.launch {
+            try {
+                val response = usuarioApiService.getAllUsuarios()
+
+                if (response.isSuccessful && response.body() != null) {
+                    val todosLosUsuarios = response.body()!!
+
+                    // Filtrar usuarios con rol "Usuario" (ignorando mayúsculas/minúsculas)
+                    val usuariosFiltrados = todosLosUsuarios.filter {
+                        it.rol.equals("Usuario", ignoreCase = true)
+                    }.map { usuario ->
+                        // Construir nombreCompleto si está vacío
+                        val nombreMostrar = when {
+                            !usuario.nombreCompleto.isNullOrBlank() -> usuario.nombreCompleto
+                            !usuario.nombre.isNullOrBlank() || !usuario.apellidos.isNullOrBlank() -> {
+                                "${usuario.nombre ?: ""} ${usuario.apellidos ?: ""}".trim()
+                            }
+                            else -> usuario.email
+                        }
+
+                        // Solo actualizar nombreCompleto si es necesario
+                        if (usuario.nombreCompleto.isNullOrBlank()) {
+                            usuario.copy(nombreCompleto = nombreMostrar)
+                        } else {
+                            usuario
+                        }
+                    }
+
+                    _usuariosAsignables.value = usuariosFiltrados
+                } else {
+                    _usuariosAsignables.value = emptyList()
+                }
+            } catch (e: Exception) {
+                _usuariosAsignables.value = emptyList()
+            }
+        }
     }
 
     // ============== UTILIDADES ==============

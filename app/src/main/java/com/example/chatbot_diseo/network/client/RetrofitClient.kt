@@ -16,37 +16,20 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-/**
- * Cliente Retrofit para conectar con ASP.NET Core Backend
- * Configuración centralizada para todas las peticiones HTTP
- */
 object RetrofitClient {
 
-    /**
-     * URL base del backend ASP.NET Core
-     * ✅ API corriendo en: http://localhost:5288 (puerto HTTP)
-     * Para emulador Android: http://10.0.2.2:5288/api/
-     */
     private const val BASE_URL = ApiEnvironment.BASE_URL
 
-    /**
-     * Configuración de Gson para serialización/deserialización
-     */
     private val gson: Gson = GsonBuilder()
         .setLenient()
+        .serializeNulls()  // ✅ Incluir campos null en el JSON
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
         .create()
 
-    /**
-     * Interceptor para logging de peticiones HTTP (solo en DEBUG)
-     */
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    /**
-     * Interceptor de autenticación con Bearer Token
-     */
     private val authInterceptor = Interceptor { chain ->
         val original = chain.request()
         val token = TokenHolder.token
@@ -54,7 +37,6 @@ object RetrofitClient {
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
 
-        // Agregar token de autenticación si está disponible
         if (!token.isNullOrBlank()) {
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }
@@ -62,16 +44,12 @@ object RetrofitClient {
         chain.proceed(requestBuilder.build())
     }
 
-    /**
-     * Cliente HTTP con configuración de timeouts y logging
-     */
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(loggingInterceptor)
         .addInterceptor(authInterceptor)
-        // Confiar en todos los certificados (para desarrollo local con HTTP)
         .apply {
             try {
                 val trustAllCerts = arrayOf<TrustManager>(
@@ -96,9 +74,6 @@ object RetrofitClient {
         }
         .build()
 
-    /**
-     * Instancia de Retrofit
-     */
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -107,9 +82,6 @@ object RetrofitClient {
             .build()
     }
 
-    /**
-     * Método genérico para crear servicios de API
-     */
     fun <T> createService(serviceClass: Class<T>): T {
         return retrofit.create(serviceClass)
     }

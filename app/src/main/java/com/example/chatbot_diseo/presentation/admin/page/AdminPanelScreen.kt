@@ -53,6 +53,7 @@ fun AdminPanelScreen(
     val contentList by viewModel.contents.collectAsState()
     val activityList by viewModel.activities.collectAsState()
     val resourceList by viewModel.resources.collectAsState()
+    val usuariosAsignables by viewModel.usuariosAsignables.collectAsState()
 
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -391,6 +392,7 @@ fun AdminPanelScreen(
                 1 -> AdminActivityDialog2(
                     titleDialog = "Crear nueva actividad",
                     initialItem = null,
+                    usuariosAsignables = usuariosAsignables,
                     onDismiss = { showNewDialog = false },
                     onConfirm = { activityRequest ->
                         viewModel.addActivity(
@@ -449,6 +451,7 @@ fun AdminPanelScreen(
         selectedActivity?.let { activityResponse ->
             EditarActividadDialog(
                 actividadInicial = activityResponse,
+                usuariosAsignables = usuariosAsignables,
                 onDismiss = {
                     viewModel.clearSelectedActivity()
                     editActivity = null

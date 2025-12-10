@@ -148,22 +148,21 @@ class AdminRemoteDataSource {
         modality: String
     ): Result<ActivityResponse> = withContext(Dispatchers.IO) {
         try {
-            // Parsear date que viene como "Día X - HH:mm" o simplemente el día
             val dia = date.substringAfter("Día ").substringBefore(" ").toIntOrNull() ?: 1
             val horaInicio = if (date.contains("-")) date.substringAfter("- ").trim() else "09:00"
             val horaFin = "18:00"
 
             val request = ActivityRequest(
                 titulo = title,
-                descripcion = "Actividad de onboarding: $title",
+                descripcion = "",  // Sin valor por defecto
                 dia = dia,
                 duracionHoras = 8.0,
                 horaInicio = horaInicio,
                 horaFin = horaFin,
-                lugar = "Por definir",
+                lugar = "",  // Sin valor por defecto
                 modalidad = modality,
                 tipo = "induccion",
-                responsable = "RRHH"
+                responsable = ""  // Sin valor por defecto
             )
             val response = apiService.createActivity(request)
             handleResponse(response) { it }
@@ -185,15 +184,15 @@ class AdminRemoteDataSource {
 
             val request = ActivityRequest(
                 titulo = title,
-                descripcion = "Actividad de onboarding: $title",
+                descripcion = "",  // Sin valor por defecto
                 dia = dia,
                 duracionHoras = 8.0,
                 horaInicio = horaInicio,
                 horaFin = horaFin,
-                lugar = "Por definir",
+                lugar = "",  // Sin valor por defecto
                 modalidad = modality,
                 tipo = "induccion",
-                responsable = "RRHH"
+                responsable = ""  // Sin valor por defecto
             )
             val response = apiService.updateActivity(id, request)
 
