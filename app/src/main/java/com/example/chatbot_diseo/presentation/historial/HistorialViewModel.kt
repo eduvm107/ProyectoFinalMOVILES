@@ -44,6 +44,7 @@ class HistorialViewModel(
 
     /**
      * Carga el historial de conversaciones del usuario desde el repositorio usando el usuarioId provisto.
+     * NUEVO: Sincroniza el estado de favoritos desde la API de favoritos
      */
     fun cargarHistorial(usuarioId: String) {
         viewModelScope.launch {
@@ -59,11 +60,52 @@ class HistorialViewModel(
 
                 Log.d("HISTORIAL_VM", "Después de filtrar: filtradas=${listaFiltrada.size}")
 
-                // 2. Ordenar la lista por fecha de inicio (más nuevo primero)
-                val listaOrdenada = listaFiltrada.sortedByDescending { it.fechaInicio }
+                // 2. 🔄 SINCRONIZAR FAVORITOS: Obtener la lista de favoritos del usuario
+                try {
+                    Log.d("HISTORIAL_VM", "🔄 Sincronizando estado de favoritos...")
+                    val responseFavoritos = com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance.favoritosApi.getMisFavoritos(usuarioId)
 
-                // 3. Actualizar el StateFlow para refrescar la UI
-                _conversaciones.value = listaOrdenada
+                    if (responseFavoritos.isSuccessful) {
+                        val favoritos = responseFavoritos.body() ?: emptyList()
+
+                        // Extraer los IDs de las conversaciones favoritas (tipo="chat")
+                        val idsFavoritosChat = favoritos
+                            .filter { it.tipo.equals("chat", ignoreCase = true) }
+                            .map { it.id }
+                            .toSet()
+
+                        Log.d("HISTORIAL_VM", "✅ ${idsFavoritosChat.size} conversaciones favoritas encontradas")
+
+                        // 3. Actualizar las conversaciones marcando cuáles son favoritas
+                        val listaConFavoritos = listaFiltrada.map { conv ->
+                            val esFavorito = idsFavoritosChat.contains(conv.id)
+                            if (conv.favorito != esFavorito) {
+                                Log.d("HISTORIAL_VM", "  ❤️ Actualizando: ${conv.tituloMostrado} -> favorito=$esFavorito")
+                                conv.copy(favorito = esFavorito)
+                            } else {
+                                conv
+                            }
+                        }
+
+                        // 4. Ordenar la lista por fecha de inicio (más nuevo primero)
+                        val listaOrdenada = listaConFavoritos.sortedByDescending { it.fechaInicio }
+
+                        // 5. Actualizar el StateFlow para refrescar la UI
+                        _conversaciones.value = listaOrdenada
+
+                        Log.d("HISTORIAL_VM", "✅ Historial cargado y sincronizado con favoritos")
+                    } else {
+                        Log.e("HISTORIAL_VM", "❌ Error al obtener favoritos: ${responseFavoritos.code()}")
+                        // Si falla la sincronización, al menos mostramos las conversaciones
+                        val listaOrdenada = listaFiltrada.sortedByDescending { it.fechaInicio }
+                        _conversaciones.value = listaOrdenada
+                    }
+                } catch (e: Exception) {
+                    Log.e("HISTORIAL_VM", "❌ Error sincronizando favoritos: ${e.message}", e)
+                    // Si falla la sincronización, al menos mostramos las conversaciones
+                    val listaOrdenada = listaFiltrada.sortedByDescending { it.fechaInicio }
+                    _conversaciones.value = listaOrdenada
+                }
 
                 // Si hubo discrepancias, notificar (opcional)
                 if (listaFiltrada.size < lista.size) {
@@ -72,6 +114,7 @@ class HistorialViewModel(
 
             } catch (e: Exception) {
                 // Manejo de errores de red o repositorio
+                Log.e("HISTORIAL_VM", "❌ Error al cargar historial: ${e.message}", e)
                 _uiEvent.value = "Error al cargar historial: ${e.message}"
             } finally {
                 _isLoading.value = false

@@ -79,8 +79,24 @@ class FavoritosViewModel : ViewModel() {
                     _favoritos.value = listaFavoritos
 
                     Log.d("FAVORITOS_GET", "✅ Favoritos cargados: ${listaFavoritos.size} recursos")
+
+                    // 🔍 LOG DETALLADO: Verificar qué tipos están llegando
+                    val tiposCargados = listaFavoritos.groupBy { it.tipo }
+                    tiposCargados.forEach { (tipo, lista) ->
+                        Log.d("FAVORITOS_GET", "  📊 Tipo '$tipo': ${lista.size} recursos")
+                    }
+
                     listaFavoritos.forEach {
-                        Log.d("FAVORITOS_GET", "  - [${it.tipo}] ${it.titulo}")
+                        Log.d("FAVORITOS_GET", "  - [${it.tipo}] ${it.titulo} (ID: ${it.id})")
+                    }
+
+                    // 🔍 LOG CRÍTICO: Verificar si hay chats
+                    val chatsCount = listaFavoritos.count { it.tipo.equals("chat", ignoreCase = true) }
+                    if (chatsCount == 0) {
+                        Log.w("FAVORITOS_GET", "⚠️ NO SE ENCONTRARON CONVERSACIONES (tipo='chat') en los favoritos")
+                        Log.w("FAVORITOS_GET", "⚠️ Posible problema: El backend no está devolviendo conversaciones favoritas")
+                    } else {
+                        Log.d("FAVORITOS_GET", "✅ $chatsCount conversaciones encontradas en favoritos")
                     }
                 } else {
                     // Manejar errores HTTP
