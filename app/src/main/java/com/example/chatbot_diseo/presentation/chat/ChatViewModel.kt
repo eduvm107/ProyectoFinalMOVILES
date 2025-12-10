@@ -8,8 +8,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 import com.example.chatbot_diseo.data.repository.ChatbotRepository
+import com.example.chatbot_diseo.data.model.MensajeRequest
+import com.example.chatbot_diseo.data.model.Mensaje as DataMensaje
+import com.example.chatbot_diseo.data.model.Conversacion as DataConversacion
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 class ChatViewModel : ViewModel() {
 
@@ -88,6 +93,94 @@ class ChatViewModel : ViewModel() {
     var navegarAActividades: (() -> Unit)? = null
     var navegarAPerfil: (() -> Unit)? = null
 
+    // --- NUEVAS FUNCIONES RELACIONADAS A CONVERSACIONES ---
+
+    private fun ahoraIso(): String {
+        return OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    }
+
+    /**
+     * Crear una conversación vacía en el backend (sin mensajes) y guardar el id en el ViewModel.
+     * Usado por el botón "Nuevo chat".
+     */
+    fun crearConversacionVacia() {
+        val userId = usuarioId
+        if (userId.isNullOrBlank()) {
+            mensajes.add(Mensaje("Por favor inicia sesión para usar el chatbot.", false))
+            return
+        }
+
+        viewModelScope.launch {
+            isLoading.value = true
+            try {
+                val nueva = DataConversacion(
+                    id = "",
+                    usuarioId = userId,
+                    tituloBackend = "",
+                    mensajes = emptyList(),
+                    fechaInicio = ahoraIso(),
+                    activa = true,
+                    favorito = false
+                )
+
+                val resp = RetrofitInstance.conversacionApi.crearConversacion(nueva)
+                if (resp.isSuccessful) {
+                    val created = resp.body()
+                    created?.id?.let { conversacionId = it }
+                    // Limpiamos el chat para la nueva conversacion localmente
+                    mensajes.clear()
+                    mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
+                    mostrarSugerencias.value = true
+                } else {
+                    mensajes.add(Mensaje("No se pudo crear conversación (code=${resp.code()}). Intenta de nuevo.", false))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "crearConversacionVacia excepción", e)
+                mensajes.add(Mensaje("Error creando conversación. Por favor intenta de nuevo.", false))
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Crear una conversación en backend incluyendo el primer mensaje del usuario.
+     * Devuelve true si se creó y se asignó conversacionId.
+     */
+    private suspend fun crearConversacionConPrimerMensaje(userId: String, primerMensaje: String): Boolean {
+        return try {
+            val dataMsg = DataMensaje(
+                tipo = "usuario",
+                contenido = primerMensaje,
+                timestamp = ahoraIso()
+            )
+            val nueva = DataConversacion(
+                id = "",
+                usuarioId = userId,
+                tituloBackend = "",
+                mensajes = listOf(dataMsg),
+                fechaInicio = ahoraIso(),
+                activa = true,
+                favorito = false
+            )
+
+            val resp = RetrofitInstance.conversacionApi.crearConversacion(nueva)
+            if (resp.isSuccessful) {
+                val created = resp.body()
+                created?.id?.let { conversacionId = it }
+                true
+            } else {
+                Log.e(TAG, "crearConversacionConPrimerMensaje failed: ${resp.code()} ${resp.message()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "crearConversacionConPrimerMensaje excepción", e)
+            false
+        }
+    }
+
+    // --- FIN: funciones de conversación ---
+
     /**
      * Enviar mensaje al chatbot con IA
      *
@@ -99,7 +192,7 @@ class ChatViewModel : ViewModel() {
 
         val textoTrim = texto.trim()
 
-        // Agregar mensaje del usuario
+        // Agregar mensaje del usuario localmente
         mensajes.add(Mensaje(textoTrim, true))
 
         // Ocultar sugerencias solo cuando viene de input escrito
@@ -108,7 +201,6 @@ class ChatViewModel : ViewModel() {
         }
 
         // Respuesta predefinida sin llamar al backend
-        // Buscamos coincidencias de forma más tolerante: exacta (ignore case) o parcial
         val matchedEntry = respuestasPredefinidas.entries.firstOrNull { (key, _) ->
             val keyTrim = key.trim()
             keyTrim.equals(textoTrim, ignoreCase = true) ||
@@ -119,7 +211,6 @@ class ChatViewModel : ViewModel() {
         if (matchedEntry != null) {
             val (key, baseRespuesta) = matchedEntry
 
-            // Si la respuesta tiene actionRoute, adjuntamos la acción correspondiente como fallback
             val respuestaConAccion = when (baseRespuesta.actionRoute) {
                 "recursos" -> baseRespuesta.copy(accion = { navegarADocumentos?.invoke() })
                 "calendario", "actividades" -> baseRespuesta.copy(accion = { navegarAActividades?.invoke() })
@@ -127,7 +218,6 @@ class ChatViewModel : ViewModel() {
                 else -> baseRespuesta
             }
 
-            // Desde FAQ (ocultarSugerencias = false): quitar solo esa pregunta de la lista visible
             if (!ocultarSugerencias) {
                 val index = sugerencias.indexOfFirst { it.equals(key, ignoreCase = true) }
                 if (index >= 0) {
@@ -135,7 +225,6 @@ class ChatViewModel : ViewModel() {
                 }
             }
 
-            // Simular "escribiendo..." siempre por 1s
             isLoading.value = true
             error.value = null
             mensajes.add(Mensaje(TYPING_MESSAGE_TEXT, false))
@@ -168,42 +257,130 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             val startTime = System.currentTimeMillis()
             try {
-                val result = chatbotRepository.enviarPregunta(userId, textoTrim)
-
-                // Garantizar mínimo 1 segundo de "escribiendo..."
-                val elapsed = System.currentTimeMillis() - startTime
-                if (elapsed < 1000L) {
-                    delay(1000L - elapsed)
+                // Si no hay conversacionId, crearla primero (incluyendo el primer mensaje)
+                if (conversacionId.isNullOrBlank()) {
+                    val created = crearConversacionConPrimerMensaje(userId, textoTrim)
+                    // Si no se pudo crear, dejar como estaba y proceder a usar el orquestador como fallback
+                    if (!created) {
+                        Log.w(TAG, "No se creó conversación antes de enviar; usando fallback a orquestador")
+                    }
                 }
 
-                result
-                    .onSuccess { response ->
+                // Si existe conversacionId, preferimos enviar mensaje a /api/Conversacion/{id}/mensajes
+                if (!conversacionId.isNullOrBlank()) {
+                    try {
+                        val resp = RetrofitInstance.conversacionApi.enviarMensaje(conversacionId!!, MensajeRequest(contenido = textoTrim, tipo = "usuario"))
+                        // Intentar obtener respuesta del body si el endpoint la retorna
+                        var botRespuesta: String? = null
+                        if (resp.isSuccessful) {
+                            val body = resp.body()
+                            when (body) {
+                                is String -> botRespuesta = body
+                                is Map<*, *> -> {
+                                    botRespuesta = (body["respuesta"] ?: body["respuestaBot"] ?: body["contenido"])?.toString()
+                                }
+                                else -> {
+                                    // no sabemos el formato; lo dejamos nulo para fallback
+                                }
+                            }
+                        }
+
+                        // Si no obtuvimos respuesta útil del endpoint, usar orquestador (fallback)
+                        if (botRespuesta == null) {
+                            val result = chatbotRepository.enviarPregunta(userId, textoTrim)
+                            result
+                                .onSuccess { response ->
+                                    response.conversacionId?.let { conversacionId = it }
+                                    botRespuesta = response.respuesta
+                                }
+                                .onFailure { e ->
+                                    throw e
+                                }
+                        }
+
+                        // Garantizar mínimo 1 segundo de "escribiendo..."
+                        val elapsed = System.currentTimeMillis() - startTime
+                        if (elapsed < 1000L) {
+                            delay(1000L - elapsed)
+                        }
+
                         if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
                             mensajes.removeAt(mensajes.size - 1)
                         }
 
-                        // Guardar el ID de la conversación
-                        response.conversacionId?.let { conversacionId = it }
-                        // Agregar respuesta del bot
-                        mensajes.add(Mensaje(response.respuesta, false))
-                    }
-                    .onFailure { e ->
-                        if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
-                            mensajes.removeAt(mensajes.size - 1)
+                        botRespuesta?.let { mensajes.add(Mensaje(it, false)) } ?: run {
+                            mensajes.add(Mensaje("No hubo respuesta del servidor. Intenta de nuevo.", false))
                         }
 
-                        error.value = e.message
-                        val errorMsg = when {
-                            e.message?.contains("timeout", ignoreCase = true) == true ->
-                                "La respuesta tardó demasiado. El servidor está muy ocupado. Por favor, intenta de nuevo."
-                            e.message?.contains("401") == true ->
-                                "Error de autenticación. Por favor, inicia sesión nuevamente."
-                            e.message?.contains("404") == true ->
-                                "Servicio no disponible. Verifica la conexión del servidor."
-                            else -> "Lo siento, ocurrió un error: ${e.message}"
-                        }
-                        mensajes.add(Mensaje(errorMsg, false))
+                    } catch (e: Exception) {
+                        Log.e(TAG, "enviarMensaje vía Conversacion API excepción", e)
+                        // Fallback: usar orquestador para obtener respuesta
+                        val result = chatbotRepository.enviarPregunta(userId, textoTrim)
+                        result
+                            .onSuccess { response ->
+                                response.conversacionId?.let { conversacionId = it }
+                                if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                    mensajes.removeAt(mensajes.size - 1)
+                                }
+                                mensajes.add(Mensaje(response.respuesta, false))
+                            }
+                            .onFailure { e ->
+                                if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                    mensajes.removeAt(mensajes.size - 1)
+                                }
+                                error.value = e.message
+                                val errorMsg = when {
+                                    e.message?.contains("timeout", ignoreCase = true) == true ->
+                                        "La respuesta tardó demasiado. El servidor está muy ocupado. Por favor, intenta de nuevo."
+                                    e.message?.contains("401") == true ->
+                                        "Error de autenticación. Por favor, inicia sesión nuevamente."
+                                    e.message?.contains("404") == true ->
+                                        "Servicio no disponible. Verifica la conexión del servidor."
+                                    else -> "Lo siento, ocurrió un error: ${e.message}"
+                                }
+                                mensajes.add(Mensaje(errorMsg, false))
+                            }
                     }
+
+                } else {
+                    // No se creó conversacion: fallback a orquestador (mismo flujo anterior)
+                    val result = chatbotRepository.enviarPregunta(userId, textoTrim)
+
+                    // Garantizar mínimo 1 segundo de "escribiendo..."
+                    val elapsed = System.currentTimeMillis() - startTime
+                    if (elapsed < 1000L) {
+                        delay(1000L - elapsed)
+                    }
+
+                    result
+                        .onSuccess { response ->
+                            if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                mensajes.removeAt(mensajes.size - 1)
+                            }
+
+                            // Guardar el ID de la conversación devuelto por el orquestador si existe
+                            response.conversacionId?.let { conversacionId = it }
+                            mensajes.add(Mensaje(response.respuesta, false))
+                        }
+                        .onFailure { e ->
+                            if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                mensajes.removeAt(mensajes.size - 1)
+                            }
+
+                            error.value = e.message
+                            val errorMsg = when {
+                                e.message?.contains("timeout", ignoreCase = true) == true ->
+                                    "La respuesta tardó demasiado. El servidor está muy ocupado. Por favor, intenta de nuevo."
+                                e.message?.contains("401") == true ->
+                                    "Error de autenticación. Por favor, inicia sesión nuevamente."
+                                e.message?.contains("404") == true ->
+                                    "Servicio no disponible. Verifica la conexión del servidor."
+                                else -> "Lo siento, ocurrió un error: ${e.message}"
+                            }
+                            mensajes.add(Mensaje(errorMsg, false))
+                        }
+                }
+
             } catch (e: Exception) {
                 Log.e(TAG, "enviarMensaje excepción", e)
                 val elapsed = System.currentTimeMillis() - startTime
@@ -295,7 +472,7 @@ class ChatViewModel : ViewModel() {
                         val listaMensajes = conversacionCompleta.mensajes ?: emptyList()
                         listaMensajes.forEach { m ->
                             val esUsuario = m.tipo.equals("usuario", ignoreCase = true)
-                            mensajes.add(Mensaje(m.contenido ?: "", esUsuario))
+                            mensajes.add(Mensaje(m.contenido, esUsuario))
                         }
 
                         conversacionId = id

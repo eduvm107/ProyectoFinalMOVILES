@@ -66,7 +66,7 @@ fun ChatScreen(
 
         // HEADER
         ChatHeader(
-            onNewChat = { viewModel.limpiarChat() },
+            onNewChat = { viewModel.crearConversacionVacia() },
             onMenuClick = { drawerOpen = true }
         )
 

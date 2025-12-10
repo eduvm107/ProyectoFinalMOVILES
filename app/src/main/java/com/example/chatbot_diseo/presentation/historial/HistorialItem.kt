@@ -14,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.chatbot_diseo.data.model.Conversacion
+import com.example.chatbot_diseo.data.model.formatearFechaSimple
 
 @Composable
 fun HistorialItem(
@@ -25,8 +27,8 @@ fun HistorialItem(
     val colorEstado = if (chat.activa) Color(0xFF4CAF50) else Color.Gray
     val textoEstado = if (chat.activa) "Activo" else "Cerrado"
 
-    // Formato simple de hora (cortamos el string de fecha)
-    val fechaMostrar = if(chat.fechaInicio.length > 10) chat.fechaInicio.substring(0, 10) else chat.fechaInicio
+    // Formato simple de hora (usamos la utilidad formatearFechaSimple para mayor legibilidad)
+    val fechaMostrar = formatearFechaSimple(chat.fechaInicio)
 
     Card(
         modifier = Modifier
@@ -53,7 +55,13 @@ fun HistorialItem(
 
             // Info
             Column(modifier = Modifier.weight(1f)) {
-                Text("Chat de Soporte", fontWeight = FontWeight.Bold)
+                // Usar el título calculado por el DTO
+                Text(
+                    text = chat.tituloMostrado,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text("Fecha: $fechaMostrar", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
 
