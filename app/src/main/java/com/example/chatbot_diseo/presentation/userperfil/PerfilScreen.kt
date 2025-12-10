@@ -44,8 +44,6 @@ fun PerfilScreen(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     sampleProfile: UserProfile? = null,
-    isDarkTheme: Boolean = false,
-    onThemeToggle: (Boolean) -> Unit = {},
     viewModel: PerfilViewModel = viewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -99,7 +97,7 @@ fun PerfilScreen(
         }
     }
 
-    // Usar colores del tema de Material3 para soportar modo oscuro
+    // Usar colores del tema de Material3
     val primaryColor = MaterialTheme.colorScheme.primary
     val backgroundColor = MaterialTheme.colorScheme.background
     val textPrimary = MaterialTheme.colorScheme.onBackground
@@ -472,81 +470,6 @@ fun ActionButton(
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
                 tint = Color(0xFFB0B0B0)
-            )
-        }
-    }
-}
-
-@Composable
-fun ThemeToggleCard(
-    isDarkTheme: Boolean,
-    onToggle: (Boolean) -> Unit,
-    primaryColor: Color,
-    textPrimary: Color,
-    textSecondary: Color
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(22.dp))
-                        .background(Color(0xFFF2F3F5)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
-                        contentDescription = null,
-                        tint = Color(0xFF6B6B6B),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column {
-                    Text(
-                        text = "Tema",
-                        fontSize = 14.sp,
-                        color = textPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = if (isDarkTheme) "Modo Oscuro" else "Modo Claro",
-                        fontSize = 13.sp,
-                        color = textSecondary,
-                        fontWeight = FontWeight.Normal
-                    )
-                }
-            }
-
-            Switch(
-                checked = isDarkTheme,
-                onCheckedChange = onToggle,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = primaryColor,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color.LightGray
-                )
             )
         }
     }

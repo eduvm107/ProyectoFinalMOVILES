@@ -8,6 +8,7 @@ import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 import com.example.chatbot_diseo.data.remote.model.Documento
 import com.example.chatbot_diseo.network.dto.request.FavoritoRequest
 import com.example.chatbot_diseo.presentation.favoritos.FavoritosViewModel
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosBus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -186,18 +187,18 @@ class RecursosViewModel : ViewModel() {
                     val body = response.body()
                     Log.d("FAVORITOS", "✅ Respuesta exitosa: ${body?.message}")
 
-                    // 3. 🎨 FIX CRÍTICO: ACTUALIZACIÓN LOCAL INMEDIATA (Arregla el color del corazón)
+                    // Determinar el nuevo estado usando la respuesta del backend si está disponible
+                    val esFavoritoBackend = body?.esFavorito
+
                     val listaActual = _recursosList.value.toMutableList()
 
                     // Buscar el índice del documento que acabamos de modificar
                     val index = listaActual.indexOfFirst { it.id == recurso.id }
 
                     // Variable para guardar el nuevo estado y usarla en el mensaje
-                    var nuevoEstado = !recurso.favorito
+                    var nuevoEstado = esFavoritoBackend ?: !recurso.favorito
 
                     if (index != -1) {
-                        // Invertir el estado actual (true <-> false)
-                        nuevoEstado = !recurso.favorito
                         val documentoActualizado = listaActual[index].copy(
                             favorito = nuevoEstado
                         )
@@ -213,6 +214,9 @@ class RecursosViewModel : ViewModel() {
 
                     // 4. 🔄 SINCRONIZACIÓN: Llamada al "Jale" (Arregla la persistencia en Mis Favoritos)
                     favoritosViewModel?.forzarRecarga(usuarioId)
+
+                    // Emitir evento global para que cualquier listener recargue favoritos
+                    FavoritosBus.emitFavoritosChanged()
 
                     // Mostrar feedback al usuario usando el nuevo estado local
                     _mensajeFeedback.value = if (nuevoEstado) {
