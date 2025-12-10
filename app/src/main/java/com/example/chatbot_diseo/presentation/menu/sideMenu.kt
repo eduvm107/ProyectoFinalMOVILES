@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,40 +34,22 @@ fun SideMenu(
             .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
 
-        // Header: título + subtítulo y switch alineado a la derecha
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // Header: título + subtítulo
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column {
-                Text(
-                    text = "Menú",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A1A1A)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Accesos rápidos",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color(0xFF6B7280)
-                )
-            }
-
-            // Switch puramente visual (no cambia lógica del menú)
-            val isDark = remember { mutableStateOf(false) }
-            Switch(
-                checked = isDark.value,
-                onCheckedChange = { isDark.value = it },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF4A6B8A),
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFE5E7EB)
-                )
+            Text(
+                text = "Menú",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1A1A1A)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Accesos rápidos",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color(0xFF6B7280)
             )
         }
 

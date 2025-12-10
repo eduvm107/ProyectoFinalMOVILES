@@ -222,15 +222,6 @@ fun PerfilScreen(
                     onClick = { showChangePasswordDialog = true }
                 )
 
-                // Switch de tema oscuro/claro dentro de card
-                ThemeToggleCard(
-                    isDarkTheme = isDarkTheme,
-                    onToggle = onThemeToggle,
-                    primaryColor = primaryColor,
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Botón de cerrar sesión remodelado
