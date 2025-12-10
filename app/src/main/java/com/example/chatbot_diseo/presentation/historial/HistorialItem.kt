@@ -59,7 +59,7 @@ fun HistorialItem(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Info
+            // Info: ahora incluye título, fecha y estado (estado debajo de la fecha)
             Column(modifier = Modifier.weight(1f).clickable { onClick(chat.id) }) {
                 // Usar el título calculado por el DTO
                 Text(
@@ -69,19 +69,21 @@ fun HistorialItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text("Fecha: $fechaMostrar", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            }
 
-            // Estado
-            Surface(
-                color = colorEstado.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(50)
-            ) {
-                Text(
-                    text = textoEstado,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colorEstado
-                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Estado colocado debajo de la fecha para no tapar el título
+                Surface(
+                    color = colorEstado.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = textoEstado,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorEstado
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
