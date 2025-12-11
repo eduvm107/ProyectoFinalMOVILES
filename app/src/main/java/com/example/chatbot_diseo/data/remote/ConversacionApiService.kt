@@ -59,6 +59,16 @@ interface ConversacionApiService {
     /**
      * Eliminar una conversación
      * DELETE /api/Conversacion/{id}
+     * Firma solicitada: Response<Void> y debe manejar 204 No Content
+     */
+    @DELETE("Conversacion/{id}")
+    suspend fun eliminarConversacion(
+        @Path("id") conversacionId: String
+    ): Response<Void>
+
+    /**
+     * Eliminar una conversación (alternativa existente)
+     * Mantengo el método original para compatibilidad pero se puede dejar de usar.
      */
     @DELETE("Conversacion/{id}")
     suspend fun deleteConversacion(
@@ -88,4 +98,16 @@ interface ConversacionApiService {
         @Path("id") idConversacion: String,
         @Body mensaje: MensajeRequest
     ): Response<Any>
+
+    /**
+     * Toggle favorito de conversación
+     * PATCH /api/Conversacion/{id}/favorito
+     * Body: Boolean (true = marcar favorito, false = desmarcar)
+     * Retorna 204 No Content en éxito
+     */
+    @PATCH("Conversacion/{id}/favorito")
+    suspend fun toggleFavorito(
+        @Path("id") conversacionId: String,
+        @Body esFavorito: Boolean
+    ): Response<Void>
 }

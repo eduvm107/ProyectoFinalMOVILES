@@ -23,15 +23,22 @@ fun ChatScreen(
     viewModel: ChatViewModel = viewModel()
 ) {
 
-    // Si se abrió con un id de conversación, cargarla al montar la pantalla
+    // ✅ FIX: Solo cargar conversación si hay un ID específico
+    // NO limpiar el chat si initialConversacionId es null (mantener conversación actual)
     LaunchedEffect(initialConversacionId) {
-        initialConversacionId?.let { id ->
+        Log.d("ChatScreen", "🔍 LaunchedEffect triggered - initialConversacionId=$initialConversacionId")
+
+        if (initialConversacionId != null && initialConversacionId.isNotBlank()) {
+            // Cargar conversación del historial
             try {
-                viewModel.cargarConversacionPorId(id)
+                Log.d("ChatScreen", "📥 Cargando conversación desde historial: id=$initialConversacionId")
+                viewModel.cargarConversacionPorId(initialConversacionId)
             } catch (e: Exception) {
-                Log.e("ChatScreen", "Error cargando conversacion id=$id", e)
+                Log.e("ChatScreen", "❌ Error cargando conversacion id=$initialConversacionId", e)
             }
         }
+        // ✅ Si initialConversacionId es null, NO hacer nada (mantener chat actual)
+        // Ya NO limpiamos el chat aquí
     }
 
     var drawerOpen by remember { mutableStateOf(false) }
@@ -66,7 +73,16 @@ fun ChatScreen(
 
         // HEADER
         ChatHeader(
-            onNewChat = { viewModel.limpiarChat() },
+            // Mostrar diálogo de confirmación antes de crear nuevo chat
+            onNewChat = {
+                // Si hay mensajes (más que el mensaje inicial), mostrar diálogo
+                if (viewModel.mensajes.size > 1 || viewModel.conversacionId != null) {
+                    viewModel.mostrarDialogoNuevoChat.value = true
+                } else {
+                    // Si no hay conversación activa, iniciar la secuencia para nueva conversación
+                    viewModel.iniciarNuevaConversacion()
+                }
+            },
             onMenuClick = { drawerOpen = true }
         )
 
@@ -138,14 +154,44 @@ fun ChatScreen(
                 shadowElevation = 12.dp
             ) {
                 SideMenu(
-                    onNavigate = {
-                        drawerOpen = false
-                        navController.navigate(it)
+                    onNavigate = { route ->
+                        // ✅ FIX: Si la ruta es "close", solo cerrar el menú sin navegar
+                        if (route == "close") {
+                            drawerOpen = false
+                        } else {
+                            drawerOpen = false
+                            navController.navigate(route)
+                        }
                     },
                     onClose = { drawerOpen = false }
                 )
             }
         }
+    }
+
+    // DIÁLOGO DE CONFIRMACIÓN PARA NUEVO CHAT
+    if (viewModel.mostrarDialogoNuevoChat.value) {
+        AlertDialog(
+            onDismissRequest = { viewModel.mostrarDialogoNuevoChat.value = false },
+            title = { Text("Iniciar nuevo chat") },
+            text = { Text("Tu conversación actual se guardará automáticamente en el historial. ¿Deseas crear un nuevo chat?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.mostrarDialogoNuevoChat.value = false
+                        // Ejecutar secuencia que guarda/cierran la conversación y reinicia el chat
+                        viewModel.iniciarNuevaConversacion()
+                    }
+                ) {
+                    Text("Sí, crear nuevo")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.mostrarDialogoNuevoChat.value = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
 }

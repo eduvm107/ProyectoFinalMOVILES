@@ -268,6 +268,12 @@ object RetrofitInstance {
         retrofitLogin.create(ApiService::class.java)
     }
 
+    /** Servicio de Auth que INCLUYE el interceptor de autenticación (Bearer token) */
+    val authSecureApi: ApiService by lazy {
+        // Usa el cliente rápido que añade el authInterceptor
+        retrofitFast.create(ApiService::class.java)
+    }
+
     /** Servicio de Chatbot (optimizado para velocidad - SIN LOGGING) */
     val chatbotApi: ChatbotApiService by lazy {
         retrofitChatbot.create(ChatbotApiService::class.java)

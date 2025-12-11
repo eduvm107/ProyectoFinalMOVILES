@@ -8,16 +8,33 @@ import androidx.lifecycle.viewModelScope
 import com.example.chatbot_diseo.data.api.TokenHolder
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 import com.example.chatbot_diseo.data.repository.ChatbotRepository
+import com.example.chatbot_diseo.data.model.MensajeRequest
+import com.example.chatbot_diseo.data.model.Mensaje as DataMensaje
+import com.example.chatbot_diseo.data.model.Conversacion as DataConversacion
+import com.example.chatbot_diseo.presentation.historial.HistorialBus
+import com.example.chatbot_diseo.data.repository.HistorialRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class ChatViewModel : ViewModel() {
 
     companion object {
         private const val TAG = "ChatViewModel"
+        const val TYPING_MESSAGE_TEXT = "escribiendo..."
     }
 
     private val chatbotRepository = ChatbotRepository()
+    private val historialRepository = HistorialRepository()
+
+    // Mutex para asegurar que la creación de la conversación (POST /api/Conversacion) solo
+    // se dispare una vez cuando varios mensajes se envían casi al mismo tiempo.
+    private val crearConversacionMutex = Mutex()
 
     val mensajes = mutableStateListOf<Mensaje>()
     val isLoading = mutableStateOf(false)
@@ -26,20 +43,31 @@ class ChatViewModel : ViewModel() {
     // Controlar visibilidad de FAQs / sugerencias
     val mostrarSugerencias = mutableStateOf(true)
 
+    // Estado para mostrar diálogo de confirmación al crear nuevo chat
+    val mostrarDialogoNuevoChat = mutableStateOf(false)
+
     // ID del usuario actual - se obtiene de TokenHolder después del login
     val usuarioId: String?
         get() = TokenHolder.usuarioId
 
-    // ID de la conversación actual
-    var conversacionId: String? = null
+    // ConversacionId como StateFlow + propiedad de compatibilidad
+    private val _conversacionId = MutableStateFlow<String?>(null)
+    val conversacionIdState: StateFlow<String?> = _conversacionId
+
+    var conversacionId: String?
+        get() = _conversacionId.value
+        set(value) { _conversacionId.value = value }
+
+    // Estado de favorito de la conversacion actual (nullable hasta cargar)
+    var conversacionFavorito: Boolean? = null
 
     // Preguntas sugeridas del chatbot (visibles en UI, se pueden ir removiendo)
     val sugerencias = mutableStateListOf(
-        "¿Qué es el onboarding?",
-        "¿Dónde veo mis documentos?",
-        "¿Qué actividades debo completar?",
-        "¿Cómo contacto a mi supervisor?",
-        "¿Qué puedo hacer en esta aplicación?"
+        "❓ ¿Qué es el onboarding?",
+        "📄 ¿Dónde veo mis documentos?",
+        "📋 ¿Qué actividades debo completar?",
+        "👤 ¿Cómo contacto a mi supervisor?",
+        "📱 ¿Qué puedo hacer en esta aplicación?"
     )
 
     // Respuestas fijas a preguntas sugeridas (versión corta)
@@ -80,6 +108,15 @@ class ChatViewModel : ViewModel() {
         )
     )
 
+    // Lista de sugerencias inicial (para restaurar cuando se limpia el chat)
+    private val sugerenciasIniciales = listOf(
+        "❓ ¿Qué es el onboarding?",
+        "📄 ¿Dónde veo mis documentos?",
+        "📋 ¿Qué actividades debo completar?",
+        "👤 ¿Cómo contacto a mi supervisor?",
+        "📱 ¿Qué puedo hacer en esta aplicación?"
+    )
+
     init {
         mensajes.add(Mensaje("¡Hola! Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?", false))
     }
@@ -87,6 +124,36 @@ class ChatViewModel : ViewModel() {
     var navegarADocumentos: (() -> Unit)? = null
     var navegarAActividades: (() -> Unit)? = null
     var navegarAPerfil: (() -> Unit)? = null
+
+    // --- NUEVAS FUNCIONES RELACIONADAS A CONVERSACIONES ---
+
+    private fun ahoraIso(): String {
+        return OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    }
+
+    /**
+     * Crear conversación con primer mensaje
+     * ⚠️ ACTUALIZACIÓN ORIGINAL: Ya NO se crea conversación manualmente desde el cliente.
+     * El orquestador crea la conversación automáticamente cuando enviamos el primer mensaje.
+     * La función mantiene la firma para compatibilidad y devuelve false siempre.
+     */
+    private suspend fun crearConversacionConPrimerMensaje(userId: String, primerMensaje: String): Boolean {
+        // ❌ YA NO CREAMOS conversación manualmente
+        // El orquestador la creará automáticamente cuando enviemos el primer mensaje
+        Log.d(TAG, "⚠️ crearConversacionConPrimerMensaje: Ya NO se crea conversación manualmente")
+        Log.d(TAG, "   El orquestador creará la conversación automáticamente")
+        return false  // Indicar que NO se creó aquí
+    }
+
+    /**
+     * Crear una conversación vacía en el backend (sin mensajes) y guardar el id en el ViewModel.
+     */
+    fun crearConversacionVacia() {
+        // ❌ YA NO CREAMOS conversación vacía manualmente
+        // Solo limpiamos el chat localmente
+        Log.d(TAG, "⚠️ crearConversacionVacia: Ya NO se usa, solo limpiamos chat")
+        limpiarChat()
+    }
 
     /**
      * Enviar mensaje al chatbot con IA
@@ -99,7 +166,7 @@ class ChatViewModel : ViewModel() {
 
         val textoTrim = texto.trim()
 
-        // Agregar mensaje del usuario
+        // Agregar mensaje del usuario localmente
         mensajes.add(Mensaje(textoTrim, true))
 
         // Ocultar sugerencias solo cuando viene de input escrito
@@ -108,7 +175,6 @@ class ChatViewModel : ViewModel() {
         }
 
         // Respuesta predefinida sin llamar al backend
-        // Buscamos coincidencias de forma más tolerante: exacta (ignore case) o parcial
         val matchedEntry = respuestasPredefinidas.entries.firstOrNull { (key, _) ->
             val keyTrim = key.trim()
             keyTrim.equals(textoTrim, ignoreCase = true) ||
@@ -119,7 +185,6 @@ class ChatViewModel : ViewModel() {
         if (matchedEntry != null) {
             val (key, baseRespuesta) = matchedEntry
 
-            // Si la respuesta tiene actionRoute, adjuntamos la acción correspondiente como fallback
             val respuestaConAccion = when (baseRespuesta.actionRoute) {
                 "recursos" -> baseRespuesta.copy(accion = { navegarADocumentos?.invoke() })
                 "calendario", "actividades" -> baseRespuesta.copy(accion = { navegarAActividades?.invoke() })
@@ -127,7 +192,6 @@ class ChatViewModel : ViewModel() {
                 else -> baseRespuesta
             }
 
-            // Desde FAQ (ocultarSugerencias = false): quitar solo esa pregunta de la lista visible
             if (!ocultarSugerencias) {
                 val index = sugerencias.indexOfFirst { it.equals(key, ignoreCase = true) }
                 if (index >= 0) {
@@ -135,7 +199,6 @@ class ChatViewModel : ViewModel() {
                 }
             }
 
-            // Simular "escribiendo..." siempre por 1s
             isLoading.value = true
             error.value = null
             mensajes.add(Mensaje(TYPING_MESSAGE_TEXT, false))
@@ -168,42 +231,143 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             val startTime = System.currentTimeMillis()
             try {
-                val result = chatbotRepository.enviarPregunta(userId, textoTrim)
-
-                // Garantizar mínimo 1 segundo de "escribiendo..."
-                val elapsed = System.currentTimeMillis() - startTime
-                if (elapsed < 1000L) {
-                    delay(1000L - elapsed)
+                // Si no hay conversacionId, crearla primero (incluyendo el primer mensaje).
+                // Usar un Mutex para evitar que múltiples coroutines creen la misma conversación
+                // (ej: usuario presiona enviar varias veces o hay llamadas concurrentes).
+                if (conversacionId.isNullOrBlank()) {
+                    crearConversacionMutex.withLock {
+                        // Re-check dentro del lock porque otra coroutine pudo crear la conversacion mientras esperábamos
+                        if (conversacionId.isNullOrBlank()) {
+                            val created = crearConversacionConPrimerMensaje(userId, textoTrim)
+                            if (!created) {
+                                Log.w(TAG, "No se creó conversación antes de enviar; usando fallback a orquestador")
+                            }
+                        } else {
+                            Log.d(TAG, "Conversación ya fue creada por otra coroutine; no se crea de nuevo")
+                        }
+                    }
                 }
 
-                result
-                    .onSuccess { response ->
-                        if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
-                            mensajes.removeAt(mensajes.size - 1)
+                // Si existe conversacionId, preferimos enviar mensaje a /api/Conversacion/{id}/mensajes
+                if (!conversacionId.isNullOrBlank()) {
+                    try {
+                        Log.d(TAG, "📤 Enviando mensaje a conversación existente: id=$conversacionId")
+
+                        // ✅ FIX: Pasar el conversacionId al orquestador
+                        val result = chatbotRepository.enviarPregunta(
+                            usuarioId = userId,
+                            pregunta = textoTrim,
+                            conversacionId = conversacionId  // ⚡ NUEVO: Ahora pasamos el ID
+                        )
+
+                        result
+                            .onSuccess { response ->
+                                // Actualizar conversacionId si el orquestador devuelve uno diferente
+                                response.conversacionId?.let { newId ->
+                                    if (newId != conversacionId) {
+                                        Log.w(TAG, "⚠️ Orquestador devolvió conversacionId diferente: $newId (esperaba: $conversacionId)")
+                                        conversacionId = newId
+                                    }
+                                }
+
+                                // Garantizar mínimo 1 segundo de "escribiendo..."
+                                val elapsed = System.currentTimeMillis() - startTime
+                                if (elapsed < 1000L) {
+                                    delay(1000L - elapsed)
+                                }
+
+                                if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                    mensajes.removeAt(mensajes.size - 1)
+                                }
+
+                                mensajes.add(Mensaje(response.respuesta, false))
+                                Log.d(TAG, "✅ Mensaje enviado y respuesta recibida exitosamente")
+                            }
+                            .onFailure { e ->
+                                Log.e(TAG, "❌ Error enviando mensaje al orquestador", e)
+
+                                val elapsed = System.currentTimeMillis() - startTime
+                                if (elapsed < 1000L) {
+                                    delay(1000L - elapsed)
+                                }
+
+                                if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                    mensajes.removeAt(mensajes.size - 1)
+                                }
+
+                                error.value = e.message
+                                val errorMsg = when {
+                                    e.message?.contains("timeout", ignoreCase = true) == true ->
+                                        "La respuesta tardó demasiado. El servidor está muy ocupado. Por favor, intenta de nuevo."
+                                    e.message?.contains("401") == true ->
+                                        "Error de autenticación. Por favor, inicia sesión nuevamente."
+                                    e.message?.contains("404") == true ->
+                                        "Servicio no disponible. Verifica la conexión del servidor."
+                                    else -> "Lo siento, ocurrió un error: ${e.message}"
+                                }
+                                mensajes.add(Mensaje(errorMsg, false))
+                            }
+
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ enviarMensaje excepción al procesar respuesta", e)
+
+                        val elapsed = System.currentTimeMillis() - startTime
+                        if (elapsed < 1000L) {
+                            delay(1000L - elapsed)
                         }
 
-                        // Guardar el ID de la conversación
-                        response.conversacionId?.let { conversacionId = it }
-                        // Agregar respuesta del bot
-                        mensajes.add(Mensaje(response.respuesta, false))
-                    }
-                    .onFailure { e ->
                         if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
                             mensajes.removeAt(mensajes.size - 1)
                         }
 
                         error.value = e.message
-                        val errorMsg = when {
-                            e.message?.contains("timeout", ignoreCase = true) == true ->
-                                "La respuesta tardó demasiado. El servidor está muy ocupado. Por favor, intenta de nuevo."
-                            e.message?.contains("401") == true ->
-                                "Error de autenticación. Por favor, inicia sesión nuevamente."
-                            e.message?.contains("404") == true ->
-                                "Servicio no disponible. Verifica la conexión del servidor."
-                            else -> "Lo siento, ocurrió un error: ${e.message}"
-                        }
-                        mensajes.add(Mensaje(errorMsg, false))
+                        mensajes.add(Mensaje("Error de conexión. Por favor intenta de nuevo.", false))
                     }
+
+                } else {
+                    // No se creó conversacion: fallback a orquestador (mismo flujo anterior)
+                    // ⚠️ Sin conversacionId, el orquestador creará una nueva
+                    val result = chatbotRepository.enviarPregunta(
+                        usuarioId = userId,
+                        pregunta = textoTrim,
+                        conversacionId = null  // Primer mensaje, sin ID aún
+                    )
+
+                    // Garantizar mínimo 1 segundo de "escribiendo..."
+                    val elapsed = System.currentTimeMillis() - startTime
+                    if (elapsed < 1000L) {
+                        delay(1000L - elapsed)
+                    }
+
+                    result
+                        .onSuccess { response ->
+                            if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                mensajes.removeAt(mensajes.size - 1)
+                            }
+
+                            // Guardar el ID de la conversación devuelto por el orquestador si existe
+                            response.conversacionId?.let { conversacionId = it }
+                            mensajes.add(Mensaje(response.respuesta, false))
+                        }
+                        .onFailure { e ->
+                            if (mensajes.isNotEmpty() && mensajes.last().texto == TYPING_MESSAGE_TEXT) {
+                                mensajes.removeAt(mensajes.size - 1)
+                            }
+
+                            error.value = e.message
+                            val errorMsg = when {
+                                e.message?.contains("timeout", ignoreCase = true) == true ->
+                                    "La respuesta tardó demasiado. El servidor está muy ocupado. Por favor, intenta de nuevo."
+                                e.message?.contains("401") == true ->
+                                    "Error de autenticación. Por favor, inicia sesión nuevamente."
+                                e.message?.contains("404") == true ->
+                                    "Servicio no disponible. Verifica la conexión del servidor."
+                                else -> "Lo siento, ocurrió un error: ${e.message}"
+                            }
+                            mensajes.add(Mensaje(errorMsg, false))
+                        }
+                }
+
             } catch (e: Exception) {
                 Log.e(TAG, "enviarMensaje excepción", e)
                 val elapsed = System.currentTimeMillis() - startTime
@@ -246,8 +410,13 @@ class ChatViewModel : ViewModel() {
     fun limpiarChat() {
         mensajes.clear()
         conversacionId = null
-        mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
+        // Limpiar estado de favorito
+        conversacionFavorito = null
+        isLoading.value = false
+        error.value = null
         mostrarSugerencias.value = true
+        mostrarDialogoNuevoChat.value = false // Asegurarse que el diálogo esté cerrado
+
         // Restaurar todas las sugerencias iniciales si se han ido removiendo
         sugerencias.clear()
         sugerencias.addAll(
@@ -259,6 +428,8 @@ class ChatViewModel : ViewModel() {
                 "¿Qué puedo hacer en esta aplicación?"
             )
         )
+
+        mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
     }
 
     /**
@@ -281,34 +452,238 @@ class ChatViewModel : ViewModel() {
      */
     @Suppress("unused")
     fun cargarConversacionPorId(id: String) {
+        Log.d(TAG, "🔵 cargarConversacionPorId INICIADO - id=$id")
+
         viewModelScope.launch {
             isLoading.value = true
             try {
+                Log.d(TAG, "📡 Llamando a API: getConversacionById($id)")
                 val response = RetrofitInstance.conversacionApi.getConversacionById(id)
+
+                Log.d(TAG, "📨 Respuesta recibida: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+
                 if (response.isSuccessful) {
                     val conversacionCompleta = response.body()
+                    Log.d(TAG, "📦 Body recibido: ${conversacionCompleta != null}")
+
                     if (conversacionCompleta != null) {
-                        // Limpiar mensajes actuales y agregar los de la conversacion
+                        // ✅ IMPORTANTE: Limpiar COMPLETAMENTE mensajes antes de cargar desde historial
+                        val mensajesAnteriores = mensajes.size
                         mensajes.clear()
+                        Log.d(TAG, "🗑️ Mensajes limpiados: $mensajesAnteriores -> 0")
+
+                        // Ocultar sugerencias al cargar conversación del historial
+                        mostrarSugerencias.value = false
 
                         // Manejar caso nullable y mapear MensajeChat -> Mensaje (estructura UI)
                         val listaMensajes = conversacionCompleta.mensajes ?: emptyList()
-                        listaMensajes.forEach { m ->
-                            val esUsuario = m.tipo.equals("usuario", ignoreCase = true)
-                            mensajes.add(Mensaje(m.contenido ?: "", esUsuario))
+
+                        Log.d(TAG, "📋 Total mensajes en conversación: ${listaMensajes.size}")
+
+                        if (listaMensajes.isEmpty()) {
+                            Log.w(TAG, "⚠️ La conversación NO tiene mensajes")
+                            mensajes.add(Mensaje("Esta conversación no tiene mensajes aún.", false))
+                        } else {
+                            // ✅ FIX: Agregar mensajes uno por uno para evitar duplicados
+                            listaMensajes.forEachIndexed { index, m ->
+                                val esUsuario = m.tipo.equals("usuario", ignoreCase = true)
+                                val nuevoMensaje = Mensaje(m.contenido, esUsuario)
+                                mensajes.add(nuevoMensaje)
+
+                                val preview = if (m.contenido.length > 50) {
+                                    m.contenido.take(50) + "..."
+                                } else {
+                                    m.contenido
+                                }
+                                Log.d(TAG, "  ✅ [$index] Mensaje agregado: tipo=${m.tipo}, contenido=$preview")
+                            }
                         }
 
                         conversacionId = id
-                        mostrarSugerencias.value = false
+                        // set favorito desde la conversacion completa
+                        conversacionFavorito = conversacionCompleta.favorito ?: false
+
+                        Log.d(TAG, "✅ cargarConversacionPorId COMPLETADO")
+                        Log.d(TAG, "   - conversacionId asignado: $id")
+                        Log.d(TAG, "   - Total mensajes en UI: ${mensajes.size}")
+                        Log.d(TAG, "   - Favorito: $conversacionFavorito")
                     } else {
-                        error.value = "Conversación vacía"
+                        val errorMsg = "Conversación vacía (body null)"
+                        error.value = errorMsg
+                        Log.e(TAG, "❌ $errorMsg")
+                        mensajes.clear()
+                        mensajes.add(Mensaje("Error: No se pudo cargar la conversación.", false))
                     }
                 } else {
-                    error.value = "Error al cargar conversación: ${response.code()}"
+                    val errorBody = response.errorBody()?.string()
+                    val errorMsg = "Error al cargar conversación: ${response.code()}"
+                    error.value = errorMsg
+                    Log.e(TAG, "❌ $errorMsg")
+                    Log.e(TAG, "   ErrorBody: $errorBody")
+
+                    mensajes.clear()
+                    mensajes.add(Mensaje("Error al cargar la conversación (${response.code()}). Por favor, intenta de nuevo.", false))
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "cargarConversacionPorId excepción", e)
+                Log.e(TAG, "❌ cargarConversacionPorId EXCEPCIÓN", e)
+                Log.e(TAG, "   Tipo: ${e.javaClass.simpleName}")
+                Log.e(TAG, "   Mensaje: ${e.message}")
+                Log.e(TAG, "   StackTrace: ${e.stackTraceToString()}")
+
                 error.value = e.message
+                mensajes.clear()
+                mensajes.add(Mensaje("Error de conexión al cargar conversación: ${e.message}", false))
+            } finally {
+                isLoading.value = false
+                Log.d(TAG, "🔵 cargarConversacionPorId FINALIZADO")
+            }
+        }
+    }
+
+    /**
+     * Cambiar estado de favorito de la conversación actual
+     * Usa el endpoint unificado POST /api/Usuario/{usuarioId}/favoritos con tipoRecurso="chat"
+     */
+    fun toggleFavoritoConversacion(conversacionId: String, estadoActual: Boolean) {
+        if (conversacionId.isBlank()) {
+            Log.e(TAG, "toggleFavoritoConversacion: conversacionId vacío")
+            return
+        }
+
+        val userId = usuarioId
+        if (userId.isNullOrBlank()) {
+            Log.e(TAG, "toggleFavoritoConversacion: usuarioId es nulo")
+            return
+        }
+
+        val nuevoEstado = !estadoActual
+
+        // Optimistic UI update
+        val before = conversacionFavorito
+        conversacionFavorito = nuevoEstado
+
+        viewModelScope.launch {
+            try {
+                // Usar el endpoint unificado de Favoritos (igual que documentos/actividades)
+                val requestBody = com.example.chatbot_diseo.network.dto.request.FavoritoRequest(
+                    tipoRecurso = "chat",
+                    recursoId = conversacionId
+                )
+
+                Log.d(TAG, "Enviando toggle favorito: tipoRecurso=chat, recursoId=$conversacionId, usuarioId=$userId")
+
+                val resp = RetrofitInstance.favoritosApi.toggleFavorito(userId, requestBody)
+
+                if (resp.isSuccessful) {
+                    val body = resp.body()
+                    val esFavoritoBackend = body?.esFavorito ?: nuevoEstado
+
+                    Log.d(TAG, "toggleFavoritoConversacion: SUCCESS, esFavorito=$esFavoritoBackend")
+
+                    // Actualizar estado local con el valor real del backend
+                    conversacionFavorito = esFavoritoBackend
+
+                    // Notificar a FavoritosViewModel para que recargue la lista unificada
+                    com.example.chatbot_diseo.presentation.favoritos.FavoritosBus.emitFavoritosChanged()
+                } else {
+                    val errorBody = resp.errorBody()?.string()
+                    Log.e(TAG, "toggleFavoritoConversacion: ERROR code=${resp.code()}, body=$errorBody")
+                    // rollback
+                    conversacionFavorito = before
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "toggleFavoritoConversacion excepción: ${e.message}", e)
+                conversacionFavorito = before
+            }
+        }
+    }
+
+    /**
+     * Iniciar nueva conversación (botón lápiz confirmado)
+     * Secuencia:
+     * 1) Finalizar la conversación anterior (PUT /api/Conversacion/{id} con activa=false, resuelto=true)
+     * 2) REINICIAR ESTADO LOCAL: Establecer conversacionId = null (CRÍTICO)
+     * 3) Limpiar mensajes en la UI
+     * 4) Notificar al historial para recargar
+     *
+     * ⚡ IMPORTANTE: NO creamos una nueva conversación aquí.
+     * El orquestador creará automáticamente la nueva conversación cuando el usuario
+     * envíe el primer mensaje (POST /api/Conversacion).
+     */
+    fun iniciarNuevaConversacion() {
+        val convId = conversacionId
+        val userId = usuarioId
+
+        viewModelScope.launch {
+            try {
+                if (convId.isNullOrBlank()) {
+                    Log.w(TAG, "iniciarNuevaConversacion: no hay conversacion activa. Solo limpiar chat")
+                    // Solo limpiar UI y notificar historial
+                    limpiarChat()
+                    HistorialBus.emitHistorialChanged()
+                    return@launch
+                }
+
+                if (userId.isNullOrBlank()) {
+                    Log.e(TAG, "iniciarNuevaConversacion: usuario no logueado")
+                    return@launch
+                }
+
+                isLoading.value = true
+
+                // 1) Finalizar la conversación anterior: marcar como resuelta/activa=false
+                try {
+                    val getResp = RetrofitInstance.conversacionApi.getConversacionById(convId)
+                    if (getResp.isSuccessful) {
+                        val conv = getResp.body()
+                        if (conv != null) {
+                            val actualizado = conv.copy(activa = false, resuelto = true)
+                            // PUT /api/Conversacion/{id}
+                            try {
+                                val putResp = RetrofitInstance.conversacionApi.updateConversacion(convId, actualizado)
+                                if (putResp.isSuccessful) {
+                                    Log.d(TAG, "✅ Conversación anterior finalizada en server: id=$convId")
+                                } else {
+                                    Log.w(TAG, "⚠️ PUT marcar conversacion fallo: code=${putResp.code()}")
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "❌ Excepción al hacer PUT conversacion: ${e.message}", e)
+                            }
+                        } else {
+                            Log.w(TAG, "⚠️ GET conversacion devolvió body null para id=$convId")
+                        }
+                    } else {
+                        Log.w(TAG, "⚠️ GET conversacion fallo: code=${getResp.code()} for id=$convId")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Excepción obteniendo conversacion antes de cerrar: ${e.message}", e)
+                }
+
+                // 2) ⚡ CORRECCIÓN CRÍTICA: Establecer conversacionId = null
+                // Esto fuerza que el próximo mensaje cree una NUEVA conversación via POST /api/Conversacion
+                _conversacionId.value = null
+                Log.d(TAG, "🔑 conversacionId establecido a NULL - próximo mensaje creará nueva conversación")
+
+                // 3) Limpiar UI (mensajes y estado)
+                mensajes.clear()
+                conversacionFavorito = null
+                mostrarSugerencias.value = true
+                mostrarDialogoNuevoChat.value = false
+
+                // Restaurar sugerencias iniciales
+                sugerencias.clear()
+                sugerencias.addAll(sugerenciasIniciales)
+
+                mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
+                Log.d(TAG, "🧹 UI limpiada - mensajes reiniciados")
+
+                // 4) Notificar al Historial para que recargue y muestre la conversación cerrada
+                HistorialBus.emitHistorialChanged()
+                Log.d(TAG, "📢 Historial notificado para recargar")
+
+                Log.d(TAG, "✅ iniciarNuevaConversacion: secuencia completada. conversacionId=$conversacionId")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ iniciarNuevaConversacion excepción general: ${e.message}", e)
             } finally {
                 isLoading.value = false
             }

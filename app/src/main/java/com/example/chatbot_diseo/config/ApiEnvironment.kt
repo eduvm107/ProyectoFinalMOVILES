@@ -19,6 +19,8 @@ object ApiEnvironment {
      *
      *  http://localhost:5000
      */
+        //"http://10.0.2.2:5288/api/"
+
     const val BASE_URL: String = "http://10.0.2.2:5288/api/"
 
 

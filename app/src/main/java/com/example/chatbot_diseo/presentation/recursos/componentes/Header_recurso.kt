@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.chatbot_diseo.presentation.recursos.componentes
 
 import androidx.compose.foundation.BorderStroke
@@ -8,10 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CardGiftcard
@@ -51,117 +54,171 @@ fun ResourcesHeader(
         ResourceFilter("Beneficios", Icons.Outlined.CardGiftcard, iconColor = Color(0xFFFFB74D))
     )
 
+    // Header oscuro full-width con estructura igual al ChatHeader
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(Color(0xFF4A6B8A))
+            .padding(vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Outlined.MenuBook,
-                contentDescription = "Recursos",
-                tint = Color(0xFF007AFF)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Recursos", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Outlined.MenuBook,
+                        contentDescription = "Recursos",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
-        Text("Material de apoyo y documentación", fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.width(12.dp))
 
-        val firstRowFilters = filters.take(2)
-        val secondRowFilters = filters.drop(2)
-
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                firstRowFilters.forEach { filter ->
-                    val isSelected = selectedFilter == filter.text
-
-                    if (isSelected) {
-                        Button(
-                            onClick = { onFilterSelected(filter.text) },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
-                        ) {
-                            Text(filter.text)
-                        }
-                    } else {
-                        OutlinedButton(
-                            onClick = { onFilterSelected(filter.text) },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.7f))
-                        ) {
-                            filter.icon?.let {
-                                Icon(
-                                    imageVector = it,
-                                    contentDescription = filter.text,
-                                    tint = filter.iconColor ?: Color.Gray
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                            }
-                            if (filter.text == "Manuales") {
-                                Box(
-                                    modifier = Modifier
-                                        .size(14.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(filter.iconColor ?: Color(0xFF4FC3F7))
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                            }
-
-                            Text(filter.text, color = Color.DarkGray)
-                        }
-                    }
+                // Título y subtítulo juntos al lado del icono
+                Column {
+                    Text(
+                        "Recursos",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Material de apoyo y documentación",
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                secondRowFilters.forEach { filter ->
-                    val isSelected = selectedFilter == filter.text
+            Spacer(modifier = Modifier.height(6.dp))
 
-                    if (isSelected) {
-                        Button(
-                            onClick = { onFilterSelected(filter.text) },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF))
-                        ) {
-                            Text(filter.text)
+            // filtros poco espaciados (subirlos)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val firstRowFilters = filters.take(2)
+            val secondRowFilters = filters.drop(2)
+
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    firstRowFilters.forEach { filter ->
+                        val isSelected = selectedFilter == filter.text
+                        if (isSelected) {
+                            Button(
+                                onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(50),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F5FB8)),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                filter.icon?.let {
+                                    Icon(
+                                        imageVector = it,
+                                        contentDescription = filter.text,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                Text(filter.text, color = Color.White)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(50),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.24f)),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                filter.icon?.let {
+                                    Icon(
+                                        imageVector = it,
+                                        contentDescription = filter.text,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = filter.iconColor ?: Color.White.copy(alpha = 0.95f)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                if (filter.text == "Manuales") {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(filter.iconColor ?: Color(0xFF4FC3F7))
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+
+                                Text(filter.text, color = Color.White.copy(alpha = 0.95f))
+                            }
                         }
-                    } else {
-                        OutlinedButton(
-                            onClick = { onFilterSelected(filter.text) },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.7f))
-                        ) {
-                            filter.icon?.let {
-                                Icon(
-                                    imageVector = it,
-                                    contentDescription = filter.text,
-                                    tint = filter.iconColor ?: Color.Gray
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                            }
-                            if (filter.text == "Manuales") {
-                                Box(
-                                    modifier = Modifier
-                                        .size(14.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(filter.iconColor ?: Color(0xFF4FC3F7))
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                            }
+                    }
+                }
 
-                            Text(filter.text, color = Color.DarkGray)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    secondRowFilters.forEach { filter ->
+                        val isSelected = selectedFilter == filter.text
+                        if (isSelected) {
+                            Button(
+                                onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(50),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F5FB8)),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                filter.icon?.let {
+                                    Icon(
+                                        imageVector = it,
+                                        contentDescription = filter.text,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                Text(filter.text, color = Color.White)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { onFilterSelected(filter.text) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(50),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.24f)),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                filter.icon?.let {
+                                    Icon(
+                                        imageVector = it,
+                                        contentDescription = filter.text,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = filter.iconColor ?: Color.White.copy(alpha = 0.95f)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                if (filter.text == "Manuales") {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(filter.iconColor ?: Color(0xFF4FC3F7))
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+
+                                Text(filter.text, color = Color.White.copy(alpha = 0.95f))
+                            }
                         }
                     }
                 }
@@ -175,4 +232,3 @@ fun ResourcesHeader(
 fun ResourcesHeaderPreview() {
     ResourcesHeader(selectedFilter = "Todos", onFilterSelected = {})
 }
-

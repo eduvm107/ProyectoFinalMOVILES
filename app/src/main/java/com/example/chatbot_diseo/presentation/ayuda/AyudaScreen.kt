@@ -11,7 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,11 +21,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,10 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatbot_diseo.data.model.FAQ
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 
 private val AccentBlue = Color(0xFF1A73E8)
 private val BackgroundLight = Color(0xFFF8F9FA)
-private val HeaderBackground = Color.White
 private val HeaderTextColor = Color(0xFF1A1A1A)
 
 /**
@@ -51,20 +57,34 @@ fun AyudaScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val expandedFaqId by viewModel.expandedFaqId.collectAsState()
+    // Observador para recargar FAQs cuando la pantalla vuelve a resume (al ingresar/retomar la app)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val observer = remember {
+        LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadFAQs()
+            }
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ayuda y Guía", color = HeaderTextColor) },
+                title = { Text("Ayuda y Guía", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = HeaderTextColor)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HeaderBackground,
-                    titleContentColor = HeaderTextColor,
-                    navigationIconContentColor = HeaderTextColor
+                    containerColor = TcsBlue,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         },
@@ -120,11 +140,13 @@ fun AyudaScreen(
                 }
                 is AyudaUiState.Success -> {
                     val faqs = (uiState as AyudaUiState.Success).faqs
-                    items(faqs) { faq ->
+                    itemsIndexed(faqs, key = { index, faq -> faq.id ?: "${faq.pregunta}#${index}" }) { index, faq ->
+                        // Usar una clave segura y única para identificar la FAQ: preferir id, si no existe usar pregunta+índice
+                        val faqKey = faq.id ?: "${faq.pregunta}#${index}"
                         FAQCard(
                             faq = faq,
-                            isExpanded = expandedFaqId == faq.id,
-                            onToggle = { viewModel.toggleFaqExpansion(faq.id) }
+                            isExpanded = expandedFaqId == faqKey,
+                            onToggle = { viewModel.toggleFaqExpansion(faqKey) }
                         )
                     }
                 }
@@ -137,7 +159,6 @@ fun AyudaScreen(
 }
 
 /**
- * Sección de Guías Rápidas TCS (sustituye el antiguo Onboarding)
  */
 @Composable
 fun OnboardingTimelineSection() {
@@ -150,34 +171,34 @@ fun OnboardingTimelineSection() {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Lista de guías rápidas (hardcoded)
+        // Lista de guías rápidas (actualizada)
         val quickGuides = listOf(
             OnboardingStep(
-                title = "Cómo usar el chatbot",
-                description = "Aprende cómo interactuar con tu asistente virtual.",
+                title = "Tu asistente virtual inteligente",
+                description = "Aprende cómo el chatbot te guía paso a paso durante tu proceso en TCS.",
                 icon = Icons.Default.SmartToy,
-                bgColor = Color(0xFFE3F2FD) ,// azul suave
+                bgColor = Color(0xFFE3F2FD), // azul suave
                 iconTint = AccentBlue,
             ),
             OnboardingStep(
-                title = "Cómo enviar documentos",
-                description = "Instrucciones para subir DNI, certificados y otros.",
+                title = "Documentos y trámites esenciales",
+                description = "Consulta cómo subir tus documentos, revisar tus pendientes y recibir alertas importantes.",
                 icon = Icons.Default.Description,
                 bgColor = Color(0xFFE8F5E9), // verde suave
                 iconTint = Color(0xFF43A047)
             ),
             OnboardingStep(
-                title = "Cómo ver tus actividades pendientes",
-                description = "Consulta tu progreso en el proceso de onboarding.",
-                icon = Icons.Default.ListAlt,
+                title = "Actividades y avances del onboarding",
+                description = "Visualiza tus próximas actividades, horarios y tu progreso dentro del programa.",
+                icon = Icons.AutoMirrored.Filled.ListAlt,
                 bgColor = Color(0xFFFFF4E0), // naranja suave
                 iconTint = Color(0xFFFFA726)
             ),
             OnboardingStep(
-                title = "Cómo contactar a RRHH",
-                description = "Canales oficiales y horarios de atención.",
+                title = "Canales de soporte y atención",
+                description = "Encuentra cómo contactar a RRHH, solicitar ayuda o resolver dudas en cualquier momento.",
                 icon = Icons.Default.Email,
-                bgColor = Color(0xFFFDE2E2) ,// rojo suave
+                bgColor = Color(0xFFFDE2E2), // rojo suave
                 iconTint = Color(0xFFE53935)
             )
         )
@@ -190,6 +211,7 @@ fun OnboardingTimelineSection() {
         }
     }
 }
+
 
 /**
  * Componente individual de Timeline adaptado a Guías Rápidas
@@ -281,8 +303,7 @@ fun FAQCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clickable { onToggle() },
+            .padding(vertical = 6.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -311,7 +332,11 @@ fun FAQCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             // Contenido de la pregunta y respuesta
-            Column(modifier = Modifier.weight(1f)) {
+            // Hacemos clicable toda la zona de texto de la pregunta (mejor área táctil)
+            Column(modifier = Modifier
+                .weight(1f)
+                .clickable { onToggle() }
+            ) {
                 // Pregunta (siempre visible)
                 Text(
                     text = faq.pregunta,
@@ -320,7 +345,8 @@ fun FAQCard(
                         fontSize = 15.sp
                     ),
                     color = Color(0xFF2D2D2D),
-                    maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+                    // Mostrar la pregunta en UNA sola línea cuando está colapsada
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
@@ -366,14 +392,22 @@ fun FAQCard(
 
             // Icono de expansión con rotación animada
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Default.ExpandMore, // Solo usamos ExpandMore
-                contentDescription = if (isExpanded) "Colapsar" else "Expandir",
-                tint = AccentBlue, // AccentBlue para la flecha
+            // Hacemos clicable SOLO la flecha (mejor objetivo táctil usando Box)
+            Box(
                 modifier = Modifier
-                    .size(24.dp)
-                    .rotate(rotationAngle) // Rotación animada
-            )
+                    .size(40.dp)
+                    .clickable { onToggle() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExpandMore, // Solo usamos ExpandMore
+                    contentDescription = if (isExpanded) "Colapsar" else "Expandir",
+                    tint = AccentBlue, // AccentBlue para la flecha
+                    modifier = Modifier
+                        .size(24.dp)
+                        .rotate(rotationAngle) // Rotación animada
+                )
+            }
         }
     }
 }

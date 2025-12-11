@@ -8,6 +8,7 @@ import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
 import com.example.chatbot_diseo.data.remote.model.Documento
 import com.example.chatbot_diseo.network.dto.request.FavoritoRequest
 import com.example.chatbot_diseo.presentation.favoritos.FavoritosViewModel
+import com.example.chatbot_diseo.presentation.favoritos.FavoritosBus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -169,6 +170,18 @@ class RecursosViewModel : ViewModel() {
             return
         }
 
+        // 0️⃣ Actualización optimista: invertir el estado local antes de la llamada de red
+        val listaOptimista = _recursosList.value.toMutableList()
+        val indexOptimista = listaOptimista.indexOfFirst { it.id == recurso.id }
+        val estadoAntes = recurso.favorito
+        val estadoOptimista = !estadoAntes
+
+        if (indexOptimista != -1) {
+            listaOptimista[indexOptimista] = listaOptimista[indexOptimista].copy(favorito = estadoOptimista)
+            _recursosList.value = listaOptimista
+            Log.d("FAVORITOS", "🎨 Actualización optimista aplicada: ${recurso.titulo} -> favorito=$estadoOptimista")
+        }
+
         viewModelScope.launch {
             try {
                 val request = FavoritoRequest(
@@ -186,35 +199,28 @@ class RecursosViewModel : ViewModel() {
                     val body = response.body()
                     Log.d("FAVORITOS", "✅ Respuesta exitosa: ${body?.message}")
 
-                    // 3. 🎨 FIX CRÍTICO: ACTUALIZACIÓN LOCAL INMEDIATA (Arregla el color del corazón)
+                    // Determinar el nuevo estado usando la respuesta del backend si está disponible
+                    val esFavoritoBackend = body?.esFavorito
+
+                    // Si backend no devuelve estado, usamos el optimista; si devuelve, usamos el suyo
+                    val nuevoEstado = esFavoritoBackend ?: estadoOptimista
+
+                    // Corregir la lista local con el estado confirmado
                     val listaActual = _recursosList.value.toMutableList()
-
-                    // Buscar el índice del documento que acabamos de modificar
                     val index = listaActual.indexOfFirst { it.id == recurso.id }
-
-                    // Variable para guardar el nuevo estado y usarla en el mensaje
-                    var nuevoEstado = !recurso.favorito
-
                     if (index != -1) {
-                        // Invertir el estado actual (true <-> false)
-                        nuevoEstado = !recurso.favorito
-                        val documentoActualizado = listaActual[index].copy(
-                            favorito = nuevoEstado
-                        )
-
-                        // Reemplazar el documento en la lista
-                        listaActual[index] = documentoActualizado
-
-                        // Emitir la nueva lista para refrescar la UI (el corazón cambia de color)
+                        listaActual[index] = listaActual[index].copy(favorito = nuevoEstado)
                         _recursosList.value = listaActual
-
-                        Log.d("FAVORITOS", "🎨 Lista local actualizada: ${recurso.titulo} en posición $index -> favorito=$nuevoEstado")
+                        Log.d("FAVORITOS", "🎨 Lista local actualizada (confirmación): ${recurso.titulo} -> favorito=$nuevoEstado")
                     }
 
                     // 4. 🔄 SINCRONIZACIÓN: Llamada al "Jale" (Arregla la persistencia en Mis Favoritos)
                     favoritosViewModel?.forzarRecarga(usuarioId)
 
-                    // Mostrar feedback al usuario usando el nuevo estado local
+                    // Emitir evento global para que cualquier listener recargue favoritos
+                    FavoritosBus.emitFavoritosChanged()
+
+                    // Mostrar feedback al usuario usando el nuevo estado local/confirmado
                     _mensajeFeedback.value = if (nuevoEstado) {
                         "✅ Agregado a favoritos"
                     } else {
@@ -223,14 +229,33 @@ class RecursosViewModel : ViewModel() {
 
                     Log.d("FAVORITOS", "🔄 Sincronización con pantalla de favoritos completada")
                 } else {
-                    // Manejar Error 400 (si el ID pasa la validación local pero el server lo rechaza)
+                    // Si falla, revertir el cambio optimista
                     Log.e("FAVORITOS", "❌ Error ${response.code()} al actualizar favorito")
                     Log.e("FAVORITOS", "Response: ${response.errorBody()?.string()}")
+
+                    val listaRevert = _recursosList.value.toMutableList()
+                    val idx = listaRevert.indexOfFirst { it.id == recurso.id }
+                    if (idx != -1) {
+                        listaRevert[idx] = listaRevert[idx].copy(favorito = estadoAntes)
+                        _recursosList.value = listaRevert
+                        Log.d("FAVORITOS", "↩️ Revertido cambio optimista por fallo de red o server")
+                    }
+
                     _mensajeFeedback.value = "Error al actualizar favorito (${response.code()})"
                 }
             } catch (e: Exception) {
                 Log.e("FAVORITOS", "❌ Excepción de red al hacer POST: ${e.message}")
                 e.printStackTrace()
+
+                // Revertir cambio optimista en caso de excepción
+                val listaRevert = _recursosList.value.toMutableList()
+                val idx = listaRevert.indexOfFirst { it.id == recurso.id }
+                if (idx != -1) {
+                    listaRevert[idx] = listaRevert[idx].copy(favorito = estadoAntes)
+                    _recursosList.value = listaRevert
+                    Log.d("FAVORITOS", "↩️ Revertido cambio optimista por excepción")
+                }
+
                 _mensajeFeedback.value = "Error de conexión: ${e.message}"
             }
         }

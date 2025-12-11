@@ -1,23 +1,21 @@
 package com.example.chatbot_diseo.presentation.notificaciones
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatbot_diseo.data.model.MensajeAutomatico
 
@@ -31,23 +29,71 @@ fun NotificacionesScreen(
     val filtroActual by viewModel.filtroSeleccionado.collectAsState()
     val tipos by viewModel.tiposDisponibles.collectAsState()
 
-    var expandido by remember { mutableStateOf(false) }
     var seleccionada by remember { mutableStateOf<MensajeAutomatico?>(null) }
 
-    // 👉 Chips visibles en la barra (scroll horizontal)
-    val chipsVisibles = tipos.take(3)
+    // Mostrar filtros siempre: 3 por fila, estático
+    val mostrar = listOf("Todos") + tipos
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Notificaciones") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Regresar")
+            // Header azul full-width, padding interno 24/20
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(TcsBlue)
+                    .padding(vertical = 24.dp, horizontal = 20.dp)
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Back icon inside small translucent box
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.White.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.White)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = "Notificaciones",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Chips de filtros dentro del header (pueden ocupar 2 filas)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        mostrar.chunked(3).forEach { fila ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                fila.forEach { tipo ->
+                                    ChipFiltro(
+                                        texto = tipo,
+                                        seleccionado = filtroActual == tipo,
+                                        onClick = { viewModel.seleccionarFiltro(tipo) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                val faltan = 3 - fila.size
+                                repeat(faltan) { Spacer(modifier = Modifier.weight(1f)) }
+                            }
+                        }
+                    }
+                }
+            }
         },
         containerColor = Color(0xFFF8F9FA)
     ) { padding ->
@@ -58,95 +104,7 @@ fun NotificacionesScreen(
                 .fillMaxSize()
         ) {
 
-            // =====================================================
-            // BARRA SUPERIOR — SCROLL + BOTÓN MÁS
-            // =====================================================
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                // 🔹 Si NO está expandido → mostrar scroll horizontal
-                if (!expandido) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        item {
-                            ChipFiltro(
-                                texto = "Todos",
-                                seleccionado = filtroActual == "Todos",
-                                onClick = { viewModel.seleccionarFiltro("Todos") }
-                            )
-                        }
-
-                        items(chipsVisibles) { tipo ->
-                            ChipFiltro(
-                                texto = tipo,
-                                seleccionado = filtroActual == tipo,
-                                onClick = { viewModel.seleccionarFiltro(tipo) }
-                            )
-                        }
-                    }
-                } else {
-                    // 🔹 Si está expandido → QUITAR scroll horizontal y dejar espacio vacío
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // ===== BOTÓN MÁS (SIEMPRE EN EL MISMO SITIO) =====
-                FilledTonalButton(
-                    onClick = { expandido = !expandido },
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(0xFFE8EBF0),
-                        contentColor = Color(0xFF1A73E8)
-                    ),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Icon(
-                        imageVector = if (expandido) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = null
-                    )
-                }
-            }
-
-            // =====================================================
-            // PANEL INFERIOR — REJILLA DE TODOS LOS CHIPS
-            // =====================================================
-            AnimatedVisibility(visible = expandido) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                ) {
-
-                    val chipsGrid = listOf("Todos") + tipos
-
-                    chipsGrid.chunked(3).forEach { fila ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            fila.forEach { tipo ->
-                                ChipFiltro(
-                                    texto = tipo,
-                                    seleccionado = filtroActual == tipo,
-                                    onClick = { viewModel.seleccionarFiltro(tipo) }
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            }
-
-            // =====================================================
             // LISTA DE NOTIFICACIONES
-            // =====================================================
             LazyColumn(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -166,19 +124,17 @@ fun NotificacionesScreen(
                 }
             }
 
-            // =====================================================
             // DIÁLOGO DETALLES
-            // =====================================================
             if (seleccionada != null) {
                 val item = seleccionada!!
                 AlertDialog(
                     onDismissRequest = { seleccionada = null },
-                    title = { Text(item.titulo ?: "Notificación", fontWeight = FontWeight.Bold) },
+                    title = { Text(item.titulo, fontWeight = FontWeight.Bold) },
                     text = {
                         Column {
-                            Text(item.contenido ?: "")
+                            Text(item.contenido)
                             Spacer(modifier = Modifier.height(10.dp))
-                            Text("Enviado: ${item.horaEnvio ?: "--"}", color = Color.Gray)
+                            Text("Enviado: ${item.horaEnvio}", color = Color.Gray)
                         }
                     },
                     confirmButton = {
@@ -196,22 +152,28 @@ fun NotificacionesScreen(
 fun ChipFiltro(
     texto: String,
     seleccionado: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     FilterChip(
+        modifier = modifier,
         selected = seleccionado,
         onClick = onClick,
-        label = { Text(texto) },
+        label = {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(texto, color = if (seleccionado) Color.White else Color(0xFF6B7280))
+            }
+        },
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Color(0xFF1A73E8),
+            selectedContainerColor = Color(0xFF0F5FB8),
             selectedLabelColor = Color.White,
             containerColor = Color.White,
-            labelColor = Color.Gray
+            labelColor = Color(0xFF6B7280)
         ),
         border = FilterChipDefaults.filterChipBorder(
             enabled = true,
             selected = seleccionado,
-            borderColor = if (seleccionado) Color.Transparent else Color.LightGray
+            borderColor = if (seleccionado) Color.Transparent else Color(0xFFE5E7EB)
         ),
         shape = RoundedCornerShape(50)
     )

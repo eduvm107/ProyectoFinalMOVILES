@@ -13,6 +13,5 @@ data class FavoritoResponse(
     val message: String? = null,
 
     @SerializedName("esFavorito")
-    val esFavorito: Boolean = false // true si se agregó, false si se eliminó
+    val esFavorito: Boolean? = null // true si se agregó, false si se eliminó; nullable para detectar ausencia
 )
-

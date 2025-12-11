@@ -3,11 +3,10 @@ package com.example.chatbot_diseo.presentation.chat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,70 +16,79 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.example.chatbot_diseo.R
+
 @Composable
 fun ChatHeader(
     onNewChat: () -> Unit,
     onMenuClick: () -> Unit
 ) {
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp)
+            .background(Color(0xFF4A6B8A))
+            .padding(vertical = 24.dp)
     ) {
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo_tata),
-                    contentDescription = "Logo TCS Assistant",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column {
-                Text(
-                    "TCS Assistant",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    "Siempre disponible para ti",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-
+        // Contenido alineado con padding horizontal interno
         Row(
-            modifier = Modifier.align(Alignment.TopEnd),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_tata),
+                        contentDescription = "Logo TCS Assistant",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
-            // Nuevo chat
-            IconButton(onClick = onNewChat) {
-                Icon(
-                    Icons.Outlined.Create,
-                    contentDescription = "Nuevo chat",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        "TCS Assistant",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 22.sp
+                    )
+                    Text(
+                        "Siempre disponible para ti",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 13.sp
+                    )
+                }
             }
 
-            // Menú hamburguesa
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    Icons.Outlined.Menu,
-                    contentDescription = "Menú",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+            // Botones a la derecha
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onNewChat) {
+                    Icon(
+                        Icons.Outlined.Create,
+                        contentDescription = "Nuevo chat",
+                        tint = Color.White
+                    )
+                }
+
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        Icons.Outlined.Menu,
+                        contentDescription = "Menú",
+                        tint = Color.White
+                    )
+                }
             }
         }
     }

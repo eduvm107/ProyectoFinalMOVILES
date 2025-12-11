@@ -1,8 +1,10 @@
 package com.example.chatbot_diseo.presentation.ayuda
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatbot_diseo.data.model.FAQ
+import com.example.chatbot_diseo.data.remote.ApiAyudaRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +24,7 @@ interface AyudaRepository {
 }
 
 // Implementación por defecto (mock) para pruebas locales
+@Suppress("unused") // Mantener el mock para pruebas locales / previews
 class DefaultAyudaRepository : AyudaRepository {
     override suspend fun getFaqs(): List<FAQ> {
         // Simula una pequeña latencia
@@ -80,7 +83,8 @@ class DefaultAyudaRepository : AyudaRepository {
 }
 
 class AyudaViewModel(
-    private val repository: AyudaRepository = DefaultAyudaRepository()
+    // Por defecto usa la implementación que llama a la API y ya limita a 5 preguntas
+    private val repository: AyudaRepository = ApiAyudaRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AyudaUiState>(AyudaUiState.Loading)
@@ -106,6 +110,8 @@ class AyudaViewModel(
     }
 
     fun toggleFaqExpansion(id: String?) {
-        _expandedFaqId.value = if (_expandedFaqId.value == id) null else id
+        val newValue = if (_expandedFaqId.value == id) null else id
+        Log.d("AyudaViewModel", "toggleFaqExpansion called. id=$id -> newValue=$newValue")
+        _expandedFaqId.value = newValue
     }
 }

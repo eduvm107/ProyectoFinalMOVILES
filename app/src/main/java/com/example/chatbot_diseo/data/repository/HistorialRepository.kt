@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.chatbot_diseo.data.model.Conversacion
 import com.example.chatbot_diseo.data.model.Mensaje
 import com.example.chatbot_diseo.data.remote.apiChatBot.RetrofitInstance
+import retrofit2.Response
 
 // Código Corregido para HistorialRepository.kt
 class HistorialRepository {
@@ -53,6 +54,19 @@ class HistorialRepository {
             }
         } catch (e: Exception) {
             Log.e("HISTORIAL_API", "Excepción al crear conversacion", e)
+            null
+        }
+    }
+
+    /**
+     * Eliminar conversación por id
+     */
+    suspend fun eliminarConversacion(conversacionId: String): Response<Void>? {
+        return try {
+            val resp = api.eliminarConversacion(conversacionId)
+            resp
+        } catch (e: Exception) {
+            Log.e("HISTORIAL_API", "Excepción al eliminar conversacion id=$conversacionId", e)
             null
         }
     }

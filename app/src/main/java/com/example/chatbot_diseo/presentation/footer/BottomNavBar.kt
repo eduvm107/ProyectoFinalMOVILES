@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,7 +56,7 @@ fun BottomNavBar(navController: NavController) {
 
         NavigationBar(
             modifier = Modifier.navigationBarsPadding(),
-            containerColor = Color(0xFF4A6B8A)
+            containerColor = TcsBlue
         ) {
             items.forEach { item ->
                 val selected = currentDestination?.hierarchy?.any { dest -> dest.route == item.route } == true
@@ -64,9 +65,16 @@ fun BottomNavBar(navController: NavController) {
                     selected = selected,
                     // Siempre navegar a la ruta al hacer click (evita clicks sin efecto)
                     onClick = {
-                        Log.d("BottomNavBar", "Clicked bottom item: ${item.title}, route=${item.route}")
+                        Log.d("BottomNavBar", "Clicked bottom item: ${item.title}, route=${item.route}, selected=$selected")
+
+                        // ✅ FIX: Si ya estamos en la ruta seleccionada, NO navegar (evita reiniciar el chat)
+                        if (selected) {
+                            Log.d("BottomNavBar", "Ya estamos en ${item.route}, no navegar")
+                            return@NavigationBarItem
+                        }
+
                         if (item.route == "chat") {
-                            // Forzar navegación explícita a "chat" usando popUpTo por ruta
+                            // Navegar a chat sin parámetros (nueva conversación o mantener actual)
                             navController.navigate("chat") {
                                 popUpTo("chat") { inclusive = false }
                                 launchSingleTop = true

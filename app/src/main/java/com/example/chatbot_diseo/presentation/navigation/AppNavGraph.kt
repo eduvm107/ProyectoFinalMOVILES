@@ -18,6 +18,7 @@ import com.example.chatbot_diseo.presentation.admin.page.AdminPanelScreen
 import com.example.chatbot_diseo.presentation.auth.ForgotPasswordScreen
 import com.example.chatbot_diseo.presentation.auth.LoginScreen
 import com.example.chatbot_diseo.presentation.ayuda.AyudaScreen
+import com.example.chatbot_diseo.presentation.configuracion.ConfiguracionScreen
 import com.example.chatbot_diseo.presentation.calendario.Pantalla_Calendario
 import com.example.chatbot_diseo.presentation.chat.ChatScreen
 import com.example.chatbot_diseo.presentation.favoritos.FavoritosScreen
@@ -25,13 +26,11 @@ import com.example.chatbot_diseo.presentation.historial.HistorialScreen
 import com.example.chatbot_diseo.presentation.notificaciones.NotificacionesScreen
 import com.example.chatbot_diseo.presentation.recursos.Pantalla_de_Recurso
 import com.example.chatbot_diseo.presentation.userperfil.PerfilScreen
-import com.example.chatbot_diseo.presentation.theme.ThemeViewModel
 
 @Composable
 fun AppNavGraph(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
-    themeViewModel: ThemeViewModel? = null
+    navController: NavHostController
 ) {
     val context = LocalContext.current
 
@@ -100,7 +99,6 @@ fun AppNavGraph(
         }
 
         composable("perfil") {
-            val isDarkTheme by themeViewModel?.isDarkTheme?.collectAsState() ?: remember { mutableStateOf(false) }
             PerfilScreen(
                 onLogout = {
                     // Limpiar token e ID del usuario
@@ -108,10 +106,6 @@ fun AppNavGraph(
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
-                },
-                isDarkTheme = isDarkTheme,
-                onThemeToggle = { newValue ->
-                    themeViewModel?.setDarkTheme(newValue)
                 }
             )
         }
@@ -137,11 +131,23 @@ fun AppNavGraph(
         }
 
         composable("favoritos") {
-            FavoritosScreen(onBack = { navController.popBackStack() })
+            FavoritosScreen(
+                onBack = { navController.popBackStack() },
+                onOpenRecurso = { /* navegar a la pantalla de recursos */
+                    navController.navigate("recursos") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
 
         composable("ayuda") {
             AyudaScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("configuracion") {
+            ConfiguracionScreen(onBack = { navController.popBackStack() })
         }
 
         // Ruta para abrir chat con una conversacionId opcional

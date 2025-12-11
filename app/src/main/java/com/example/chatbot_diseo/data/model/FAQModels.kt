@@ -4,7 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 // Modelo de FAQ según el backend
 data class FAQ(
-    @SerializedName("_id")
+    // Aceptar tanto "id" como "_id" (algunos endpoints usan una u otra clave)
+    @SerializedName(value = "id", alternate = ["_id"])
     val id: String? = null,
     val pregunta: String,
     val respuesta: String,

@@ -3,13 +3,15 @@ package com.example.chatbot_diseo.presentation.historial
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.chatbot_diseo.ui.theme.TcsBlue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chatbot_diseo.data.repository.HistorialRepository
@@ -38,11 +40,41 @@ fun HistorialScreen(
         }
     }
 
+    // Observa el id de conversación creado para navegar automáticamente
+    val openConvId by viewModel.openConversationId.collectAsState(initial = null)
+    LaunchedEffect(openConvId) {
+        openConvId?.let { id ->
+            // Navegar a chat/{id} a través del callback proporcionado por el NavGraph
+            onOpenChat(id)
+            // Marcar como consumido
+            viewModel.openConversationConsumed()
+        }
+    }
+
+    // Estado para diálogo de confirmación de eliminación
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var toDeleteId by remember { mutableStateOf<String?>(null) }
+
+    // Función que abre diálogo
+    val requestDelete: (String) -> Unit = { id ->
+        toDeleteId = id
+        showConfirmDialog = true
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Mis Conversaciones") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TcsBlue,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -68,15 +100,50 @@ fun HistorialScreen(
             ) {
                 items(chats) { chat ->
                     // Pasamos el id de la conversación al hacer click. Si es null, mostramos Snackbar
-                    HistorialItem(chat = chat, onClick = { id ->
-                        if (id != null) {
-                            onOpenChat(id)
-                        } else {
-                            coroutineScope.launch { snackbarHostState.showSnackbar("ID de conversación inválido") }
+                    HistorialItem(
+                        chat = chat,
+                        onClick = { id ->
+                            if (id != null) {
+                                onOpenChat(id)
+                            } else {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("ID de conversación inválido") }
+                            }
+                        },
+                        onDelete = { id ->
+                            // Abrir diálogo de confirmación
+                            requestDelete(id)
+                        },
+                        onToggleFavorito = { id, estadoActual ->
+                            // Toggle favorito usando el endpoint unificado
+                            viewModel.toggleFavoritoConversacion(id, estadoActual)
                         }
-                    })
+                    )
                 }
             }
+        }
+
+        // Diálogo de confirmación
+        if (showConfirmDialog && toDeleteId != null) {
+            AlertDialog(
+                onDismissRequest = { showConfirmDialog = false; toDeleteId = null },
+                title = { Text("Eliminar conversación") },
+                text = { Text("¿Seguro que deseas eliminar esta conversación? Esta acción no se puede deshacer.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        // Llamada al ViewModel para eliminar
+                        toDeleteId?.let { id -> viewModel.eliminarConversacion(id, usuarioId) }
+                        showConfirmDialog = false
+                        toDeleteId = null
+                    }) {
+                        Text("Eliminar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showConfirmDialog = false; toDeleteId = null }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }

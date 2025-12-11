@@ -30,10 +30,9 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.chatbot_diseo.presentation.navigation.AppNavGraph
-import com.example.chatbot_diseo.presentation.theme.ThemeViewModel
 
 @Composable
-fun PantallaPrincipal(themeViewModel: ThemeViewModel? = null) {
+fun PantallaPrincipal() {
     val context = LocalContext.current
     val navController = rememberNavController()
 
@@ -63,8 +62,7 @@ fun PantallaPrincipal(themeViewModel: ThemeViewModel? = null) {
             Box(modifier = Modifier.padding(innerPadding)) {
                 AppNavGraph(
                     modifier = Modifier.fillMaxSize(),
-                    navController = navController,
-                    themeViewModel = themeViewModel
+                    navController = navController
                 )
             }
         }
@@ -116,13 +114,6 @@ fun PermissionScreenForMain(modifier: Modifier = Modifier, onPermissionsGranted:
         }) {
             Text(if (shouldShowRationale) "Abrir configuración" else "Conceder permisos")
         }
-    }
-}
-
-@Composable
-fun PlaceholderScreen(screenName: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Pantalla de $screenName")
     }
 }
 
