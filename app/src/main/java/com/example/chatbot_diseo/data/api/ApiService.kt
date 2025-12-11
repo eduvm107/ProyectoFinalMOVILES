@@ -21,7 +21,7 @@ interface ApiService {
     @POST("Auth/change-password")
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<ChangePasswordResponse>
 
-    @POST("Auth/recover-password")
+    @POST("Auth/temporary-password")
     suspend fun recoverPassword(@Body request: RecoverPasswordRequest): Response<RecoverPasswordResponse>
 
     @POST("Auth/forgot-password")
