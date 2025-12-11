@@ -79,9 +79,8 @@ fun ChatScreen(
                 if (viewModel.mensajes.size > 1 || viewModel.conversacionId != null) {
                     viewModel.mostrarDialogoNuevoChat.value = true
                 } else {
-                    // Si no hay conversación activa, crear directamente
-                    viewModel.limpiarChat()
-                    viewModel.crearConversacionVacia()
+                    // Si no hay conversación activa, iniciar la secuencia para nueva conversación
+                    viewModel.iniciarNuevaConversacion()
                 }
             },
             onMenuClick = { drawerOpen = true }
@@ -155,9 +154,14 @@ fun ChatScreen(
                 shadowElevation = 12.dp
             ) {
                 SideMenu(
-                    onNavigate = {
-                        drawerOpen = false
-                        navController.navigate(it)
+                    onNavigate = { route ->
+                        // ✅ FIX: Si la ruta es "close", solo cerrar el menú sin navegar
+                        if (route == "close") {
+                            drawerOpen = false
+                        } else {
+                            drawerOpen = false
+                            navController.navigate(route)
+                        }
                     },
                     onClose = { drawerOpen = false }
                 )
@@ -175,8 +179,8 @@ fun ChatScreen(
                 TextButton(
                     onClick = {
                         viewModel.mostrarDialogoNuevoChat.value = false
-                        viewModel.limpiarChat()
-                        viewModel.crearConversacionVacia()
+                        // Ejecutar secuencia que guarda/cierran la conversación y reinicia el chat
+                        viewModel.iniciarNuevaConversacion()
                     }
                 ) {
                     Text("Sí, crear nuevo")

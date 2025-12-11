@@ -56,7 +56,8 @@ fun SideMenu(
         Spacer(modifier = Modifier.height(20.dp))
 
         // Items: usar estilo consistente, separadores sutiles y padding entre items (16dp)
-        DrawerItem("Inicio", Icons.Outlined.Home, "chat", onNavigate)
+        // ✅ FIX: "Inicio" ahora solo cierra el menú en lugar de recargar el chat
+        DrawerItem("Inicio", Icons.Outlined.Home, "close", onNavigate)
         HorizontalDivider(color = Color(0xFFE5E7EB).copy(alpha = 0.4f))
         Spacer(modifier = Modifier.height(16.dp))
 

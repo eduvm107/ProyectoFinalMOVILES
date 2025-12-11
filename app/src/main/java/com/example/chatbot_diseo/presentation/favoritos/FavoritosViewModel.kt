@@ -143,12 +143,21 @@ class FavoritosViewModel : ViewModel() {
 
                 if (response.isSuccessful) {
                     val body = response.body()
-                    val esFavorito = body?.esFavorito ?: false
+                    // El backend idealmente devuelve body?.esFavorito (true/false). Si viene null,
+                    // no debemos asumir por defecto `false` porque eso provoca mensajes erróneos
+                    // y remueve ítems de la lista aunque la operación pudo haber sido un agregado.
+                    val esFavoritoBackend = body?.esFavorito
 
-                    Log.d("FAVORITOS_TOGGLE", "✅ Toggle exitoso: esFavorito=$esFavorito")
+                    // Inferir el nuevo estado cuando el backend no lo provee: si el recurso
+                    // ya está en la lista local de favoritos, entonces al togglear debería
+                    // eliminarlo (nuevoEstado = false). Si no está, entonces debe agregarse.
+                    val estaEnListaLocal = _favoritos.value.any { it.id == recurso.id }
+                    val nuevoEstado = esFavoritoBackend ?: !estaEnListaLocal
 
-                    // 3. Si se eliminó de favoritos, quitarlo de la lista local
-                    if (!esFavorito) {
+                    Log.d("FAVORITOS_TOGGLE", "✅ Toggle exitoso: esFavoritoBackend=$esFavoritoBackend, inferidoNuevoEstado=$nuevoEstado")
+
+                    // Actualizar la lista local según el nuevo estado
+                    if (!nuevoEstado) {
                         val listaActual = _favoritos.value.toMutableList()
                         listaActual.removeAll { it.id == recurso.id }
                         _favoritos.value = listaActual
@@ -156,6 +165,13 @@ class FavoritosViewModel : ViewModel() {
                         _mensajeFeedback.value = "❌ Eliminado de favoritos"
                         Log.d("FAVORITOS_TOGGLE", "🗑️ Recurso eliminado de la lista local")
                     } else {
+                        // Si se agregó y aún no está en la lista local, añadirlo
+                        val listaActual = _favoritos.value.toMutableList()
+                        if (listaActual.none { it.id == recurso.id }) {
+                            listaActual.add(recurso)
+                            _favoritos.value = listaActual
+                            Log.d("FAVORITOS_TOGGLE", "➕ Recurso agregado a la lista local")
+                        }
                         _mensajeFeedback.value = "✅ Agregado a favoritos"
                     }
                 } else {

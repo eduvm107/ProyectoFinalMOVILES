@@ -11,6 +11,8 @@ import com.example.chatbot_diseo.data.repository.ChatbotRepository
 import com.example.chatbot_diseo.data.model.MensajeRequest
 import com.example.chatbot_diseo.data.model.Mensaje as DataMensaje
 import com.example.chatbot_diseo.data.model.Conversacion as DataConversacion
+import com.example.chatbot_diseo.presentation.historial.HistorialBus
+import com.example.chatbot_diseo.data.repository.HistorialRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,7 @@ class ChatViewModel : ViewModel() {
     }
 
     private val chatbotRepository = ChatbotRepository()
+    private val historialRepository = HistorialRepository()
 
     // Mutex para asegurar que la creación de la conversación (POST /api/Conversacion) solo
     // se dispare una vez cuando varios mensajes se envían casi al mismo tiempo.
@@ -129,20 +132,10 @@ class ChatViewModel : ViewModel() {
     }
 
     /**
-     * Crear una conversación vacía en el backend (sin mensajes) y guardar el id en el ViewModel.
-     * ⚠️ YA NO SE USA - El botón de lápiz ahora solo limpia el chat localmente
-     */
-    fun crearConversacionVacia() {
-        // ❌ YA NO CREAMOS conversación vacía manualmente
-        // Solo limpiamos el chat localmente
-        Log.d(TAG, "⚠️ crearConversacionVacia: Ya NO se usa, solo limpiamos chat")
-        limpiarChat()
-    }
-
-    /**
-     * Crear una conversación en backend incluyendo el primer mensaje del usuario.
-     * ⚠️ ACTUALIZACIÓN: Ya NO se usa, el orquestador crea la conversación automáticamente
-     * Devuelve true si se creó y se asignó conversacionId.
+     * Crear conversación con primer mensaje
+     * ⚠️ ACTUALIZACIÓN ORIGINAL: Ya NO se crea conversación manualmente desde el cliente.
+     * El orquestador crea la conversación automáticamente cuando enviamos el primer mensaje.
+     * La función mantiene la firma para compatibilidad y devuelve false siempre.
      */
     private suspend fun crearConversacionConPrimerMensaje(userId: String, primerMensaje: String): Boolean {
         // ❌ YA NO CREAMOS conversación manualmente
@@ -152,7 +145,15 @@ class ChatViewModel : ViewModel() {
         return false  // Indicar que NO se creó aquí
     }
 
-    // --- FIN: funciones de conversación ---
+    /**
+     * Crear una conversación vacía en el backend (sin mensajes) y guardar el id en el ViewModel.
+     */
+    fun crearConversacionVacia() {
+        // ❌ YA NO CREAMOS conversación vacía manualmente
+        // Solo limpiamos el chat localmente
+        Log.d(TAG, "⚠️ crearConversacionVacia: Ya NO se usa, solo limpiamos chat")
+        limpiarChat()
+    }
 
     /**
      * Enviar mensaje al chatbot con IA
@@ -596,5 +597,96 @@ class ChatViewModel : ViewModel() {
             }
         }
     }
-}
 
+    /**
+     * Iniciar nueva conversación (botón lápiz confirmado)
+     * Secuencia:
+     * 1) Finalizar la conversación anterior (PUT /api/Conversacion/{id} con activa=false, resuelto=true)
+     * 2) REINICIAR ESTADO LOCAL: Establecer conversacionId = null (CRÍTICO)
+     * 3) Limpiar mensajes en la UI
+     * 4) Notificar al historial para recargar
+     *
+     * ⚡ IMPORTANTE: NO creamos una nueva conversación aquí.
+     * El orquestador creará automáticamente la nueva conversación cuando el usuario
+     * envíe el primer mensaje (POST /api/Conversacion).
+     */
+    fun iniciarNuevaConversacion() {
+        val convId = conversacionId
+        val userId = usuarioId
+
+        viewModelScope.launch {
+            try {
+                if (convId.isNullOrBlank()) {
+                    Log.w(TAG, "iniciarNuevaConversacion: no hay conversacion activa. Solo limpiar chat")
+                    // Solo limpiar UI y notificar historial
+                    limpiarChat()
+                    HistorialBus.emitHistorialChanged()
+                    return@launch
+                }
+
+                if (userId.isNullOrBlank()) {
+                    Log.e(TAG, "iniciarNuevaConversacion: usuario no logueado")
+                    return@launch
+                }
+
+                isLoading.value = true
+
+                // 1) Finalizar la conversación anterior: marcar como resuelta/activa=false
+                try {
+                    val getResp = RetrofitInstance.conversacionApi.getConversacionById(convId)
+                    if (getResp.isSuccessful) {
+                        val conv = getResp.body()
+                        if (conv != null) {
+                            val actualizado = conv.copy(activa = false, resuelto = true)
+                            // PUT /api/Conversacion/{id}
+                            try {
+                                val putResp = RetrofitInstance.conversacionApi.updateConversacion(convId, actualizado)
+                                if (putResp.isSuccessful) {
+                                    Log.d(TAG, "✅ Conversación anterior finalizada en server: id=$convId")
+                                } else {
+                                    Log.w(TAG, "⚠️ PUT marcar conversacion fallo: code=${putResp.code()}")
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "❌ Excepción al hacer PUT conversacion: ${e.message}", e)
+                            }
+                        } else {
+                            Log.w(TAG, "⚠️ GET conversacion devolvió body null para id=$convId")
+                        }
+                    } else {
+                        Log.w(TAG, "⚠️ GET conversacion fallo: code=${getResp.code()} for id=$convId")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Excepción obteniendo conversacion antes de cerrar: ${e.message}", e)
+                }
+
+                // 2) ⚡ CORRECCIÓN CRÍTICA: Establecer conversacionId = null
+                // Esto fuerza que el próximo mensaje cree una NUEVA conversación via POST /api/Conversacion
+                _conversacionId.value = null
+                Log.d(TAG, "🔑 conversacionId establecido a NULL - próximo mensaje creará nueva conversación")
+
+                // 3) Limpiar UI (mensajes y estado)
+                mensajes.clear()
+                conversacionFavorito = null
+                mostrarSugerencias.value = true
+                mostrarDialogoNuevoChat.value = false
+
+                // Restaurar sugerencias iniciales
+                sugerencias.clear()
+                sugerencias.addAll(sugerenciasIniciales)
+
+                mensajes.add(Mensaje("¡Nuevo chat iniciado! ¿En qué puedo ayudarte ahora?", false))
+                Log.d(TAG, "🧹 UI limpiada - mensajes reiniciados")
+
+                // 4) Notificar al Historial para que recargue y muestre la conversación cerrada
+                HistorialBus.emitHistorialChanged()
+                Log.d(TAG, "📢 Historial notificado para recargar")
+
+                Log.d(TAG, "✅ iniciarNuevaConversacion: secuencia completada. conversacionId=$conversacionId")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ iniciarNuevaConversacion excepción general: ${e.message}", e)
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+}

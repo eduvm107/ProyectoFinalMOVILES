@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 import org.json.JSONObject
+import com.example.chatbot_diseo.presentation.historial.HistorialBus
 
 // 💡 Nota: Asegúrate de tener una forma de inyectar o pasar el HistorialRepository.
 class HistorialViewModel(
@@ -38,6 +39,18 @@ class HistorialViewModel(
 
     init {
         cargarHistorial()
+
+        // Suscribirse al bus para recargar historial cuando otra pantalla lo indique
+        viewModelScope.launch {
+            HistorialBus.events.collect {
+                try {
+                    Log.d("HISTORIAL_VM", "Evento HistorialBus recibido: recargando historial para $usuarioId")
+                    cargarHistorial(usuarioId)
+                } catch (e: Exception) {
+                    Log.e("HISTORIAL_VM", "Error al recargar historial por evento: ${e.message}", e)
+                }
+            }
+        }
     }
 
     /**
