@@ -1,6 +1,7 @@
 package com.example.chatbot_diseo.data.model
 
 import com.google.gson.annotations.SerializedName
+import com.example.chatbot_diseo.network.dto.response.Supervisor
 
 // Modelo completo de Usuario según el backend
 data class UsuarioCompleto(
@@ -41,13 +42,6 @@ data class Direccion(
     val ciudad: String? = null,
     val codigoPostal: String? = null,
     val pais: String? = null
-)
-
-// Información del supervisor
-data class Supervisor(
-    val nombre: String? = null,
-    val email: String? = null,
-    val telefono: String? = null
 )
 
 // Preferencias del usuario

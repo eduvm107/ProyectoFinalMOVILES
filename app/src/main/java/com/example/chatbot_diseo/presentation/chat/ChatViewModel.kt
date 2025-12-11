@@ -632,6 +632,7 @@ class ChatViewModel : ViewModel() {
                 isLoading.value = true
 
                 // 1) Finalizar la conversación anterior: marcar como resuelta/activa=false
+                var conversacionCerradaExitosamente = false
                 try {
                     val getResp = RetrofitInstance.conversacionApi.getConversacionById(convId)
                     if (getResp.isSuccessful) {
@@ -643,6 +644,7 @@ class ChatViewModel : ViewModel() {
                                 val putResp = RetrofitInstance.conversacionApi.updateConversacion(convId, actualizado)
                                 if (putResp.isSuccessful) {
                                     Log.d(TAG, "✅ Conversación anterior finalizada en server: id=$convId")
+                                    conversacionCerradaExitosamente = true
                                 } else {
                                     Log.w(TAG, "⚠️ PUT marcar conversacion fallo: code=${putResp.code()}")
                                 }
@@ -657,6 +659,12 @@ class ChatViewModel : ViewModel() {
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ Excepción obteniendo conversacion antes de cerrar: ${e.message}", e)
+                }
+
+                // ⏱️ CORRECCIÓN: Esperar un momento para que el backend procese el cambio
+                if (conversacionCerradaExitosamente) {
+                    Log.d(TAG, "⏱️ Esperando 500ms para que el backend procese el cierre...")
+                    delay(500L)
                 }
 
                 // 2) ⚡ CORRECCIÓN CRÍTICA: Establecer conversacionId = null

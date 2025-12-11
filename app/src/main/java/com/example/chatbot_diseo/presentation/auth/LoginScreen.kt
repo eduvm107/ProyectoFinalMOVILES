@@ -271,18 +271,6 @@ fun LoginScreen(
                             placeholder = { Text("********") },
                             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                             trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
-                                    )
-                                }
-                            },
-                            singleLine = true,
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            trailingIcon = {
                                 val image = if (passwordVisible)
                                     Icons.Filled.Visibility
                                 else
@@ -293,7 +281,11 @@ fun LoginScreen(
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(imageVector = image, contentDescription = description)
                                 }
-                            }
+                            },
+                            singleLine = true,
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
@@ -332,7 +324,7 @@ fun LoginScreen(
                                     return@Button
                                 }
                                 isLoading = true
-                                vm.login(email.trim(), password)
+                                vm.login(email.trim(), password.trim())
                             },
                             enabled = !isLoading && !navigated,
                             modifier = Modifier

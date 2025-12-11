@@ -133,10 +133,29 @@ fun AppNavGraph(
         composable("favoritos") {
             FavoritosScreen(
                 onBack = { navController.popBackStack() },
-                onOpenRecurso = { /* navegar a la pantalla de recursos */
-                    navController.navigate("recursos") {
-                        launchSingleTop = true
-                        restoreState = true
+                onOpenRecurso = { recurso ->
+                    // ✅ CORREGIDO: Navegar según el tipo de favorito
+                    when (recurso.tipo.lowercase()) {
+                        "chat" -> {
+                            // Para favoritos de chat, navegar al chat con el ID de la conversación
+                            navController.navigate("chat/${recurso.id}") {
+                                launchSingleTop = true
+                            }
+                        }
+                        "documento", "actividad" -> {
+                            // Para documentos y actividades, navegar a recursos
+                            navController.navigate("recursos") {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                        else -> {
+                            // Por defecto, navegar a recursos
+                            navController.navigate("recursos") {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     }
                 }
             )

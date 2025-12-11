@@ -36,7 +36,8 @@ data class UserProfile(
     val position: String,
     val department: String,
     val phone: String,
-    val joinDate: String
+    val joinDate: String,
+    val supervisorName: String? = null
 )
 
 @Composable
@@ -56,7 +57,8 @@ fun PerfilScreen(
             position = it.puesto ?: "Empleado",
             department = it.departamento ?: "General",
             phone = it.telefono ?: "",  // Teléfono del usuario desde el backend
-            joinDate = ""  // No disponible desde el backend
+            joinDate = "",  // No disponible desde el backend
+            supervisorName = it.supervisor?.nombre  // Nombre del supervisor
         )
     } ?: UserProfile(
         name = "Usuario",
@@ -64,7 +66,8 @@ fun PerfilScreen(
         position = "Empleado",
         department = "General",
         phone = "",
-        joinDate = ""
+        joinDate = "",
+        supervisorName = null
     )
 
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -203,6 +206,17 @@ fun PerfilScreen(
                     textPrimary = textPrimary,
                     textSecondary = textSecondary
                 )
+
+                // Mostrar supervisor si está disponible
+                profile.supervisorName?.let { supervisorName ->
+                    ProfileInfoCard(
+                        icon = Icons.Default.Person,
+                        label = "Supervisor",
+                        value = supervisorName,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
