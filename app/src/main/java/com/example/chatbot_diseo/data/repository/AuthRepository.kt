@@ -61,6 +61,7 @@ object AuthRepository {
                                 telefono = usuarioCompleto.telefono,  // Aquí está el teléfono
                                 departamento = usuarioCompleto.departamento,
                                 puesto = usuarioCompleto.puesto,
+                                supervisor = usuarioCompleto.supervisor,  // ✅ AGREGADO: Supervisor
                                 activo = usuarioCompleto.activo,
                                 verificado = usuarioCompleto.verificado,
                                 estadoOnboarding = usuarioCompleto.estadoOnboarding,

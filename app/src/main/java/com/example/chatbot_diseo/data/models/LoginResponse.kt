@@ -1,5 +1,7 @@
 package com.example.chatbot_diseo.data.models
 
+import com.example.chatbot_diseo.network.dto.response.Supervisor
+
 // Modelo que representa el usuario devuelto por la API
 data class Usuario(
     val id: String?,
@@ -9,6 +11,7 @@ data class Usuario(
     val telefono: String?,
     val departamento: String?,
     val puesto: String?,
+    val supervisor: Supervisor? = null,
     val activo: Boolean? = null,
     val verificado: Boolean? = null,
     val estadoOnboarding: String? = null,
